@@ -1,15 +1,15 @@
 package parser
 
 import (
-	"github.com/NeowayLabs/abad/token"
-	"github.com/NeowayLabs/abad/lexer"
+	"github.com/NeowayLabs/abad/ast"
+	"github.com/NeowayLabs/abad/internal/utf16"
 )
 
 // Parse input source into an AST representation.
-func Parse(code string) (ast.AST, error) {
+func Parse(code string) (*ast.AST, error) {
 	return parse(utf16.Encode(code))
 }
 
-func parse(code utf16.Str) (ast.AST, error) {
+func parse(code utf16.Str) (*ast.AST, error) {
 	return nil, nil
 }

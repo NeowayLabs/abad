@@ -15,5 +15,5 @@ var names = map[Type]string{
 }
 
 func (t Type) String() string {
-	return names[tok]
+	return names[t]
 }

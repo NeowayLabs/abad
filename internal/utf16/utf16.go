@@ -9,5 +9,5 @@ func Encode(a string) Str {
 
 // Decode an UTF-16 string into a UTF-8 string
 func Decode(a Str) string {
-	return []rune(utf16.Decode([]uint16(a)))
+	return string(utf16.Decode([]uint16(a)))
 }

@@ -1,7 +1,5 @@
 package utf16
 
-import "unicode/utf16"
-
 type (
 	// Str is a UTF-16 encoded string
 	Str []uint16
