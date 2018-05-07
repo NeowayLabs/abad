@@ -64,6 +64,12 @@ func (p *Parser) parse() (*ast.Program, error) {
 			return nil, err
 		}
 
+		// parsers should not leave tokens not processed
+		// in the lookahead buffer.
+		if len(p.lookahead) != 0 {
+			panic("parsers not handling lookahead correctly")
+		}
+
 		nodes = append(nodes, node)
 	}
 
