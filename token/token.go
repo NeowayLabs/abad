@@ -1,6 +1,8 @@
 // Package token exports the grammar's lexical tokens.
 package token
 
+import "fmt"
+
 type (
 	// Type of tokens
 	Type int
@@ -26,5 +28,9 @@ var names = map[Type]string{
 }
 
 func (t Type) String() string {
-	return names[t]
+	str, ok := names[t]
+	if !ok {
+		panic(fmt.Sprintf("symbol %d not found", t))
+	}
+	return str
 }
