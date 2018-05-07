@@ -67,6 +67,18 @@ func TestParserNumbers(t *testing.T) {
 			input:    "1.0e10",
 			expected: ast.NewNumber(1.0e10),
 		},
+		{
+			input:    "1e10",
+			expected: ast.NewNumber(1e10),
+		},
+		{
+			input:    ".1e10",
+			expected: ast.NewNumber(.1e10),
+		},
+		{
+			input:    "1e-10",
+			expected: ast.NewNumber(1e-10),
+		},
 	} {
 		tree, err := parser.Parse("tests.js", tc.input)
 		if err != nil {
@@ -77,7 +89,7 @@ func TestParserNumbers(t *testing.T) {
 					tc.expectedErr, err)
 			}
 
-			return
+			continue
 		}
 
 		nodes := tree.Nodes

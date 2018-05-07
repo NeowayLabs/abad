@@ -20,6 +20,7 @@ var mock = map[string][]Tokval{
 	// https://es5.github.io/#x7.8.3
 	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Decimal
 	"1":                  onetok(token.Decimal, "1"),
+	"1234":               onetok(token.Decimal, "1234"),
 	"1234567890":         onetok(token.Decimal, "1234567890"),
 	"1a":                 onetok(token.Illegal, "1a"),
 	"0x0":                onetok(token.Hexadecimal, "0x0"),
@@ -28,10 +29,13 @@ var mock = map[string][]Tokval{
 	".1":                 onetok(token.Decimal, ".1"),
 	".0000":              onetok(token.Decimal, ".0000"),
 	"1234.":              onetok(token.Decimal, "1234."),
-	"0.12345":            onetok(token.Decimal, "0x12345"),
+	"0.12345":            onetok(token.Decimal, "0.12345"),
 	"0.a":                onetok(token.Illegal, "0.a"),
 	"12.13.":             onetok(token.Illegal, "12.13."),
 	"1.0e10":             onetok(token.Decimal, "1.0e10"),
+	".1e10":              onetok(token.Decimal, ".1e10"),
+	"1e10":               onetok(token.Decimal, "1e10"),
+	"1e-10":               onetok(token.Decimal, "1e-10"),
 }
 
 // TODO: remove me
