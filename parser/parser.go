@@ -54,17 +54,17 @@ func (p *Parser) parse() (*ast.Program, error) {
 			break
 		}
 
-		fn, ok := litParsers[tok.Type]
-		if ok {
-			node, err := fn(p)
-			if err != nil {
-				return nil, err
-			}
-
-			nodes = append(nodes, node)
-		} else {
-			panic(tok.Type)
+		parser, ok := litParsers[tok.Type]
+		if !ok {
+			return nil, p.errorf(tok, "not implemented: %s", tok)
 		}
+
+		node, err := parser(p)
+		if err != nil {
+			return nil, err
+		}
+
+		nodes = append(nodes, node)
 	}
 
 	return &ast.Program{
