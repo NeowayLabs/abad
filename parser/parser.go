@@ -136,14 +136,23 @@ func parseHex(p *Parser) (ast.Node, error) {
 	defer p.forget(1)
 
 	hexstr := tok.Value
-	prefix := utf16.S("0x")
-	if hexstr.Index(prefix) == 0 {
-		hexstr = hexstr.TrimPrefix(prefix)
+	hexPrefix := utf16.S("0x")
+
+	signed := hexstr.Index(utf16.S("-")) == 0
+	if signed {
+		hexstr = hexstr.TrimPrefix(utf16.S("-"))
 	}
+
+	hexstr = hexstr.TrimPrefix(hexPrefix)
 	hex, err := strconv.ParseInt(hexstr.String(), 16, 64)
 	if err != nil {
 		return nil, p.errorf(tok, err.Error())
 	}
+	
+	if signed {
+		hex = -hex
+	}
+
 	return ast.NewIntNumber(hex), nil
 }
 
