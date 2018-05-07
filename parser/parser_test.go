@@ -31,7 +31,31 @@ func TestParserNumbers(t *testing.T) {
 			input:    "0x0",
 			expected: ast.NewIntNumber(0),
 		},
-	} {
+		{
+			input:    "0x1234567890abcdef",
+			expected: ast.NewIntNumber(0x1234567890abcdef),
+		},
+		{
+			input:    "0xff",
+			expected: ast.NewIntNumber(0xff),
+		},
+		{
+			input:    ".1",
+			expected: ast.NewNumber(0.1),
+		},
+		{
+			input:    ".0000",
+			expected: ast.NewNumber(0.0),
+		},
+		{
+			input:    "1234",
+			expected: ast.NewIntNumber(1234),
+		},
+		{
+			input:    "0.12345",
+			expected: ast.NewNumber(0.12345),
+		},
+		} {
 		tree, err := parser.Parse("tests.js", tc.input)
 		if err != nil {
 			if tc.expectedErr == "" {

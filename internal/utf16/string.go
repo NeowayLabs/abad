@@ -86,3 +86,7 @@ func (s Str) TrimPrefix(substr Str) Str {
 	}
 	return s
 }
+
+func (s Str) HasPrefix(substr Str) bool {
+	return s.Index(substr) == 0
+}
