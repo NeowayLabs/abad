@@ -28,8 +28,8 @@ var tokEOF = lexer.Tokval{
 
 // literal parsers
 var litParsers = map[token.Type]parserfn{
-	token.Illegal: parseIllegal,
-	token.Decimal: parseDecimal,
+	token.Illegal:     parseIllegal,
+	token.Decimal:     parseDecimal,
 	token.Hexadecimal: parseHex,
 }
 
