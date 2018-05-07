@@ -8,11 +8,11 @@ import (
 
 type (
 	// Node type
-	Type int
+	NodeType int
 
 	// All node types implement the Node interface
 	Node interface {
-		Type() Type
+		Type() NodeType
 		String() string
 		Equal(other Node) bool
 	}
@@ -26,7 +26,7 @@ type (
 )
 
 const (
-	NodeProgram = iota + 1
+	NodeProgram NodeType = iota + 1
 	NodeNumber
 )
 
@@ -35,7 +35,7 @@ const (
 // TODO(i4k): Inspect v8 source code for the right value.
 const ε = 2.220446049250313e-16
 
-func (_ *Program) Type() Type {
+func (_ *Program) Type() NodeType {
 	return NodeProgram
 }
 
@@ -73,7 +73,7 @@ func NewIntNumber(a int64) Number {
 	return Number(float64(a))
 }
 
-func (_ Number) Type() Type {
+func (_ Number) Type() NodeType {
 	return NodeNumber
 }
 
