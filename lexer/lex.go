@@ -31,6 +31,7 @@ var mock = map[string][]Tokval{
 	"0.12345":            onetok(token.Decimal, "0x12345"),
 	"0.a":                onetok(token.Illegal, "0.a"),
 	"12.13.":             onetok(token.Illegal, "12.13."),
+	"1.0e10":             onetok(token.Decimal, "1.0e10"),
 }
 
 // TODO: remove me

@@ -56,12 +56,16 @@ func TestParserNumbers(t *testing.T) {
 			expected: ast.NewNumber(0.12345),
 		},
 		{
-			input: "0.a",
+			input:       "0.a",
 			expectedErr: "tests.js:1:0: invalid token: 0.a",
 		},
 		{
-			input: "12.13.",
+			input:       "12.13.",
 			expectedErr: "tests.js:1:0: invalid token: 12.13.",
+		},
+		{
+			input:    "1.0e10",
+			expected: ast.NewNumber(1.0e10),
 		},
 	} {
 		tree, err := parser.Parse("tests.js", tc.input)

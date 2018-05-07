@@ -118,22 +118,11 @@ func parseDecimal(p *Parser) (ast.Node, error) {
 	defer p.forget(1)
 
 	decstr := tok.Value
-	if decstr.Contains(utf16.S(".")) {
-		if decstr.HasPrefix(utf16.S(".")) {
-			decstr = append(utf16.S("0"), decstr...)
-		}
-		f, err := strconv.ParseFloat(decstr.String(), 64)
-		if err != nil {
-			return nil, p.errorf(tok, err.Error())
-		}
-		return ast.NewNumber(f), nil
-	}
-	dec, err := strconv.ParseInt(decstr.String(), 10, 64)
+	f, err := strconv.ParseFloat(decstr.String(), 64)
 	if err != nil {
 		return nil, p.errorf(tok, err.Error())
 	}
-
-	return ast.NewIntNumber(dec), nil
+	return ast.NewNumber(f), nil
 }
 
 func parseHex(p *Parser) (ast.Node, error) {
