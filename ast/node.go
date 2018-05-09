@@ -92,5 +92,5 @@ func (a Number) Equal(other Node) bool {
 }
 
 func floatEquals(a, b float64) bool {
-	return (math.Abs(a-b) < ε && math.Abs(b-a) < ε)
+	return math.Abs(a-b) < ε && math.Abs(b-a) < ε
 }
