@@ -30,10 +30,9 @@ const (
 	NodeNumber
 )
 
-// copied from V8 running:
 // console.log(Number.EPSILON);
-// TODO(i4k): Inspect v8 source code for the right value.
-const ε = 2.220446049250313e-16
+// 2.220446049250313e-16
+var ε = math.Pow(2, -52)
 
 func (_ *Program) Type() NodeType {
 	return NodeProgram
