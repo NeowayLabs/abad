@@ -109,13 +109,13 @@ func TestParserNumbers(t *testing.T) {
 			),
 		},
 		{
-			input:    "-.0",
+			input: "-.0",
 			expected: ast.NewUnaryExpr(
 				token.Minus, ast.NewNumber(0),
 			),
 		},
 		{
-			input:    "-.0e1",
+			input: "-.0e1",
 			expected: ast.NewUnaryExpr(
 				token.Minus, ast.NewNumber(0),
 			),
@@ -125,10 +125,26 @@ func TestParserNumbers(t *testing.T) {
 			expectedErr: E("tests.js:1:0: invalid token: 12.13."),
 		},
 		{
-			input:    "-1e-10",
+			input: "-1e-10",
 			expected: ast.NewUnaryExpr(
 				token.Minus, ast.NewNumber(1.0e-10),
 			),
+		},
+		{
+			input: "-+0",
+			expected: ast.NewUnaryExpr(
+				token.Minus, ast.NewUnaryExpr(
+					token.Plus, ast.NewNumber(0),
+				),
+			),
+		},
+		{
+			input: "-+-+0",
+			expected: ast.NewUnaryExpr(token.Minus,
+				ast.NewUnaryExpr(token.Plus,
+					ast.NewUnaryExpr(token.Minus,
+						ast.NewUnaryExpr(token.Plus,
+							ast.NewNumber(0))))),
 		},
 	} {
 		tree, err := parser.Parse("tests.js", tc.input)
