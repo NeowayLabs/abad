@@ -72,6 +72,8 @@ func NewIntNumber(a int64) Number {
 	return Number(float64(a))
 }
 
+func (a Number) Value() float64 { return float64(a) }
+
 func (_ Number) Type() NodeType {
 	return NodeNumber
 }
