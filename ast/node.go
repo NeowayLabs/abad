@@ -1,9 +1,12 @@
 package ast
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
+
+	"github.com/NeowayLabs/abad/token"
 )
 
 type (
@@ -23,16 +26,33 @@ type (
 	}
 
 	Number float64
+
+	// UnaryExpr is a unary expression (-a, +a, ~a, and so on)
+	UnaryExpr struct {
+		Operator token.Type
+		Operand  Node
+	}
 )
 
 const (
 	NodeProgram NodeType = iota + 1
+
+	exprBegin
+
 	NodeNumber
+	NodeUnaryExpr
+
+	exprEnd
 )
 
 // console.log(Number.EPSILON);
 // 2.220446049250313e-16
 var ε = math.Pow(2, -52)
+
+func IsExpr(node Node) bool {
+	return node.Type() > exprBegin &&
+		node.Type() < exprEnd
+}
 
 func (_ *Program) Type() NodeType {
 	return NodeProgram
@@ -72,6 +92,8 @@ func NewIntNumber(a int64) Number {
 	return Number(float64(a))
 }
 
+func (a Number) Value() float64 { return float64(a) }
+
 func (_ Number) Type() NodeType {
 	return NodeNumber
 }
@@ -89,6 +111,34 @@ func (a Number) Equal(other Node) bool {
 
 	o := other.(Number)
 	return floatEquals(float64(a), float64(o))
+}
+
+func NewUnaryExpr(operator token.Type, operand Node) *UnaryExpr {
+	return &UnaryExpr{
+		Operator: operator,
+		Operand:  operand,
+	}
+}
+
+func (_ *UnaryExpr) Type() NodeType {
+	return NodeUnaryExpr
+}
+
+func (a *UnaryExpr) String() string {
+	return fmt.Sprintf("%s%s", a.Operator, a.Operand)
+}
+
+func (a *UnaryExpr) Equal(other Node) bool {
+	if other.Type() != a.Type() {
+		return false
+	}
+
+	o := other.(*UnaryExpr)
+	if a.Operator != o.Operator {
+		return false
+	}
+
+	return a.Operand.Equal(o.Operand)
 }
 
 func floatEquals(a, b float64) bool {
