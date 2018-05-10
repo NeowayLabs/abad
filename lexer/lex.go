@@ -54,6 +54,12 @@ var mock = map[string][]Tokval{
 	"+.0":     toks(tok(token.Plus, "+"), tok(token.Decimal, ".0")),
 	"-.0e1":   toks(tok(token.Minus, "-"), tok(token.Decimal, ".0e1")),
 	"-12.13.": toks(tok(token.Minus, "-"), tok(token.Illegal, "12.13.")),
+	"-+0":     toks(tok(token.Minus, "-"), tok(token.Plus, "+"), tok(token.Decimal, "0")),
+	"+-0":     toks(tok(token.Plus, "+"), tok(token.Minus, "-"), tok(token.Decimal, "0")),
+	"-+-+0": toks(
+		tok(token.Minus, "-"), tok(token.Plus, "+"),
+		tok(token.Minus, "-"), tok(token.Plus, "+"),
+		tok(token.Decimal, "0")),
 }
 
 // TODO: remove me
