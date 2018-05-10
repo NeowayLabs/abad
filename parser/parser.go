@@ -26,11 +26,20 @@ var tokEOF = lexer.Tokval{
 	Type: token.EOF,
 }
 
-// literal parsers
-var litParsers = map[token.Type]parserfn{
-	token.Illegal:     parseIllegal,
-	token.Decimal:     parseDecimal,
-	token.Hexadecimal: parseHex,
+var (
+	keywordParsers = map[token.Type]parserfn{}
+	literalParsers = map[token.Type]parserfn{
+		token.Decimal:     parseDecimal,
+		token.Hexadecimal: parseHex,
+	}
+	unaryParsers map[token.Type]parserfn
+)
+
+func init() {
+	unaryParsers = map[token.Type]parserfn{
+		token.Minus: parseUnary,
+		token.Plus:  parseUnary,
+	}
 }
 
 // Parse input source into an AST representation.
@@ -47,27 +56,13 @@ func (p *Parser) parse() (*ast.Program, error) {
 	var nodes []ast.Node
 
 	for {
-		p.scry(1)
-
-		tok := p.lookahead[0]
-		if tok.Type == token.EOF {
-			break
-		}
-
-		parser, ok := litParsers[tok.Type]
-		if !ok {
-			return nil, p.errorf(tok, "not implemented: %s", tok)
-		}
-
-		node, err := parser(p)
+		node, eof, err := p.parseNode()
 		if err != nil {
 			return nil, err
 		}
 
-		// parsers should not leave tokens not processed
-		// in the lookahead buffer.
-		if len(p.lookahead) != 0 {
-			panic("parsers not handling lookahead correctly")
+		if eof {
+			break
 		}
 
 		nodes = append(nodes, node)
@@ -76,6 +71,50 @@ func (p *Parser) parse() (*ast.Program, error) {
 	return &ast.Program{
 		Nodes: nodes,
 	}, nil
+}
+
+func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
+	p.scry(1)
+
+	tok := p.lookahead[0]
+	if tok.Type == token.EOF {
+		return nil, true, nil
+	}
+
+	if tok.Type == token.Illegal {
+		_, err := parseIllegal(p)
+		return nil, false, err
+	}
+
+	var parser parserfn
+	var hasparser bool
+
+	for _, parsers := range []map[token.Type]parserfn{
+		keywordParsers,
+		literalParsers,
+		unaryParsers,
+	} {
+		parser, hasparser = parsers[tok.Type]
+		if hasparser {
+			break
+		}
+	}
+
+	if !hasparser {
+		return nil, false, p.errorf(tok, "invalid token: %s", tok)
+	}
+
+	node, err := parser(p)
+	if err != nil {
+		return nil, false, err
+	}
+
+	// parsers should not leave tokens not processed
+	// in the lookahead buffer.
+	if len(p.lookahead) != 0 {
+		panic("parsers not handling lookahead correctly")
+	}
+	return node, false, nil
 }
 
 // next token
@@ -137,33 +176,40 @@ func parseHex(p *Parser) (ast.Node, error) {
 
 	hexstr := tok.Value
 	hexPrefix := utf16.S("0x")
-
-	signed := hexstr.Index(utf16.S("-")) == 0
-	if signed {
-		hexstr = hexstr.TrimPrefix(utf16.S("-"))
-	}
-
 	hexstr = hexstr.TrimPrefix(hexPrefix)
 	hex, err := strconv.ParseInt(hexstr.String(), 16, 64)
 	if err != nil {
 		return nil, p.errorf(tok, err.Error())
 	}
-	
-	if signed {
-		hex = -hex
-	}
 
 	return ast.NewIntNumber(hex), nil
+}
+
+func parseUnary(p *Parser) (ast.Node, error) {
+	tok := p.lookahead[0]
+	if !token.IsUnaryOperator(tok.Type) {
+		return nil, p.errorf(tok, "unexpected: %s", tok.Type)
+	}
+	p.forget(1)
+	expr, eof, err := p.parseNode()
+	if err != nil {
+		return nil, err
+	}
+
+	if eof {
+		return nil, p.errorf(tok, "unexpected eof")
+	}
+
+	if !ast.IsExpr(expr) {
+		return nil, p.errorf(tok, "expected expression, but got %s",
+			expr.Type())
+	}
+
+	return ast.NewUnaryExpr(tok.Type, expr), nil
 }
 
 // TODO(i4k): implement line and column of error
 func (p *Parser) errorf(_ lexer.Tokval, f string, a ...interface{},
 ) error {
 	return fmt.Errorf("%s:1:0: %s", p.filename, fmt.Sprintf(f, a...))
-}
-
-func isNumber(typ token.Type) bool {
-	return typ == token.Decimal ||
-		typ == token.Hexadecimal ||
-		typ == token.Octal
 }

@@ -15,6 +15,9 @@ const (
 	Octal
 	String
 
+	Minus
+	Plus
+
 	EOF
 )
 
@@ -24,6 +27,8 @@ var names = map[Type]string{
 	Hexadecimal: "Hexadecimal",
 	Octal:       "Octal",
 	String:      "String",
+	Minus:       "-",
+	Plus:        "+",
 	EOF:         "EOF",
 }
 
@@ -33,4 +38,15 @@ func (t Type) String() string {
 		panic(fmt.Sprintf("symbol %d not found", t))
 	}
 	return str
+}
+
+func IsNumber(t Type) bool {
+	return t == Decimal ||
+		t == Hexadecimal ||
+		t == Octal
+}
+
+func IsUnaryOperator(t Type) bool {
+	return t == Minus ||
+		t == Plus
 }
