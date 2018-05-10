@@ -74,6 +74,14 @@ func (a *Abad) evalUnaryExpr(expr *ast.UnaryExpr) (Obj, error) {
 		return nil, err
 	}
 
+	// TODO(i4k): UnaryExpr could work in any expression in js
+	// examples below are valid:
+	//   -[]
+	//	 +[]
+	//   -{}
+	//   +{}
+	//   -eval("0")
+	//   -new Object()
 	num, ok := obj.(types.Number)
 	if !ok {
 		return nil, fmt.Errorf("not a number: %s", obj)
