@@ -26,6 +26,14 @@ func TestNumberEval(t *testing.T) {
 			code: "+0",
 			obj:  types.Number(0.0),
 		},
+		{
+			code: "-0",
+			obj:  types.Number(-0.0),
+		},
+		{
+			code: "1.0e10",
+			obj:  types.Number(1.0e10),
+		},
 	} {
 		js := abad.NewAbad("<anonymous>")
 		obj, err := js.Eval(tc.code)

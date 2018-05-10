@@ -42,6 +42,7 @@ var mock = map[string][]Tokval{
 	"-1e-10": toks(
 		tok(token.Minus, "-"), tok(token.Decimal, "1e-10"),
 	),
+	"-0":      toks(tok(token.Minus, "-"), tok(token.Decimal, "0")),
 	"+0":      toks(tok(token.Plus, "+"), tok(token.Decimal, "0")),
 	"-1":      toks(tok(token.Minus, "-"), tok(token.Decimal, "1")),
 	"-1234":   toks(tok(token.Minus, "-"), tok(token.Decimal, "1234")),
