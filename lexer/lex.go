@@ -35,6 +35,7 @@ var mock = map[string][]Tokval{
 	"0.a":                onetok(token.Illegal, "0.a"),
 	"12.13.":             onetok(token.Illegal, "12.13."),
 	"1.0e10":             onetok(token.Decimal, "1.0e10"),
+	"1.0e1":             onetok(token.Decimal, "1.0e1"),
 	".1e10":              onetok(token.Decimal, ".1e10"),
 	"1e10":               onetok(token.Decimal, "1e10"),
 	"1e-10":              onetok(token.Decimal, "1e-10"),
@@ -85,7 +86,7 @@ func Lex(code utf16.Str) <-chan Tokval {
 	tokens := make(chan Tokval)
 	tokvals := mock[code.String()]
 	if len(tokvals) == 0 {
-		panic(fmt.Errorf("mock not implemented for: %s", code))
+		panic(fmt.Errorf("mock not implemented for: '%s'", code))
 	}
 
 	go func() {

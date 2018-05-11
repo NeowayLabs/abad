@@ -7,5 +7,5 @@ type (
 )
 
 func (a Number) String() string {
-	return strconv.FormatFloat(float64(a), 'e', -1, 64)
+	return strconv.FormatFloat(float64(a), 'f', -1, 64)
 }
