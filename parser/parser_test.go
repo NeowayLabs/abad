@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/NeowayLabs/abad/ast"
+	"github.com/NeowayLabs/abad/internal/utf16"
 	"github.com/NeowayLabs/abad/parser"
 	"github.com/NeowayLabs/abad/token"
 	"github.com/madlambda/spells/assert"
@@ -170,4 +171,61 @@ func TestParserNumbers(t *testing.T) {
 				got, tc.expected)
 		}
 	}
+}
+
+func TestIdentifier(t *testing.T) {
+	for _, tc := range []struct {
+		input       string
+		expected    ast.Node
+		expectedErr error
+	}{
+		{
+			input:    "_",
+			expected: ast.NewIdent(utf16.S("_")),
+		},
+		{
+			input:    "$",
+			expected: ast.NewIdent(utf16.S("$")),
+		},
+		{
+			input:    "console",
+			expected: ast.NewIdent(utf16.S("console")),
+		},
+		{
+			input:    "angular",
+			expected: ast.NewIdent(utf16.S("angular")),
+		},
+		{
+			input:    "___hyped___",
+			expected: ast.NewIdent(utf16.S("___hyped___")),
+		},
+		{
+			input: "a$b$c",
+			expected: ast.NewIdent(utf16.S("a$b$c")),
+		},
+	} {
+		tree, err := parser.Parse("tests.js", tc.input)
+		assert.EqualErrs(t, tc.expectedErr, err, "parser err")
+
+		if err != nil {
+			continue
+		}
+
+		nodes := tree.Nodes
+		if len(nodes) != 1 {
+			t.Fatalf("id tests must be isolated: %v", nodes)
+		}
+
+		got := nodes[0]
+		if got.Type() != tc.expected.Type() {
+			t.Fatalf("type differ: %d != %d (%s)",
+				got.Type(), tc.expected.Type(), tc.input)
+		}
+
+		if !tc.expected.Equal(got) {
+			t.Fatalf("Identifier differ: '%s' != '%s'",
+				got, tc.expected)
+		}
+	}
+
 }

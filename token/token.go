@@ -18,6 +18,12 @@ const (
 	Minus
 	Plus
 
+	Dot
+	LParen
+	RParen
+
+	Ident
+
 	EOF
 )
 
@@ -29,6 +35,10 @@ var names = map[Type]string{
 	String:      "String",
 	Minus:       "-",
 	Plus:        "+",
+	Dot:         ".",
+	LParen:      "(",
+	RParen:      ")",
+	Ident:       "Ident",
 	EOF:         "EOF",
 }
 

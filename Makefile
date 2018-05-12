@@ -1,4 +1,4 @@
-.PHONY: all build test
+.PHONY: all build test vendor
 
 all: build test
 

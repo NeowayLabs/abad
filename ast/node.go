@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/NeowayLabs/abad/internal/utf16"
 	"github.com/NeowayLabs/abad/token"
 )
 
@@ -32,6 +33,8 @@ type (
 		Operator token.Type
 		Operand  Node
 	}
+
+	Ident utf16.Str
 )
 
 const (
@@ -41,6 +44,7 @@ const (
 
 	NodeNumber
 	NodeUnaryExpr
+	NodeIdent
 
 	exprEnd
 )
@@ -139,6 +143,39 @@ func (a *UnaryExpr) Equal(other Node) bool {
 	}
 
 	return a.Operand.Equal(o.Operand)
+}
+
+func NewIdent(ident utf16.Str) Ident {
+	return Ident(ident)
+}
+
+func (_ Ident) Type() NodeType {
+	return NodeIdent
+}
+
+func (an Ident) String() string {
+	return utf16.Decode(utf16.Str(an))
+}
+
+func (an Ident) Equal(other Node) bool {
+	if an.Type() != other.Type() {
+		return false
+	}
+
+	astr := utf16.Str(an)
+	ostr := utf16.Str(other.(Ident))
+	
+	if len(astr) != len(ostr) {
+		return false
+	}
+
+	for i := 0; i < len(astr); i++ {
+		if astr[i] != ostr[i] {
+			return false
+		}
+	}
+
+	return true
 }
 
 func floatEquals(a, b float64) bool {

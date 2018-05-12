@@ -93,6 +93,9 @@ func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 		keywordParsers,
 		literalParsers,
 		unaryParsers,
+		map[token.Type]parserfn{
+			token.Ident: parseIdentExpr,
+		},
 	} {
 		parser, hasparser = parsers[tok.Type]
 		if hasparser {
@@ -133,8 +136,7 @@ func (p *Parser) scry(amount int) []lexer.Tokval {
 		panic("lookahead > 2")
 	}
 
-	sz := len(p.lookahead)
-	for i := 0; i < amount-sz; i++ {
+	for i := 0; i < amount; i++ {
 		val := p.next()
 		p.lookahead = append(p.lookahead, val)
 		if val.Type == token.EOF {
@@ -206,6 +208,44 @@ func parseUnary(p *Parser) (ast.Node, error) {
 	}
 
 	return ast.NewUnaryExpr(tok.Type, expr), nil
+}
+
+func parseIdentExpr(p *Parser) (ast.Node, error) {
+	tok := p.lookahead[0]
+	p.scry(1)
+	next := p.lookahead[1]
+
+	// eg.: console.
+	if next.Type == token.Dot {
+		return parseMemberExpr(p)
+	}
+
+	// eg.: console(
+	if next.Type == token.LParen {
+		return parseCallExpr(p)
+	}
+
+	if next.Type != token.EOF {
+		return nil, p.errorf(next, "unexpected token '%s'", next)
+	}
+
+	p.forget(2)
+
+	return ast.NewIdent(tok.Value), nil
+}
+
+// state:
+// lookahead[0] = token.Ident
+// lookahead[1] = token.Dot
+func parseMemberExpr(p *Parser) (ast.Node, error) {
+	return nil, nil
+}
+
+// state:
+// lookahead[0] = token.Ident
+// lookahead[1] = token.LParen
+func parseCallExpr(p *Parser) (ast.Node, error) {
+	return nil, nil
 }
 
 // TODO(i4k): implement line and column of error

@@ -5,29 +5,31 @@ import (
 
 	"github.com/NeowayLabs/abad/ast"
 	"github.com/NeowayLabs/abad/parser"
-	"github.com/NeowayLabs/abad/types"
 	"github.com/NeowayLabs/abad/token"
+	"github.com/NeowayLabs/abad/types"
 )
 
 type (
-	// Obj types
-	Obj interface {
-		String() string
-	}
-
 	// Abad interpreter, a very bad one.
 	Abad struct {
 		filename string
+
+		vars map[string]types.Value
 	}
 )
 
 func NewAbad(filename string) *Abad {
 	return &Abad{
 		filename: filename,
+		vars: map[string]types.Value{
+			// TODO(i4k): remove
+			// used to test reference until var decl is implemented
+			"a": types.Number(666.),
+		},
 	}
 }
 
-func (a *Abad) Eval(code string) (Obj, error) {
+func (a *Abad) Eval(code string) (types.Value, error) {
 	program, err := parser.Parse(a.filename, code)
 	if err != nil {
 		return nil, err
@@ -36,13 +38,16 @@ func (a *Abad) Eval(code string) (Obj, error) {
 	return a.eval(program)
 }
 
-func (a *Abad) eval(n ast.Node) (Obj, error) {
+func (a *Abad) eval(n ast.Node) (types.Value, error) {
 	switch n.Type() {
 	case ast.NodeProgram:
 		return a.evalProgram(n.(*ast.Program))
 	case ast.NodeNumber:
 		val := n.(ast.Number)
 		return types.Number(val.Value()), nil
+	case ast.NodeIdent:
+		val := n.(ast.Ident)
+		return a.evalIdentExpr(val)
 	case ast.NodeUnaryExpr:
 		expr := n.(*ast.UnaryExpr)
 		return a.evalUnaryExpr(expr)
@@ -52,9 +57,9 @@ func (a *Abad) eval(n ast.Node) (Obj, error) {
 	return nil, nil
 }
 
-func (a *Abad) evalProgram(stmts *ast.Program) (Obj, error) {
+func (a *Abad) evalProgram(stmts *ast.Program) (types.Value, error) {
 	var (
-		result Obj
+		result types.Value
 		err    error
 	)
 	for _, node := range stmts.Nodes {
@@ -67,7 +72,7 @@ func (a *Abad) evalProgram(stmts *ast.Program) (Obj, error) {
 	return result, nil
 }
 
-func (a *Abad) evalUnaryExpr(expr *ast.UnaryExpr) (Obj, error) {
+func (a *Abad) evalUnaryExpr(expr *ast.UnaryExpr) (types.Value, error) {
 	op := expr.Operator
 	obj, err := a.eval(expr.Operand)
 	if err != nil {
@@ -97,4 +102,13 @@ func (a *Abad) evalUnaryExpr(expr *ast.UnaryExpr) (Obj, error) {
 	}
 
 	return num, nil
+}
+
+func (a *Abad) evalIdentExpr(ident ast.Ident) (types.Value, error) {
+	val, ok := a.vars[ident.String()]
+	if !ok {
+		return nil, fmt.Errorf("%s is not defined", ident)
+	}
+
+	return val, nil
 }

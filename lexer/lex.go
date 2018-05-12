@@ -33,9 +33,10 @@ var mock = map[string][]Tokval{
 	"1234.":              onetok(token.Decimal, "1234."),
 	"0.12345":            onetok(token.Decimal, "0.12345"),
 	"0.a":                onetok(token.Illegal, "0.a"),
+	"0.1.":               onetok(token.Illegal, "0.1."),
 	"12.13.":             onetok(token.Illegal, "12.13."),
 	"1.0e10":             onetok(token.Decimal, "1.0e10"),
-	"1.0e1":             onetok(token.Decimal, "1.0e1"),
+	"1.0e1":              onetok(token.Decimal, "1.0e1"),
 	".1e10":              onetok(token.Decimal, ".1e10"),
 	"1e10":               onetok(token.Decimal, "1e10"),
 	"1e-10":              onetok(token.Decimal, "1e-10"),
@@ -64,6 +65,17 @@ var mock = map[string][]Tokval{
 		tok(token.Minus, "-"), tok(token.Plus, "+"),
 		tok(token.Minus, "-"), tok(token.Plus, "+"),
 		tok(token.Decimal, "0")),
+
+	// Identifiers
+	// https://es5.github.io/#x7.6
+	"_":           onetok(token.Ident, "_"), // most important identifier of js
+	"$":           onetok(token.Ident, "$"), // the second one
+	"self":        onetok(token.Ident, "self"),
+	"console":     onetok(token.Ident, "console"),
+	"angular":     onetok(token.Ident, "angular"),
+	"___hyped___": onetok(token.Ident, "___hyped___"),
+	"a$b$c":       onetok(token.Ident, "a$b$c"),
+	"a":           onetok(token.Ident, "a"),
 }
 
 // TODO: remove me
