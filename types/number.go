@@ -9,6 +9,14 @@ type (
 	Number float64
 )
 
+var ε = math.Nextafter(1, 2) - 1
+
+func NewNumber(a float64) Number {
+	return Number(a)
+}
+
+func (a Number) Value() float64 { return float64(a) }
+
 func (a Number) String() string {
 	return strconv.FormatFloat(float64(a), 'f', -1, 64)
 }
@@ -46,4 +54,21 @@ func (a Number) ToNumber() Number {
 func (a Number) ToString() String {
 	val := strconv.FormatFloat(float64(a), 'f', -1, 64)
 	return NewString(val)
+}
+
+func (_ Number) Kind() Kind {
+	return KindNumber
+}
+
+func (a Number) Equal(b Number) bool {
+	if math.IsNaN(a.Value()) ||
+		math.IsNaN(b.Value()) {
+		return false
+	}
+
+	return equalValues(a.Value(), b.Value())
+}
+
+func equalValues(a, b float64) bool {
+	return math.Abs(a-b) < ε && math.Abs(b-a) < ε
 }
