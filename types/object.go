@@ -23,7 +23,9 @@ type (
 	//   });
 	PropertyDescriptor *Object
 
+	// Object is a collection of named objects.
 	Object struct {
+		// Class is the kind of object
 		Class      string
 		Extensible bool
 
@@ -43,37 +45,63 @@ var (
 )
 
 func NewDataPropDesc(value Value, wrt, enum, cfg bool) *Object {
-	o := &Object{
-		props: make(map[string]*Object),
-	}
-
-	o.props["value"] = value
-	o.props["writable"] = Bool(wrt)
-	o.props["enumerable"] = Bool(enum)
-	o.props["configurable"] = Bool(cfg)
+	o := newRawObject()
+	o.put(valueAttr, value)
+	o.put(writableAttr, Bool(wrt))
+	o.put(enumAttr, Bool(enum))
+	o.put(cfgAttr, Bool(cfg))
 	return o
 }
 
-func NewObject(proto Value) *Object {
-	o := &Object{
+func NewAcessorPropDesc(get, set Value, enum, cfg bool) *Object {
+	o := newRawObject()
+	o.put(getAttr, get)
+	o.put(setAttr, set)
+	o.put(enumAttr, Bool(enum))
+	o.put(cfgAttr, Bool(cfg))
+	return o
+}
+
+// https://es5.github.io/#x8.6.1
+func DefaultDataPropDesc() *Object {
+	return NewDataPropDesc(Undef, false, false, false)
+}
+
+// https://es5.github.io/#x8.6.1
+func DefaultAcessorPropDesc() *Object {
+	return NewAcessorPropDesc(Undef, Undef, false, false)
+}
+
+// NewObject creates a new Object using proto as
+// prototype.
+func NewObject(proto Value) (*Object, error) {
+	o := newRawObject()
+	err = o.DefineOwnProperty(protoAttr,
+		NewDataPropDesc(proto, false, true, false), true)
+	if err != nil {
+		return nil, err
+	}
+	return o, nil
+}
+
+// newRawObject creates a prototypeless object.
+// Cannot be exposed to ECMAScript.
+func newRawObject() *Object {
+	return &Object{
 		props: make(map[string]*Object),
 	}
-
-	err = o.DefineOwnProperty(protoAttr, 
-			NewDataPropDesc(proto, false, true,false), true)
-	return o
 }
 
 func (o *Object) Get(name utf16.Str) (Value, error) {
 	if o.Class == "Function" {
-		return o.getfn(name)
+		return o.functionGet(name)
 	}
-	return o.get(name)
+	return o.genericGet(name)
 }
 
-// get is the default [[Get]] implementation for objects.
+// genericGet is the default [[Get]] implementation for objects.
 // https://es5.github.io/#x8.12.3
-func (o *Object) get(name utf16.Str) (Value, error) {
+func (o *Object) genericGet(name utf16.Str) (Value, error) {
 	desc := o.GetProperty(name)
 	if desc.Kind() == KindUndefined {
 		return Undef, nil
@@ -99,15 +127,16 @@ func (o *Object) get(name utf16.Str) (Value, error) {
 	return getter.Call(o), nil
 }
 
-func (o *Object) getfn(name utf16.Str) (Value, error) {
-	v, err := o.get(name)
+// functionGet implements [[Get]] for Function.
+func (o *Object) functionGet(name utf16.Str) (Value, error) {
+	v, err := o.genericGet(name)
 	if err != nil {
 		return nil, err
 	}
 
 	if name.Equal(utf16.S("caller")) {
 		// TODO(i4k): throw TypeError
-		return nil, fmt.Errorf("TypeError exception")
+		return nil, NewTypeError("property caller is unaceptable")
 	}
 
 	return v, nil
@@ -117,22 +146,186 @@ func (o *Object) Put(name utf16.Str, val Value, failure bool) error {
 	return nil
 }
 
+func (o *Object) put(name utf16.Str, val Value) {
+	o.props[name.String()] = val
+}
+
 func (o *Object) CanPut(name utf16.Str) bool {
 	return false
 }
 
 func (o *Object) GetOwnProperty(name utf16.Str) Value {
-	return Undef
+	prop := o.Get(name)
+	if prop == Undef {
+		return Undef
+	}
+
+	desc := newRawObject()
+	if IsDataDescriptor(prop) {
+		desc.put(valueAttr, prop.Get(valueAttr))
+	}
 }
 
 func (o *Object) GetProperty(name utf16.Str) Value {
 	return Undef
 }
 
+// https://es5.github.io/#x8.12.9
 func (o *Object) DefineOwnProperty(
-	name utf16.Str, desc Value, failure bool,
-) error {
-	return nil
+	name utf16.Str, desc Value, throw bool,
+) (bool, error) {
+	// throw exception if requested, otherwise quietly returns
+	retOrThrow := func(err error) (bool, error) {
+		if err != nil {
+			if throw {
+				return false, err
+			}
+
+			return false, nil
+		}
+
+		return true, nil
+	}
+
+	if desc.Kind() != KindObject {
+		return retOrThrow(NewTypeError(
+			"DefineOwnProperty expects a PropertyDescriptor object",
+		))
+	}
+
+	objdesc := desc.(*Object)
+
+	current := o.GetOwnProperty(name)
+	if current.Kind() != KindObject {
+		panic("internal error: property is not a descriptor")
+	}
+
+	extensible := o.Extensible
+	if StrictEqual(current, Undef) {
+		if !extensible {
+			return throw(NewTypeError("Object %s is not extensible",
+				o.Class))
+		}
+
+		return o.setOwnProperty()
+	}
+
+	if isAbsentDescriptor(objdesc) {
+		return true, nil
+	}
+
+	// uses internal SameValue(x, y)
+	// TODO
+	if isSameDescriptor(objdesc, current) {
+		return true, nil
+	}
+
+	curCfg := current.Get(cfgAttr).ToBool()
+	curEnum := current.Get(enumAttr).ToBool()
+	curWr := current.Get(writableAttr).ToBool()
+
+	descCfg := objdesc.Get(cfgAttr).ToBool()
+	descEnum := objdesc.Get(enumAttr).ToBool()
+	descWr := objdesc.Get(writableAttr).ToBool()
+
+	if !curCfg {
+		if descCfg {
+			return throw(NewTypeError("configurable is false"))
+		}
+
+		if descEnum != curEnum {
+			return throw(
+				NewTypeError("enumerable dont match for configuration disabled"),
+			)
+		}
+	}
+
+	if IsDataDescriptor(current) != IsDataDescriptor(objdesc) {
+		if !curCfg {
+			return throw(NewTypeError("configurable is false, cannot" +
+				" change from data descriptor to acessor, and vice-versa"))
+		}
+
+		var newdesc *Object
+
+		if IsDataDescriptor(current) {
+			newdesc = DefaultAcessorPropDesc()
+		} else {
+			newdesc = DefaultDataPropDesc()
+		}
+
+		err := newdesc.Put(enumAttr, curEnum, shouldThrow)
+		if err != nil {
+			return throw(err)
+		}
+
+		err = newdesc.Put(cfgAttr, curCfg, shouldThrow)
+		if err != nil {
+			return throw(err)
+		}
+
+		current = newdesc
+	} else if IsDataDescriptor(current) && IsDataDescriptor(objdesc) {
+		if !curCfg {
+			if !curWr && descWr {
+				return throw(
+					NewTypeError("configurable is false and writable mismatch"),
+				)
+			}
+
+			if !curWr {
+				if objdesc.HasProperty(valueAttr) &&
+					!SameValue(current.Get(valueAttr), objdesc.Get(valueAttr)) {
+					return throw(NewTypeError("writable is false"))
+				}
+			}
+		}
+	}
+
+	err := copyProperties(current, objdesc)
+	if err != nil {
+		return throw(NewTypeError(err.Error()))
+	}
+
+	return throw(o.Put(name, current, throw))
+}
+
+// setOwnProperty just sets the property. Calls from ECMAScript
+// must invoke DefineOwnProperty that does the correct validations.
+func (o *Object) setOwnProperty(name utf16.Str, desc *Object, throw bool) (bool, error) {
+	retOrThrow := func(err error) (bool, error) {
+		if err != nil {
+			if throw {
+				return false, err
+			}
+			return false, nil
+		}
+
+		return true, nil
+	}
+
+	if IsGenericDescriptor(desc) ||
+		IsDataDescriptor(desc) {
+		newdesc := DefaultDataDescProp()
+		err := copyDataDesc(newdesc, desc, throw)
+		if err != nil {
+			return retOrThrow(err)
+		}
+
+		return retOrThrow(o.Put(name, newdesc, throw))
+	}
+
+	if !IsAcessorDescriptor(desc) {
+		panic("descriptor must be generic, data or acessor")
+	}
+
+	newdesc := DefaultAcessorPropDesc()
+	err := copyAcessorDesc(newdesc, desc, throw)
+	if err != nil {
+		return retOrThrow(err)
+	}
+
+	return retOrThrow(o.Put(name, newdesc, throw))
 }
 
 func (o *Object) HasProperty(name utf16.Str) bool {
@@ -145,4 +338,25 @@ func (o *Object) Delete(name utf16.Str, failure bool) error {
 
 func (o *Object) DefaultValue(hint utf16.Str) Value {
 	return Undef
+}
+
+func copyDataDesc(dst, src *Object, throw bool) error {
+	values := []utf16.Str{
+		valueAttr,
+		writableAttr,
+		enumAttr,
+		cfgAttr,
+	}
+
+	for _, attr := range values {
+		v := src.Get(attr)
+		if !StrictEqual(v, Undef) {
+			err := dst.Put(attr, v, throw)
+			if err != nil && throw {
+				return false, err
+			}
+		}
+	}
+
+	return nil
 }
