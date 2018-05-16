@@ -16,6 +16,7 @@ type (
 		IsTrue() bool
 		IsFalse() bool
 
+		ToPrimitive(hint Kind) (Value, error)
 		ToBool() Bool
 		ToNumber() Number
 		ToString() String
@@ -24,10 +25,11 @@ type (
 
 const (
 	KindUndefined Kind = iota
+	KindNull
 	KindNumber
 	KindString
 	KindBool
-	KindNull
+	KindObject
 )
 
 func StrictEqual(a, b Value) bool {
@@ -60,6 +62,15 @@ func StrictEqual(a, b Value) bool {
 	}
 
 	// TODO(i4k): implement Object comparison
+
+	return false
+}
+
+func IsPrimitive(val Value) bool {
+	switch val.Kind() {
+	case KindUndefined, KindNull, KindNumber, KindString, KindBool:
+		return true
+	}
 
 	return false
 }

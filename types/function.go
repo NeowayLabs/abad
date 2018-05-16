@@ -1,21 +1,28 @@
 package types
 
-import "github.com/NeowayLabs/abad/envrec"
+import (
+	"github.com/NeowayLabs/abad/ast"
+)
 
-func NewFunctionProto() *Object {
+func NewFunctionProto() (*Object, error) {
 	proto := NewObject(Null)
 	proto.Extensible = true
-	proto.Length = 0
-	return proto
+	return proto, nil
 }
 
 func NewFunction(
-	params []utf16.S, body *ast.Body, scope *envrec.Decl, strict bool,
-) *Object {
-	o := NewObject(NewFunctionProto())
+	params []ast.Ident, body *ast.Program, scope *Object, strict bool,
+) (*Object, error) {
+	proto, err := NewFunctionProto()
+	if err != nil {
+		return nil, err
+	}
+
+	o := NewObject(proto)
 	o.Class = "Function"
 	o.Scope = scope
 	o.Params = params
 	o.Code = body
 	o.Extensible = true
+	return o, nil
 }

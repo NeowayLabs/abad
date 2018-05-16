@@ -1,35 +1,29 @@
 package types
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+
+	"github.com/NeowayLabs/abad/ast"
+	"github.com/NeowayLabs/abad/internal/utf16"
+)
 
 type (
-	// PropertyDescriptor describes an Object property.
-	// An Object is a collection of properties and each
-	// property is either a `Named Data Property`, a
-	// `Named Acessor Property` or an internal property.
-	// PropertyDescriptor describes all of them, why?
-	// By ECMA 8.6, the property type should be interpreted
-	// by their attributes set (see IsAcessorDescriptor in 8.10.1
-	// and IsDataDescriptor in 8.10.2).
-	// A Named Data Property associates a name with an ECMAScript
-	// value. Eg.:
-	//   this.name = "value";
-	// The code above is the same:
-	//   Object.defineOwnProperty(this, {
-	//       value: "value",
-	//       writable: true,
-	//       enumerable: true,
-	//       configurable: true
-	//   });
-	PropertyDescriptor *Object
-
 	// Object is a collection of named objects.
 	Object struct {
 		// Class is the kind of object
 		Class      string
 		Extensible bool
 
-		props map[string]*Object
+		Scope  *Object
+		Params []ast.Ident
+		Code   *ast.Program
+
+		props map[string]*PropertyDescriptor
+	}
+
+	callable interface {
+		Call(this *Object, args []Value) Value
 	}
 )
 
@@ -42,54 +36,129 @@ var (
 	cfgAttr      = utf16.S("configurable")
 
 	protoAttr = utf16.S("prototype")
+
+	S = utf16.S
 )
 
-func NewDataPropDesc(value Value, wrt, enum, cfg bool) *Object {
-	o := newRawObject()
-	o.put(valueAttr, value)
-	o.put(writableAttr, Bool(wrt))
-	o.put(enumAttr, Bool(enum))
-	o.put(cfgAttr, Bool(cfg))
-	return o
-}
-
-func NewAcessorPropDesc(get, set Value, enum, cfg bool) *Object {
-	o := newRawObject()
-	o.put(getAttr, get)
-	o.put(setAttr, set)
-	o.put(enumAttr, Bool(enum))
-	o.put(cfgAttr, Bool(cfg))
-	return o
-}
-
-// https://es5.github.io/#x8.6.1
-func DefaultDataPropDesc() *Object {
-	return NewDataPropDesc(Undef, false, false, false)
-}
-
-// https://es5.github.io/#x8.6.1
-func DefaultAcessorPropDesc() *Object {
-	return NewAcessorPropDesc(Undef, Undef, false, false)
+func DefaultPrototypeDesc() *PropertyDescriptor {
+	return NewDataPropDesc(Null, true, false, false)
 }
 
 // NewObject creates a new Object using proto as
 // prototype.
-func NewObject(proto Value) (*Object, error) {
-	o := newRawObject()
-	err = o.DefineOwnProperty(protoAttr,
+func NewObject(proto Value) *Object {
+	o := NewRawObject()
+
+	// error ignored because it does not fail if
+	// there's no previous properties.
+	o.DefineOwnPropertyP(protoAttr,
 		NewDataPropDesc(proto, false, true, false), true)
-	if err != nil {
-		return nil, err
-	}
-	return o, nil
+	return o
 }
 
-// newRawObject creates a prototypeless object.
-// Cannot be exposed to ECMAScript.
-func newRawObject() *Object {
-	return &Object{
-		props: make(map[string]*Object),
+// NewRawObject creates a prototypeless object.
+func NewRawObject() *Object {
+	obj := &Object{
+		props: make(map[string]*PropertyDescriptor),
 	}
+
+	obj.props["prototype"] = DefaultPrototypeDesc()
+	return obj
+}
+
+func (o *Object) IsFalse() bool { return false }
+func (o *Object) IsTrue() bool  { return true }
+func (_ *Object) Kind() Kind    { return KindObject }
+func (_ *Object) ToBool() Bool  { return True }
+func (o *Object) ToNumber() Number {
+	primVal, err := o.ToPrimitive(KindNumber)
+	if err != nil {
+		return NewNumber(math.NaN())
+	}
+
+	return primVal.ToNumber()
+}
+
+func (o *Object) ToString() String {
+	primVal, err := o.ToPrimitive(KindString)
+	if err != nil {
+		return NewString("")
+	}
+
+	return primVal.ToString()
+}
+
+func (o *Object) ToPrimitive(hint Kind) (Value, error) {
+	return o.DefaultValue(hint)
+}
+
+func (o *Object) ToPropertyDescriptor() *PropertyDescriptor {
+	var (
+		value, get, set     Value
+		writable, enum, cfg Value
+	)
+
+	if o.HasProperty(valueAttr) {
+		value, _ = o.Get(valueAttr)
+	}
+
+	if o.HasProperty(writableAttr) {
+		b, _ := o.Get(writableAttr)
+		writable = b.ToBool()
+	}
+
+	if o.HasProperty(getAttr) {
+		get, _ = o.Get(getAttr)
+	}
+
+	if o.HasProperty(setAttr) {
+		set, _ = o.Get(getAttr)
+	}
+
+	if o.HasProperty(enumAttr) {
+		b, _ := o.Get(enumAttr)
+		enum = b.ToBool()
+	}
+
+	if o.HasProperty(cfgAttr) {
+		b, _ := o.Get(cfgAttr)
+		cfg = b.ToBool()
+	}
+
+	if enum == nil {
+		enum = DefEnumerable
+	}
+
+	if cfg == nil {
+		cfg = DefConfigurable
+	}
+
+	if value != nil || writable != nil {
+		if writable == nil {
+			writable = DefWritable
+		}
+
+		if value == nil {
+			value = DefValue
+		}
+
+		return NewDataPropDesc(value, writable.IsTrue(), enum.IsTrue(), cfg.IsTrue())
+	} else if get != nil || set != nil {
+		if get == nil {
+			get = DefGet
+		}
+
+		if set == nil {
+			set = DefSet
+		}
+
+		return NewAcessorPropDesc(get, set, enum.IsTrue(), cfg.IsTrue())
+	}
+
+	prop := NewGenericPropDesc()
+	prop.put("enumerable", enum)
+	prop.put("configurable", cfg)
+	return prop
 }
 
 func (o *Object) Get(name utf16.Str) (Value, error) {
@@ -102,29 +171,30 @@ func (o *Object) Get(name utf16.Str) (Value, error) {
 // genericGet is the default [[Get]] implementation for objects.
 // https://es5.github.io/#x8.12.3
 func (o *Object) genericGet(name utf16.Str) (Value, error) {
-	desc := o.GetProperty(name)
-	if desc.Kind() == KindUndefined {
-		return Undef, nil
+	desc, ok := o.getProperty(name)
+	if !ok {
+		return Undefined, nil
 	}
 
-	if isDataDescriptor(desc) {
-		return desc.Get(valueAttr)
+	if desc.IsDataDescriptor() {
+		return desc.Value(), nil
 	}
 
-	if !isAcessorDescriptor(desc) {
+	if !desc.IsAcessorDescriptor() {
 		panic("descriptor is not data not acessor")
 	}
 
-	getter, _ := desc.Get(getAttr)
-	if getter.Kind() == KindUndefined {
-		return Undef, nil
+	value := desc.Get()
+	if StrictEqual(value, Undefined) {
+		return Undefined, nil
 	}
 
+	getter := value.(*Object)
 	if getter.Class == "Function" {
 		panic(fmt.Sprintf("object %s is not callable", getter))
 	}
 
-	return getter.Call(o), nil
+	return getter.Call(o, []Value{}), nil
 }
 
 // functionGet implements [[Get]] for Function.
@@ -136,7 +206,7 @@ func (o *Object) functionGet(name utf16.Str) (Value, error) {
 
 	if name.Equal(utf16.S("caller")) {
 		// TODO(i4k): throw TypeError
-		return nil, NewTypeError("property caller is unaceptable")
+		return nil, NewTypeErrorS("property caller is unaceptable")
 	}
 
 	return v, nil
@@ -146,7 +216,12 @@ func (o *Object) Put(name utf16.Str, val Value, failure bool) error {
 	return nil
 }
 
-func (o *Object) put(name utf16.Str, val Value) {
+func (o *Object) get(name utf16.Str) (*PropertyDescriptor, bool) {
+	v, ok := o.props[name.String()]
+	return v, ok
+}
+
+func (o *Object) put(name utf16.Str, val *PropertyDescriptor) {
 	o.props[name.String()] = val
 }
 
@@ -154,25 +229,91 @@ func (o *Object) CanPut(name utf16.Str) bool {
 	return false
 }
 
+func (o *Object) Call(this *Object, args []Value) Value {
+	return Undefined
+}
+
+
+
+func (o *Object) getOwnProperty(name utf16.Str) (*PropertyDescriptor, bool) {
+	prop, ok := o.get(name)
+	if !ok {
+		return nil, false
+	}
+	return prop, true
+}
+
 func (o *Object) GetOwnProperty(name utf16.Str) Value {
-	prop := o.Get(name)
-	if prop == Undef {
-		return Undef
+	prop, ok := o.get(name)
+	if !ok {
+		return Undefined
 	}
 
-	desc := newRawObject()
-	if IsDataDescriptor(prop) {
-		desc.put(valueAttr, prop.Get(valueAttr))
+	return prop.ToObject()
+}
+
+func (o *Object) getProperty(name utf16.Str) (*PropertyDescriptor, bool) {
+	prop, ok := o.getOwnProperty(name)
+	if ok {
+		return prop, true
 	}
+
+	protodesc, ok := o.getOwnProperty(protoAttr)
+	if !ok {
+		return nil, false
+	}
+
+	if !protodesc.HasValue() {
+		return nil, false
+	}
+
+	protoval := protodesc.Value()
+
+	if protoval.Kind() != KindObject {
+		return nil, false
+	}
+
+	obj := protoval.(*Object)
+
+	return obj.getProperty(name)
 }
 
 func (o *Object) GetProperty(name utf16.Str) Value {
-	return Undef
+	prop := o.GetOwnProperty(name)
+	if !StrictEqual(prop, Undefined) {
+		return prop
+	}
+
+	proto := o.GetOwnProperty(protoAttr)
+	if proto.Kind() != KindObject {
+		return Undefined
+	}
+
+	obj := proto.(*Object)
+	return obj.GetProperty(name)
+}
+
+func (o *Object) DefineOwnProperty(
+	name utf16.Str, desc Value, throw bool,
+) (bool, error) {
+	if desc.Kind() != KindObject {
+		if throw {
+			return false, NewTypeErrorS(
+				"DefineOwnProperty expects a PropertyDescriptor object",
+			)
+		}
+
+		return false, nil
+	}
+
+	descobj := desc.(*Object)
+
+	return o.DefineOwnPropertyP(name, descobj.ToPropertyDescriptor(), throw)
 }
 
 // https://es5.github.io/#x8.12.9
-func (o *Object) DefineOwnProperty(
-	name utf16.Str, desc Value, throw bool,
+func (o *Object) DefineOwnPropertyP(
+	name utf16.Str, desc *PropertyDescriptor, throw bool,
 ) (bool, error) {
 	// throw exception if requested, otherwise quietly returns
 	retOrThrow := func(err error) (bool, error) {
@@ -187,102 +328,84 @@ func (o *Object) DefineOwnProperty(
 		return true, nil
 	}
 
-	if desc.Kind() != KindObject {
-		return retOrThrow(NewTypeError(
-			"DefineOwnProperty expects a PropertyDescriptor object",
-		))
-	}
-
-	objdesc := desc.(*Object)
-
-	current := o.GetOwnProperty(name)
-	if current.Kind() != KindObject {
-		panic("internal error: property is not a descriptor")
-	}
-
 	extensible := o.Extensible
-	if StrictEqual(current, Undef) {
+	current, ok := o.getOwnProperty(name)
+	if !ok {
 		if !extensible {
-			return throw(NewTypeError("Object %s is not extensible",
+			return retOrThrow(NewTypeErrorS("Object %s is not extensible",
 				o.Class))
 		}
 
-		return o.setOwnProperty()
+		return o.setOwnProperty(name, desc, throw)
 	}
 
-	if isAbsentDescriptor(objdesc) {
+	if desc.IsAbsentDescriptor() {
 		return true, nil
 	}
 
 	// uses internal SameValue(x, y)
 	// TODO
-	if isSameDescriptor(objdesc, current) {
+	if IsSameDescriptor(desc, current) {
 		return true, nil
 	}
 
-	curCfg := current.Get(cfgAttr).ToBool()
-	curEnum := current.Get(enumAttr).ToBool()
-	curWr := current.Get(writableAttr).ToBool()
+	curCfg := current.Cfg().ToBool()
+	curEnum := current.Enum().ToBool()
+	curWr := current.Writable().ToBool()
 
-	descCfg := objdesc.Get(cfgAttr).ToBool()
-	descEnum := objdesc.Get(enumAttr).ToBool()
-	descWr := objdesc.Get(writableAttr).ToBool()
+	descCfg := desc.Cfg().ToBool()
+	descEnum := desc.Enum().ToBool()
+	descWr := desc.Writable().ToBool()
 
 	if !curCfg {
 		if descCfg {
-			return throw(NewTypeError("configurable is false"))
+			return retOrThrow(NewTypeErrorS("configurable is false"))
 		}
 
 		if descEnum != curEnum {
-			return throw(
-				NewTypeError("enumerable dont match for configuration disabled"),
+			return retOrThrow(
+				NewTypeErrorS("enumerable dont match for configuration disabled"),
 			)
 		}
 	}
 
-	if IsDataDescriptor(current) != IsDataDescriptor(objdesc) {
+	if current.IsDataDescriptor() != desc.IsDataDescriptor() {
 		if !curCfg {
-			return throw(NewTypeError("configurable is false, cannot" +
+			return retOrThrow(NewTypeErrorS("configurable is false, cannot" +
 				" change from data descriptor to acessor, and vice-versa"))
 		}
 
-		var newdesc *Object
+		var newdesc *PropertyDescriptor
 
-		if IsDataDescriptor(current) {
+		if current.IsDataDescriptor() {
 			newdesc = DefaultAcessorPropDesc()
 		} else {
 			newdesc = DefaultDataPropDesc()
 		}
 
-		err := newdesc.Put(enumAttr, curEnum, shouldThrow)
-		if err != nil {
-			return throw(err)
-		}
-
-		err = newdesc.Put(cfgAttr, curCfg, shouldThrow)
-		if err != nil {
-			return throw(err)
-		}
+		newdesc.SetEnum(curEnum)
+		newdesc.SetCfg(curCfg)
 
 		current = newdesc
-	} else if IsDataDescriptor(current) && IsDataDescriptor(objdesc) {
+	} else if current.IsDataDescriptor() && desc.IsDataDescriptor() {
 		if !curCfg {
 			if !curWr && descWr {
-				return throw(
-					NewTypeError("configurable is false and writable mismatch"),
+				return retOrThrow(
+					NewTypeErrorS("configurable is false and writable mismatch"),
 				)
 			}
 
 			if !curWr {
-				if objdesc.HasProperty(valueAttr) &&
-					!SameValue(current.Get(valueAttr), objdesc.Get(valueAttr)) {
-					return throw(NewTypeError("writable is false"))
+				if desc.HasValue() &&
+					//TODO(i4k): SameValue() ?
+					!StrictEqual(current.Value(), desc.Value()) {
+					return retOrThrow(NewTypeErrorS("writable is false"))
 				}
 			}
 		}
 	}
 
-	err := copyProperties(current, objdesc)
+	err := copyProperties(current, desc)
 	if err != nil {
 		return throw(NewTypeError(err.Error()))
 	}
@@ -292,7 +415,7 @@ func (o *Object) DefineOwnProperty(
 
 // setOwnProperty just sets the property. Calls from ECMAScript
 // must invoke DefineOwnProperty that does the correct validations.
-func (o *Object) setOwnProperty(name utf16.Str, desc *Object, throw bool) (bool, error) {
+func (o *Object) setOwnProperty(name utf16.Str, desc *PropertyDescriptor, throw bool) (bool, error) {
 	retOrThrow := func(err error) (bool, error) {
 		if err != nil {
 			if throw {
@@ -304,8 +427,8 @@ func (o *Object) setOwnProperty(name utf16.Str, desc *Object, throw bool) (bool,
 		return true, nil
 	}
 
-	if IsGenericDescriptor(desc) ||
-		IsDataDescriptor(desc) {
+	if desc.IsGenericDescriptor() ||
+		desc.IsDataDescriptor() {
 		newdesc := DefaultDataDescProp()
 		err := copyDataDesc(newdesc, desc, throw)
 		if err != nil {
@@ -329,34 +452,63 @@ func (o *Object) setOwnProperty(name utf16.Str, desc *Object, throw bool) (bool,
 }
 
 func (o *Object) HasProperty(name utf16.Str) bool {
-	return false
+	prop := o.GetProperty()
+	return !StrictEqual(prop, Undefined)
 }
 
+/*
 func (o *Object) Delete(name utf16.Str, failure bool) error {
 	return nil
 }
 
-func (o *Object) DefaultValue(hint utf16.Str) Value {
-	return Undef
-}
+*/
 
-func copyDataDesc(dst, src *Object, throw bool) error {
-	values := []utf16.Str{
-		valueAttr,
-		writableAttr,
-		enumAttr,
-		cfgAttr,
+// https://es5.github.io/#x8.12.8
+func (o *Object) DefaultValue(hint Kind) (Value, error) {
+	if hint == KindString ||
+		hint == KindDate {
+		return o.defaultString()
 	}
 
-	for _, attr := range values {
-		v := src.Get(attr)
-		if !StrictEqual(v, Undef) {
-			err := dst.Put(attr, v, throw)
-			if err != nil && throw {
-				return false, err
-			}
+	return o.defaultNumber()
+}
+
+func (o *Object) defaultString() (Value, error) {
+	toString := o.Get(toStringAttr)
+	if stringify, ok := toString.(callable); ok {
+		str := stringify.Call(o, []Value{})
+		if IsPrimitive(str) {
+			return str, nil
 		}
 	}
 
-	return nil
+	valueOf := o.Get(valueOfAttr)
+	if valueFunc, ok := valueOf.(callable); ok {
+		val := valueFunc.Call(o, []Value{})
+		if IsPrimitive(val) {
+			return val, nil
+		}
+	}
+
+	return nil, NewTypeError("Object has no defaultValue")
+}
+
+func (o *Object) defaultNumber() (Value, error) {
+	valueOf := o.Get(valueofAttr)
+	if valuefunc, ok := valueOf.(callable); ok {
+		val := valuefunc.Call(o, []Value{})
+		if IsPrimitive(val) {
+			return val, nil
+		}
+	}
+
+	tostring := o.Get(tostringAttr)
+	if stringify, ok := tostring.(callable); ok {
+		str := stringify.Call(o, []Value{})
+		if IsPrimitive(str) {
+			return str
+		}
+	}
+
+	return nil, NewTypeError("Object has no defaultValue")
 }

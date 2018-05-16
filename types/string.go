@@ -15,6 +15,8 @@ func NewString(str string) String {
 	return String(utf16.Encode(str))
 }
 
+func (a String) ToPrimitive(hint Kind) (Value, error) { return a, nil }
+
 func (a String) Length() int {
 	return len(a)
 }
