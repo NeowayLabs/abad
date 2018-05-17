@@ -8,37 +8,23 @@ import (
 
 type (
 	TypeError struct {
-		*Object
+		msg string
 	}
 )
 
 var messageAttr = utf16.S("message")
 
-func NewTypeError(msg Value) *TypeError {
-	err := &TypeError{
-		Object: NewRawObject(),
+func NewTypeError(format string, args ...interface{}) TypeError {
+	err := TypeError{
+		msg: fmt.Sprintf(format, args...),
 	}
-
-	err.DefineOwnProperty(messageAttr, NewDataPropDesc(
-		msg, true, false, true,
-	).ToObject(), false)
 
 	return err
 }
 
-func NewTypeErrorS(format string, args ...interface{}) *TypeError {
-	return NewTypeError(NewString(fmt.Sprintf(format, args...)))
-}
-
-func (e *TypeError) Error() string {
-	msg, err := e.Get(messageAttr)
-	if err != nil {
-		msg = NewString("")
-	}
-
+func (e TypeError) Error() string {
 	// TODO(i4k): improve this
-	return fmt.Sprintf("TypeError: %s\n\tat anonymous:1:1",
-		msg.ToString())
+	return fmt.Sprintf("TypeError: %s\n\tat anonymous:1:1", e.msg)
 }
 
 func (e TypeError) Exception() bool { return true }

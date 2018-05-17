@@ -45,6 +45,10 @@ func (a String) ToString() String {
 	return a
 }
 
+func (a String) String() string {
+	return utf16.Str(a).String()
+}
+
 func (a String) Kind() Kind {
 	return KindString
 }

@@ -35,7 +35,7 @@ func TestEnvDecl(t *testing.T) {
 		},
 		{
 			ident: "_",
-			value: types.Undef,
+			value: types.Undefined,
 		},
 		{
 			ident: "$",

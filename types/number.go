@@ -69,6 +69,10 @@ func (a Number) Equal(b Number) bool {
 	return equalValues(a.Value(), b.Value())
 }
 
+func (a Number) ToPrimitive(hint Kind) (Value, error) {
+	return a, nil
+}
+
 func equalValues(a, b float64) bool {
 	return math.Abs(a-b) < ε && math.Abs(b-a) < ε
 }

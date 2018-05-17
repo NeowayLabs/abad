@@ -26,7 +26,7 @@ type (
 
 // Default attribute values
 // Table 7 in https://es5.github.io/#x8.6.1
-const (
+var (
 	DefValue        = Undefined
 	DefWritable     = False
 	DefGet          = Undefined
@@ -50,9 +50,9 @@ func NewDataPropDesc(value Value, wrt, enum, cfg bool) *PropertyDescriptor {
 	p := NewGenericPropDesc()
 
 	p.put("value", value)
-	p.put("writable", wrt)
-	p.put("enumerable", enum)
-	p.put("configurable", cfg)
+	p.put("writable", Bool(wrt))
+	p.put("enumerable", Bool(enum))
+	p.put("configurable", Bool(cfg))
 
 	return p
 }
@@ -65,7 +65,7 @@ func NewAcessorPropDesc(get, set Value, enum, cfg bool) *PropertyDescriptor {
 	p.put("set", set)
 	p.put("enumerable", Bool(enum))
 	p.put("configurable", Bool(cfg))
-	return o
+	return p
 }
 
 // https://es5.github.io/#x8.6.1
@@ -109,6 +109,13 @@ func (p *PropertyDescriptor) HasWritable() bool {
 	return p.has("writable")
 }
 
+func (p *PropertyDescriptor) HasGet() bool {
+	return p.has("get")
+}
+func (p *PropertyDescriptor) HasSet() bool {
+	return p.has("set")
+}
+
 func (p *PropertyDescriptor) HasCfg() bool {
 	return p.has("configurable")
 }
@@ -119,6 +126,18 @@ func (p *PropertyDescriptor) HasEnum() bool {
 
 func (p *PropertyDescriptor) SetValue(v Value) {
 	p.put("value", v)
+}
+
+func (p *PropertyDescriptor) SetWritable(b Bool) {
+	p.put("writable", b)
+}
+
+func (p *PropertyDescriptor) SetGet(get Value) {
+	p.put("get", get)
+}
+
+func (p *PropertyDescriptor) SetSet(set Value) {
+	p.put("set", set)
 }
 
 func (p *PropertyDescriptor) SetEnum(b Bool) {
@@ -181,38 +200,38 @@ func (p *PropertyDescriptor) ToObject() *Object {
 
 	if p.IsDataDescriptor() {
 		if p.has("value") {
-			obj.DefineOwnPropertyP("value", NewDataPropDesc(
+			obj.DefineOwnPropertyP(valueAttr, NewDataPropDesc(
 				p.Value(), true, true, true,
 			), false)
 		}
 
 		if p.has("writable") {
-			obj.DefineOwnPropertyP("writable", NewDataPropDesc(
+			obj.DefineOwnPropertyP(writableAttr, NewDataPropDesc(
 				p.Writable(), true, true, true,
 			), false)
 		}
 	} else if p.IsAcessorDescriptor() {
 		if p.has("get") {
-			obj.DefineOwnPropertyP("get", NewDataPropDesc(
+			obj.DefineOwnPropertyP(getAttr, NewDataPropDesc(
 				p.Get(), true, true, true,
 			), false)
 		}
 
 		if p.has("set") {
-			obj.DefineOwnPropertyP("set", NewDataPropDesc(
+			obj.DefineOwnPropertyP(setAttr, NewDataPropDesc(
 				p.Set(), true, true, true,
 			), false)
 		}
 	}
 
 	if p.has("enumerable") {
-		obj.DefineOwnProperty("enumerable", NewDataPropDesc(
+		obj.DefineOwnPropertyP(enumAttr, NewDataPropDesc(
 			p.Enum(), true, true, true,
 		), false)
 	}
 
 	if p.has("configurable") {
-		obj.DefineOwnProperty("configurable", NewDataPropDesc(
+		obj.DefineOwnPropertyP(cfgAttr, NewDataPropDesc(
 			p.Cfg(), true, true, true,
 		), false)
 	}
@@ -221,12 +240,12 @@ func (p *PropertyDescriptor) ToObject() *Object {
 }
 
 func IsSameDescriptor(a, b *PropertyDescriptor) bool {
-	return a.Value().Equal(b.Value()) &&
-		a.Writable().Equal(b.Writable()) &&
-		a.Enum().Equal(b.Enum()) &&
-		a.Cfg().Equal(b.Cfg()) &&
-		a.Get().Equal(b.Get()) &&
-		a.Set().Equal(b.Set())
+	return StrictEqual(a.Value(), b.Value()) &&
+		StrictEqual(a.Writable(), b.Writable()) &&
+		StrictEqual(a.Enum(), b.Enum()) &&
+		StrictEqual(a.Cfg(), b.Cfg()) &&
+		StrictEqual(a.Get(), b.Get()) &&
+		StrictEqual(a.Set(), b.Set())
 }
 
 func CopyProperties(dst, src *PropertyDescriptor) {
@@ -236,7 +255,7 @@ func CopyProperties(dst, src *PropertyDescriptor) {
 		}
 
 		if src.HasWritable() {
-			dst.SetWritable(src.Writable())
+			dst.SetWritable(src.Writable().(Bool))
 		}
 	} else if src.IsAcessorDescriptor() {
 		if src.HasGet() {
@@ -247,12 +266,12 @@ func CopyProperties(dst, src *PropertyDescriptor) {
 			dst.SetSet(src.Set())
 		}
 	}
-	
+
 	if src.HasEnum() {
-		dst.SetEnum(src.Enum())
+		dst.SetEnum(src.Enum().(Bool))
 	}
 
 	if src.HasCfg() {
-		dst.SetCfg(src.Cfg())
+		dst.SetCfg(src.Cfg().(Bool))
 	}
 }

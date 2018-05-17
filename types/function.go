@@ -6,7 +6,6 @@ import (
 
 func NewFunctionProto() (*Object, error) {
 	proto := NewObject(Null)
-	proto.Extensible = true
 	return proto, nil
 }
 
@@ -23,6 +22,5 @@ func NewFunction(
 	o.Scope = scope
 	o.Params = params
 	o.Code = body
-	o.Extensible = true
 	return o, nil
 }

@@ -46,7 +46,7 @@ func (env *Decl) New(name utf16.Str, candelete bool) error {
 	env.records[name.String()] = Record{
 		mutable:   true,
 		deletable: candelete,
-		value:     types.Undef,
+		value:     types.Undefined,
 	}
 
 	return nil
@@ -80,7 +80,7 @@ func (env *Decl) Get(name utf16.Str, musterr bool) (types.Value, error) {
 			return nil, fmt.Errorf("%s is not defined", name)
 		}
 
-		return types.Undef, nil
+		return types.Undefined, nil
 	}
 
 	return r.value, nil
