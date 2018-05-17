@@ -28,18 +28,17 @@ type (
 )
 
 var (
-	valueAttr    = utf16.S("value")
-	writableAttr = utf16.S("writable")
-	getAttr      = utf16.S("get")
-	setAttr      = utf16.S("set")
-	enumAttr     = utf16.S("enumerable")
-	cfgAttr      = utf16.S("configurable")
-
-	protoAttr    = utf16.S("prototype")
-	toStringAttr = utf16.S("toString")
-	valueOfAttr  = utf16.S("valueOf")
-
 	S = utf16.S
+	valueAttr    = S("value")
+	writableAttr = S("writable")
+	getAttr      = S("get")
+	setAttr      = S("set")
+	enumAttr     = S("enumerable")
+	cfgAttr      = S("configurable")
+
+	protoAttr    = S("prototype")
+	toStringAttr = S("toString")
+	valueOfAttr  = S("valueOf")
 )
 
 func DefaultPrototypeDesc() *PropertyDescriptor {
@@ -214,7 +213,7 @@ func (o *Object) functionGet(name utf16.Str) (Value, error) {
 		return nil, err
 	}
 
-	if name.Equal(utf16.S("caller")) {
+	if name.Equal(S("caller")) {
 		// TODO(i4k): throw TypeError
 		return nil, NewTypeError("property caller is unaceptable")
 	}
