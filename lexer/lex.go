@@ -35,6 +35,7 @@ var mock = map[string][]Tokval{
 	"0.a":                onetok(token.Illegal, "0.a"),
 	"12.13.":             onetok(token.Illegal, "12.13."),
 	"1.0e10":             onetok(token.Decimal, "1.0e10"),
+	"1.0e1":             onetok(token.Decimal, "1.0e1"),
 	".1e10":              onetok(token.Decimal, ".1e10"),
 	"1e10":               onetok(token.Decimal, "1e10"),
 	"1e-10":              onetok(token.Decimal, "1e-10"),
@@ -42,6 +43,7 @@ var mock = map[string][]Tokval{
 	"-1e-10": toks(
 		tok(token.Minus, "-"), tok(token.Decimal, "1e-10"),
 	),
+	"-0":      toks(tok(token.Minus, "-"), tok(token.Decimal, "0")),
 	"+0":      toks(tok(token.Plus, "+"), tok(token.Decimal, "0")),
 	"-1":      toks(tok(token.Minus, "-"), tok(token.Decimal, "1")),
 	"-1234":   toks(tok(token.Minus, "-"), tok(token.Decimal, "1234")),
@@ -55,6 +57,9 @@ var mock = map[string][]Tokval{
 	"-12.13.": toks(tok(token.Minus, "-"), tok(token.Illegal, "12.13.")),
 	"-+0":     toks(tok(token.Minus, "-"), tok(token.Plus, "+"), tok(token.Decimal, "0")),
 	"+-0":     toks(tok(token.Plus, "+"), tok(token.Minus, "-"), tok(token.Decimal, "0")),
+	"-+-0": toks(
+		tok(token.Minus, "-"), tok(token.Plus, "+"),
+		tok(token.Minus, "-"), tok(token.Decimal, "0")),
 	"-+-+0": toks(
 		tok(token.Minus, "-"), tok(token.Plus, "+"),
 		tok(token.Minus, "-"), tok(token.Plus, "+"),
@@ -81,7 +86,7 @@ func Lex(code utf16.Str) <-chan Tokval {
 	tokens := make(chan Tokval)
 	tokvals := mock[code.String()]
 	if len(tokvals) == 0 {
-		panic(fmt.Errorf("mock not implemented for: %s", code))
+		panic(fmt.Errorf("mock not implemented for: '%s'", code))
 	}
 
 	go func() {
