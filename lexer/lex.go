@@ -137,6 +137,16 @@ var mock = map[string][]Tokval{
 		tok(token.Hexadecimal, "0xff"),
 		tok(token.RParen, ")"),
 	),
+
+	`console.log.toString()`: toks(
+		tok(token.Ident, "console"),
+		tok(token.Dot, "."),
+		tok(token.Ident, "log"),
+		tok(token.Dot, "."),
+		tok(token.Ident, "toString"),
+		tok(token.LParen, "("),
+		tok(token.RParen, ")"),
+	),
 }
 
 // TODO: remove me
