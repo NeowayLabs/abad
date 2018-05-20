@@ -23,7 +23,7 @@ type (
 
 // used when the tokens is over
 var tokEOF = lexer.Tokval{
-	Type: token.EOF,
+	Type:  token.EOF,
 	Value: utf16.S("EOF"),
 }
 
@@ -116,7 +116,9 @@ func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 	// parsers should not leave tokens not processed
 	// in the lookahead buffer.
 	if len(p.lookahead) != 0 {
-		panic("parsers not handling lookahead correctly")
+		panic(fmt.Sprintf(
+			"parsers not handling lookahead correctly: %s",
+			p.lookahead))
 	}
 	return node, false, nil
 }
@@ -245,7 +247,78 @@ func parseMemberExpr(p *Parser) (ast.Node, error) {
 		return nil, p.errorf(tok, "unexpected %s", tok.Value)
 	}
 
-	return ast.NewMemberExpr(object, ast.NewIdent(tok.Value)), nil
+	member := ast.NewMemberExpr(object, ast.NewIdent(tok.Value))
+
+	p.scry(1)
+
+	tok = p.lookahead[0]
+	if tok.Type == token.LParen {
+		return parseMemberFuncall(p, member)
+	}
+
+	if tok.Type != token.EOF {
+		panic("not expected")
+	}
+
+	p.forget(1)
+
+	return member, nil
+}
+
+// state:
+// lookahead[0] = token.LParen
+func parseMemberFuncall(p *Parser, member *ast.MemberExpr) (ast.Node, error) {
+	p.forget(1) // drops (
+	args, err := parseFuncallArgs(p)
+	if err != nil {
+		return nil, err
+	}
+
+	return ast.NewCallExpr(member, args), nil
+}
+
+func parseFuncallArgs(p *Parser) ([]ast.Node, error) {
+	if len(p.lookahead) != 0 {
+		panic("wrong lookahead")
+	}
+
+	hasMoreArgs := func(t token.Type) bool {
+		return t != token.EOF &&
+			t != token.RParen
+	}
+
+	var args []ast.Node
+
+	p.scry(1)
+	var tok lexer.Tokval
+
+	for tok = p.lookahead[0]; hasMoreArgs(tok.Type); {
+		switch tok.Type {
+		case token.Decimal, token.Hexadecimal:
+			parser := literalParsers[tok.Type]
+			num, err := parser(p)
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, num)
+		default:
+			return nil, p.errorf(tok, "unexpected %s", tok.Value)
+		}
+
+		p.scry(1)
+		if tok = p.lookahead[0]; tok.Type != token.Comma &&
+			tok.Type != token.RParen {
+			return nil, p.errorf(tok, "unexpected %s", tok.Value)
+		}
+	}
+
+	if tok.Type != token.RParen {
+		return nil, p.errorf(tok, "unexpected %s", tok.Value)
+	}
+
+	p.forget(1)
+
+	return args, nil
 }
 
 // state:

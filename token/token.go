@@ -21,6 +21,7 @@ const (
 	Dot
 	LParen
 	RParen
+	Comma
 
 	Ident
 
@@ -38,6 +39,7 @@ var names = map[Type]string{
 	Dot:         ".",
 	LParen:      "(",
 	RParen:      ")",
+	Comma:       ",",
 	Ident:       "Ident",
 	EOF:         "EOF",
 }

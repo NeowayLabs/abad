@@ -138,6 +138,9 @@ func (a *Abad) evalExpr(n ast.Node) (types.Value, error) {
 	case ast.NodeMemberExpr:
 		val := n.(*ast.MemberExpr)
 		return a.evalMemberExpr(val)
+	case ast.NodeCallExpr:
+		val := n.(*ast.CallExpr)
+		return a.evalCallExpr(val)
 	case ast.NodeUnaryExpr:
 		expr := n.(*ast.UnaryExpr)
 		return a.evalUnaryExpr(expr)
@@ -154,7 +157,7 @@ func (a *Abad) evalIdentExpr(ident ast.Ident) (types.Value, error) {
 	}
 
 	if types.StrictEqual(val, types.Undefined) {
-		return nil, fmt.Errorf("%s is not defined", 
+		return nil, fmt.Errorf("%s is not defined",
 			ident.String())
 	}
 
@@ -177,4 +180,44 @@ func (a *Abad) evalMemberExpr(member *ast.MemberExpr) (types.Value, error) {
 	}
 
 	return obj.Get(utf16.Str(member.Property))
+}
+
+func (a *Abad) evalCallExpr(call *ast.CallExpr) (types.Value, error) {
+	// TODO(i4k): safe to assume the AST is ok?
+	objval, err := a.evalExpr(call.Callee)
+	if err != nil {
+		return nil, err
+	}
+
+	obj, err := objval.ToObject() // wraps primitives (if needed)
+	if err != nil {
+		return nil, err
+	}
+
+	fun, ok := obj.(types.Function)
+	if !ok {
+		return nil, fmt.Errorf("%s is not a function", objval.Kind())
+	}
+
+	args, err := a.evalArgs(call.Args)
+	if err != nil {
+		return nil, err
+	}
+
+	return fun.Call(obj, args), nil
+}
+
+func (a *Abad) evalArgs(args []ast.Node) ([]types.Value, error) {
+	var vargs []types.Value
+
+	for _, arg := range args {
+		v, err := a.evalExpr(arg)
+		if err != nil {
+			return nil, err
+		}
+
+		vargs = append(vargs, v)
+	}
+
+	return vargs, nil
 }

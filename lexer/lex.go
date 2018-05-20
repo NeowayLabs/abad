@@ -83,9 +83,59 @@ var mock = map[string][]Tokval{
 		tok(token.Dot, "."),
 		tok(token.Ident, "log"),
 	),
+	"console.prototype": toks(
+		tok(token.Ident, "console"),
+		tok(token.Dot, "."),
+		tok(token.Ident, "prototype"),
+	),
+	"console.log.toString": toks(
+		tok(token.Ident, "console"),
+		tok(token.Dot, "."),
+		tok(token.Ident, "log"),
+		tok(token.Dot, "."),
+		tok(token.Ident, "toString"),
+	),
 	"console.": toks(
 		tok(token.Ident, "console"),
 		tok(token.Dot, "."),
+	),
+
+	// Funcall
+	"console.log()": toks(
+		tok(token.Ident, "console"),
+		tok(token.Dot, "."),
+		tok(token.Ident, "log"),
+		tok(token.LParen, "("),
+		tok(token.RParen, ")"),
+	),
+
+	`console.log("hello", "world")`: toks(
+		tok(token.Ident, "console"),
+		tok(token.Dot, "."),
+		tok(token.Ident, "log"),
+		tok(token.LParen, "("),
+		tok(token.String, "hello"),
+		tok(token.Comma, ","),
+		tok(token.String, "world"),
+		tok(token.RParen, ")"),
+	),
+
+	`console.log(2.0)`: toks(
+		tok(token.Ident, "console"),
+		tok(token.Dot, "."),
+		tok(token.Ident, "log"),
+		tok(token.LParen, "("),
+		tok(token.Decimal, "2.0"),
+		tok(token.RParen, ")"),
+	),	
+
+	`console.log(0xff)`: toks(
+		tok(token.Ident, "console"),
+		tok(token.Dot, "."),
+		tok(token.Ident, "log"),
+		tok(token.LParen, "("),
+		tok(token.Hexadecimal, "0xff"),
+		tok(token.RParen, ")"),
 	),
 }
 

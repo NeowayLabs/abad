@@ -230,6 +230,37 @@ func TestMemberExpr(t *testing.T) {
 	}
 }
 
+func TestParserFuncall(t *testing.T) {
+	for _, tc := range []struct {
+		input       string
+		expected    ast.Node
+		expectedErr error
+	}{
+		{
+			input: "console.log()",
+			expected: ast.NewCallExpr(
+				ast.NewMemberExpr(
+					ast.NewIdent(utf16.S("console")),
+					ast.NewIdent(utf16.S("log")),
+				),
+				[]ast.Node{},
+			),
+		},
+		{
+			input: "console.log(2.0)",
+			expected: ast.NewCallExpr(
+				ast.NewMemberExpr(
+					ast.NewIdent(utf16.S("console")),
+					ast.NewIdent(utf16.S("log")),
+				),
+				[]ast.Node{ast.NewNumber(2.0)},
+			),
+		},
+	} {
+		testParser(t, tc.input, tc.expected, tc.expectedErr)
+	}
+}
+
 func testParser(
 	t *testing.T, input string, expected ast.Node, expectedErr error,
 ) {

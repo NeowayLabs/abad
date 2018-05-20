@@ -22,3 +22,7 @@ func NewBuiltinfn(fn Execfn) *Builtinfn {
 func (f *Builtinfn) Call(this Object, args []Value) Value {
 	return f.fn(this, args)
 }
+
+func (f *Builtinfn) ToObject() (Object, error) {
+	return f, nil
+}

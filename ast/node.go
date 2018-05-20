@@ -46,6 +46,11 @@ type (
 		Property Ident
 	}
 
+	CallExpr struct {
+		Callee Node
+		Args []Node
+	}
+
 	Ident utf16.Str
 )
 
@@ -58,6 +63,7 @@ const (
 	NodeNumber
 	NodeUnaryExpr
 	NodeMemberExpr
+	NodeCallExpr
 	NodeIdent
 
 	exprEnd
@@ -222,6 +228,38 @@ func (m *MemberExpr) Equal(other Node) bool {
 	o := other.(*MemberExpr)
 	return m.Object.Equal(o.Object) &&
 		m.Property.Equal(o.Property)
+}
+
+func NewCallExpr(callee Node, args []Node) *CallExpr {
+	return &CallExpr{
+		Callee: callee,
+		Args: args,
+	}
+}
+
+func (c *CallExpr) Type() NodeType { return NodeCallExpr }
+func (c *CallExpr) String() string {
+	return fmt.Sprintf("%s(<args>)", c.Callee)
+}
+
+func (c *CallExpr) Equal(other Node) bool {
+	if other.Type() != c.Type() {
+		return false
+	}
+
+	o := other.(*CallExpr)
+
+	if len(c.Args) != len(o.Args) {
+		return false
+	}
+
+	for i := 0; i < len(c.Args); i++ {
+		if !c.Args[i].Equal(o.Args[i]) {
+			return false
+		}
+	}
+
+	return c.Callee.Equal(o.Callee)
 }
 
 func floatEquals(a, b float64) bool {

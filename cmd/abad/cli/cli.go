@@ -51,7 +51,7 @@ func (c *Cli) ReadEval() {
 		return
 	}
 
-	fmt.Fprintf(c.out, "< %s\n", obj)
+	fmt.Fprintf(c.out, "< %s\n", obj.ToString().String())
 }
 
 func (c *Cli) Repl() {
