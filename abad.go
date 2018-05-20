@@ -63,18 +63,13 @@ func (a *Abad) Eval(code string) (types.Value, error) {
 }
 
 func (a *Abad) eval(n ast.Node) (types.Value, error) {
+	if ast.IsExpr(n) {
+		return a.evalExpr(n)
+	}
+
 	switch n.Type() {
 	case ast.NodeProgram:
 		return a.evalProgram(n.(*ast.Program))
-	case ast.NodeNumber:
-		val := n.(ast.Number)
-		return types.Number(val.Value()), nil
-	case ast.NodeIdent:
-		val := n.(ast.Ident)
-		return a.evalIdentExpr(val)
-	case ast.NodeUnaryExpr:
-		expr := n.(*ast.UnaryExpr)
-		return a.evalUnaryExpr(expr)
 	}
 
 	panic(fmt.Sprintf("AST(%s) not implemented", n))
@@ -128,6 +123,30 @@ func (a *Abad) evalUnaryExpr(expr *ast.UnaryExpr) (types.Value, error) {
 	return num, nil
 }
 
+func (a *Abad) evalExpr(n ast.Node) (types.Value, error) {
+	if !ast.IsExpr(n) {
+		panic("internal error: not an expression")
+	}
+
+	switch n.Type() {
+	case ast.NodeNumber:
+		val := n.(ast.Number)
+		return types.Number(val.Value()), nil
+	case ast.NodeIdent:
+		val := n.(ast.Ident)
+		return a.evalIdentExpr(val)
+	case ast.NodeMemberExpr:
+		val := n.(*ast.MemberExpr)
+		return a.evalMemberExpr(val)
+	case ast.NodeUnaryExpr:
+		expr := n.(*ast.UnaryExpr)
+		return a.evalUnaryExpr(expr)
+	}
+
+	panic("unreachable")
+	return nil, nil
+}
+
 func (a *Abad) evalIdentExpr(ident ast.Ident) (types.Value, error) {
 	val, err := a.global.Get(utf16.Str(ident))
 	if err != nil {
@@ -140,4 +159,22 @@ func (a *Abad) evalIdentExpr(ident ast.Ident) (types.Value, error) {
 	}
 
 	return val, nil
+}
+
+func (a *Abad) evalMemberExpr(member *ast.MemberExpr) (types.Value, error) {
+	objval, err := a.evalExpr(member.Object)
+	if err != nil {
+		return nil, err
+	}
+
+	if objval.Kind() != types.KindObject {
+		panic("wrapping primitive values not implemented yet")
+	}
+
+	obj, err := objval.ToObject()
+	if err != nil {
+		return nil, err
+	}
+
+	return obj.Get(utf16.Str(member.Property))
 }

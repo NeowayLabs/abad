@@ -73,6 +73,10 @@ func (a Number) ToPrimitive(hint Kind) (Value, error) {
 	return a, nil
 }
 
+func (a Number) ToObject() (Object, error) {
+	panic("not implemented")
+}
+
 func equalValues(a, b float64) bool {
 	return math.Abs(a-b) < ε && math.Abs(b-a) < ε
 }

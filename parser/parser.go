@@ -24,6 +24,7 @@ type (
 // used when the tokens is over
 var tokEOF = lexer.Tokval{
 	Type: token.EOF,
+	Value: utf16.S("EOF"),
 }
 
 var (
@@ -149,9 +150,7 @@ func (p *Parser) scry(amount int) []lexer.Tokval {
 
 // forget what you had foresee
 func (p *Parser) forget(amount int) {
-	for i := 0; i < amount; i++ {
-		p.lookahead = p.lookahead[1:]
-	}
+	p.lookahead = p.lookahead[amount:]
 }
 
 func parseIllegal(p *Parser) (ast.Node, error) {
@@ -238,7 +237,15 @@ func parseIdentExpr(p *Parser) (ast.Node, error) {
 // lookahead[0] = token.Ident
 // lookahead[1] = token.Dot
 func parseMemberExpr(p *Parser) (ast.Node, error) {
-	return nil, nil
+	object := ast.NewIdent(p.lookahead[0].Value)
+	p.forget(2)
+
+	tok := p.next()
+	if tok.Type != token.Ident {
+		return nil, p.errorf(tok, "unexpected %s", tok.Value)
+	}
+
+	return ast.NewMemberExpr(object, ast.NewIdent(tok.Value)), nil
 }
 
 // state:

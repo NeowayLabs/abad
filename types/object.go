@@ -112,6 +112,10 @@ func (o *DataObject) ToPrimitive(hint Kind) (Value, error) {
 	return o.DefaultValue(hint)
 }
 
+func (o *DataObject) ToObject() (Object, error) {
+	return o, nil
+}
+
 func (o *DataObject) ToPropertyDescriptor() *PropertyDescriptor {
 	var (
 		value, get, set     Value
@@ -295,7 +299,7 @@ func (o *DataObject) CanPut(name utf16.Str) bool {
 		panic(fmt.Sprintf("unexpected prototype value: %s", proto))
 	}
 
-	oproto := proto.(*DataObject)
+	oproto := proto.(Object)
 	inherited, ok := oproto.getProperty(name)
 	if !ok {
 		return !o.NotExtensible()

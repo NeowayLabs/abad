@@ -24,6 +24,7 @@ type (
 		ToBool() Bool
 		ToNumber() Number
 		ToString() String
+		ToObject() (Object, error)
 	}
 
 	ECMAObject interface {

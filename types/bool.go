@@ -30,6 +30,11 @@ func (b Bool) ToPrimitive(hint Kind) (Value, error) {
 	return b, nil
 }
 
+func (b Bool) ToObject() (Object, error) {
+	panic("not implemented")
+	return nil, nil
+}
+
 func (b Bool) Equal(a Bool) bool {
 	return bool(b) == bool(a)
 }

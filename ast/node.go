@@ -39,6 +39,13 @@ type (
 		Operand  Node
 	}
 
+	// MemberExpr handles get of object's properties
+	// eg.: <object>.<property>
+	MemberExpr struct {
+		Object   Node
+		Property Ident
+	}
+
 	Ident utf16.Str
 )
 
@@ -50,6 +57,7 @@ const (
 
 	NodeNumber
 	NodeUnaryExpr
+	NodeMemberExpr
 	NodeIdent
 
 	exprEnd
@@ -180,7 +188,7 @@ func (an Ident) Equal(other Node) bool {
 
 	astr := utf16.Str(an)
 	ostr := utf16.Str(other.(Ident))
-	
+
 	if len(astr) != len(ostr) {
 		return false
 	}
@@ -192,6 +200,28 @@ func (an Ident) Equal(other Node) bool {
 	}
 
 	return true
+}
+
+func NewMemberExpr(object Node, property Ident) *MemberExpr {
+	return &MemberExpr{
+		Object:   object,
+		Property: property,
+	}
+}
+
+func (m *MemberExpr) Type() NodeType { return NodeMemberExpr }
+func (m *MemberExpr) String() string { 
+	return fmt.Sprintf("%s.%s", m.Object, m.Property)
+}
+
+func (m *MemberExpr) Equal(other Node) bool {
+	if m.Type() != other.Type() {
+		return false
+	}
+
+	o := other.(*MemberExpr)
+	return m.Object.Equal(o.Object) &&
+		m.Property.Equal(o.Property)
 }
 
 func floatEquals(a, b float64) bool {

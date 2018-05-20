@@ -76,6 +76,17 @@ var mock = map[string][]Tokval{
 	"___hyped___": onetok(token.Ident, "___hyped___"),
 	"a$b$c":       onetok(token.Ident, "a$b$c"),
 	"a":           onetok(token.Ident, "a"),
+
+	// Member
+	"console.log": toks(
+		tok(token.Ident, "console"),
+		tok(token.Dot, "."),
+		tok(token.Ident, "log"),
+	),
+	"console.": toks(
+		tok(token.Ident, "console"),
+		tok(token.Dot, "."),
+	),
 }
 
 // TODO: remove me

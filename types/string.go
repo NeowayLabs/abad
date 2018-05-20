@@ -17,6 +17,10 @@ func NewString(str string) String {
 
 func (a String) ToPrimitive(hint Kind) (Value, error) { return a, nil }
 
+func (a String) ToObject() (Object, error) {
+	panic("not implemented yet")
+}
+
 func (a String) Length() int {
 	return len(a)
 }

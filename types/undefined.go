@@ -30,6 +30,10 @@ func (u undefined) ToNumber() Number {
 	return Number(math.NaN())
 }
 
+func (u undefined) ToObject() (Object, error) {
+	return nil, NewTypeError("undefined cannot be converted to Object")
+}
+
 func (_ undefined) Kind() Kind {
 	return KindUndefined
 }

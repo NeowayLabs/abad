@@ -200,32 +200,59 @@ func TestIdentifier(t *testing.T) {
 			expected: ast.NewIdent(utf16.S("___hyped___")),
 		},
 		{
-			input: "a$b$c",
+			input:    "a$b$c",
 			expected: ast.NewIdent(utf16.S("a$b$c")),
 		},
 	} {
-		tree, err := parser.Parse("tests.js", tc.input)
-		assert.EqualErrs(t, tc.expectedErr, err, "parser err")
+		testParser(t, tc.input, tc.expected, tc.expectedErr)
+	}
+}
 
-		if err != nil {
-			continue
-		}
+func TestMemberExpr(t *testing.T) {
+	for _, tc := range []struct {
+		input       string
+		expected    ast.Node
+		expectedErr error
+	}{
+		{
+			input: "console.log",
+			expected: ast.NewMemberExpr(
+				ast.NewIdent(utf16.S("console")),
+				ast.NewIdent(utf16.S("log")),
+			),
+		},
+		{
+			input:       "console.",
+			expectedErr: E("tests.js:1:0: unexpected EOF"),
+		},
+	} {
+		testParser(t, tc.input, tc.expected, tc.expectedErr)
+	}
+}
 
-		nodes := tree.Nodes
-		if len(nodes) != 1 {
-			t.Fatalf("id tests must be isolated: %v", nodes)
-		}
+func testParser(
+	t *testing.T, input string, expected ast.Node, expectedErr error,
+) {
+	tree, err := parser.Parse("tests.js", input)
+	assert.EqualErrs(t, expectedErr, err, "parser err")
 
-		got := nodes[0]
-		if got.Type() != tc.expected.Type() {
-			t.Fatalf("type differ: %d != %d (%s)",
-				got.Type(), tc.expected.Type(), tc.input)
-		}
-
-		if !tc.expected.Equal(got) {
-			t.Fatalf("Identifier differ: '%s' != '%s'",
-				got, tc.expected)
-		}
+	if err != nil {
+		return
 	}
 
+	nodes := tree.Nodes
+	if len(nodes) != 1 {
+		t.Fatalf("id tests must be isolated: %v", nodes)
+	}
+
+	got := nodes[0]
+	if got.Type() != expected.Type() {
+		t.Fatalf("type differ: %d != %d (%s)",
+			got.Type(), expected.Type(), input)
+	}
+
+	if !expected.Equal(got) {
+		t.Fatalf("Identifier differ: '%s' != '%s'",
+			got, expected)
+	}
 }
