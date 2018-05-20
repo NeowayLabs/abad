@@ -4,31 +4,25 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/NeowayLabs/abad/ast"
 	"github.com/NeowayLabs/abad/internal/utf16"
 )
 
 type (
-	// Object is a collection of named objects.
-	Object struct {
+	// DataObject is a collection of named objects.
+	DataObject struct {
 		// Class is the kind of object
-		Class      string
-		NotExtensible bool
-
-		Scope  *Object
-		Params []ast.Ident
-		Code   *ast.Program
-
-		props map[string]*PropertyDescriptor
+		class         string
+		notExtensible bool
+		props         map[string]*PropertyDescriptor
 	}
 
 	callable interface {
-		Call(this *Object, args []Value) Value
+		Call(this *DataObject, args []Value) Value
 	}
 )
 
 var (
-	S = utf16.S
+	S            = utf16.S
 	valueAttr    = S("value")
 	writableAttr = S("writable")
 	getAttr      = S("get")
@@ -41,16 +35,18 @@ var (
 	valueOfAttr  = S("valueOf")
 )
 
+// Base object extends Null
 func DefaultPrototypeDesc() *PropertyDescriptor {
 	return NewDataPropDesc(Null, true, false, false)
 }
 
-// NewObject creates a new Object using proto as
+// NewDataObject creates a new DataObject using proto as
 // prototype.
-func NewObject(proto Value) *Object {
-	obj := &Object{
-		props: make(map[string]*PropertyDescriptor),
-	}
+func NewDataObject(proto Value) *DataObject {
+	obj := NewBaseDataObject()
+
+	// is must extend proto
+	delete(obj.props, "prototype")
 
 	// error ignored because it does not fail if
 	// there's no previous properties.
@@ -65,21 +61,36 @@ func NewObject(proto Value) *Object {
 	return obj
 }
 
-// NewRawObject creates a prototypeless object.
-func NewRawObject() *Object {
-	obj := &Object{
+func NewBaseDataObject() *DataObject {
+	return NewDataObjectP(DefaultPrototypeDesc())
+}
+
+// NewDataObjectP creates an object with PropertyDescriptor
+// proto as prototype attribute.
+// The *everything is an object* concept makes
+// impossible to defineOwnProperties work by
+// passing an object to define an object (recursive
+// definition).
+func NewDataObjectP(proto *PropertyDescriptor) *DataObject {
+	obj := &DataObject{
+		class: "object",
 		props: make(map[string]*PropertyDescriptor),
 	}
 
-	obj.props["prototype"] = DefaultPrototypeDesc()
+	obj.props["prototype"] = proto
 	return obj
 }
 
-func (o *Object) IsFalse() bool { return false }
-func (o *Object) IsTrue() bool  { return true }
-func (_ *Object) Kind() Kind    { return KindObject }
-func (_ *Object) ToBool() Bool  { return True }
-func (o *Object) ToNumber() Number {
+func (o *DataObject) Class() string       { return o.class }
+func (o *DataObject) NotExtensible() bool { return o.notExtensible }
+
+// Value interface implementations
+
+func (o *DataObject) IsFalse() bool { return false }
+func (o *DataObject) IsTrue() bool  { return true }
+func (_ *DataObject) Kind() Kind    { return KindObject }
+func (_ *DataObject) ToBool() Bool  { return True }
+func (o *DataObject) ToNumber() Number {
 	primVal, err := o.ToPrimitive(KindNumber)
 	if err != nil {
 		return NewNumber(math.NaN())
@@ -88,7 +99,7 @@ func (o *Object) ToNumber() Number {
 	return primVal.ToNumber()
 }
 
-func (o *Object) ToString() String {
+func (o *DataObject) ToString() String {
 	primVal, err := o.ToPrimitive(KindString)
 	if err != nil {
 		return NewString("")
@@ -97,11 +108,11 @@ func (o *Object) ToString() String {
 	return primVal.ToString()
 }
 
-func (o *Object) ToPrimitive(hint Kind) (Value, error) {
+func (o *DataObject) ToPrimitive(hint Kind) (Value, error) {
 	return o.DefaultValue(hint)
 }
 
-func (o *Object) ToPropertyDescriptor() *PropertyDescriptor {
+func (o *DataObject) ToPropertyDescriptor() *PropertyDescriptor {
 	var (
 		value, get, set     Value
 		writable, enum, cfg Value
@@ -170,16 +181,9 @@ func (o *Object) ToPropertyDescriptor() *PropertyDescriptor {
 	return prop
 }
 
-func (o *Object) Get(name utf16.Str) (Value, error) {
-	if o.Class == "Function" {
-		return o.functionGet(name)
-	}
-	return o.genericGet(name)
-}
-
-// genericGet is the default [[Get]] implementation for objects.
+// Get is the default [[Get]] implementation for objects.
 // https://es5.github.io/#x8.12.3
-func (o *Object) genericGet(name utf16.Str) (Value, error) {
+func (o *DataObject) Get(name utf16.Str) (Value, error) {
 	desc, ok := o.getProperty(name)
 	if !ok {
 		return Undefined, nil
@@ -198,51 +202,120 @@ func (o *Object) genericGet(name utf16.Str) (Value, error) {
 		return Undefined, nil
 	}
 
-	getter := value.(*Object)
-	if getter.Class != "Function" {
+	getter, ok := value.(callable)
+	if !ok {
 		panic(fmt.Sprintf("object %s is not callable", getter))
 	}
 
 	return getter.Call(o, []Value{}), nil
 }
 
-// functionGet implements [[Get]] for Function.
-func (o *Object) functionGet(name utf16.Str) (Value, error) {
-	v, err := o.genericGet(name)
-	if err != nil {
-		return nil, err
+func (o *DataObject) Put(name utf16.Str, val Value, throw bool) error {
+	if !o.CanPut(name) {
+		if throw {
+			return NewTypeError("can not put data on this object")
+		}
+
+		return nil
 	}
 
-	if name.Equal(S("caller")) {
-		// TODO(i4k): throw TypeError
-		return nil, NewTypeError("property caller is unaceptable")
+	ownDesc, ok := o.getOwnProperty(name)
+	if ok && ownDesc.IsDataDescriptor() {
+		// TODO(i4k): I'm not sure of this parameters
+		desc := NewDataPropDesc(ownDesc.Value(), true, true, true)
+		_, err := o.DefineOwnPropertyP(name, desc, throw)
+		return err
 	}
 
-	return v, nil
-}
+	desc, ok := o.getProperty(name)
+	if !ok {
+		desc := NewDataPropDesc(val, true, true, true)
+		_, err := o.DefineOwnPropertyP(name, desc, throw)
+		return err
+	}
 
-func (o *Object) Put(name utf16.Str, val Value, failure bool) error {
+	if desc.IsDataDescriptor() {
+		valueDesc := NewDataPropDesc(val, true, true, true)
+		_, err := o.DefineOwnPropertyP(name, valueDesc, throw)
+		return err
+	}
+
+	if desc.IsAcessorDescriptor() {
+		set := desc.Set()
+		if StrictEqual(set, Undefined) {
+			panic("setter is undefined for acessor property")
+		}
+
+		setter, ok := set.(callable)
+		if !ok {
+			panic("setter is not a Function")
+		}
+
+		_ = setter.Call(o, []Value{val})
+		return nil
+	}
+
+	panic("TODO(i4k): property is not an acessor nor data. Is this a problem?")
 	return nil
 }
 
-func (o *Object) get(name utf16.Str) (*PropertyDescriptor, bool) {
+func (o *DataObject) get(name utf16.Str) (*PropertyDescriptor, bool) {
 	v, ok := o.props[name.String()]
 	return v, ok
 }
 
-func (o *Object) put(name utf16.Str, val *PropertyDescriptor) {
+func (o *DataObject) put(name utf16.Str, val *PropertyDescriptor) {
 	o.props[name.String()] = val
 }
 
-func (o *Object) CanPut(name utf16.Str) bool {
+func (o *DataObject) CanPut(name utf16.Str) bool {
+	desc, ok := o.getOwnProperty(name)
+	if ok {
+		if desc.IsAcessorDescriptor() {
+			return !StrictEqual(desc.Set(), Undefined)
+		} else if desc.IsDataDescriptor() {
+			return desc.Writable().IsTrue()
+		}
+
+		panic("property is acessor nor data descriptor")
+		return false
+	}
+
+	protodesc, ok := o.getOwnProperty(protoAttr)
+	if !ok {
+		panic("prototype not found")
+	}
+
+	proto := protodesc.Value()
+	if StrictEqual(proto, Null) {
+		return !o.NotExtensible()
+	}
+
+	if proto.Kind() != KindObject {
+		panic(fmt.Sprintf("unexpected prototype value: %s", proto))
+	}
+
+	oproto := proto.(*DataObject)
+	inherited, ok := oproto.getProperty(name)
+	if !ok {
+		return !o.NotExtensible()
+	}
+
+	if inherited.IsAcessorDescriptor() {
+		return !StrictEqual(inherited.Set(), Undefined)
+	} else if inherited.IsDataDescriptor() {
+		if o.NotExtensible() {
+			return false
+		}
+
+		return true
+	}
+
+	panic("inherited isn't acessor not data descriptor")
 	return false
 }
 
-func (o *Object) Call(this *Object, args []Value) Value {
-	return Undefined
-}
-
-func (o *Object) getOwnProperty(name utf16.Str) (*PropertyDescriptor, bool) {
+func (o *DataObject) getOwnProperty(name utf16.Str) (*PropertyDescriptor, bool) {
 	prop, ok := o.get(name)
 	if !ok {
 		return nil, false
@@ -250,7 +323,7 @@ func (o *Object) getOwnProperty(name utf16.Str) (*PropertyDescriptor, bool) {
 	return prop, true
 }
 
-func (o *Object) GetOwnProperty(name utf16.Str) Value {
+func (o *DataObject) GetOwnProperty(name utf16.Str) Value {
 	prop, ok := o.get(name)
 	if !ok {
 		return Undefined
@@ -259,7 +332,7 @@ func (o *Object) GetOwnProperty(name utf16.Str) Value {
 	return prop.ToObject()
 }
 
-func (o *Object) getProperty(name utf16.Str) (*PropertyDescriptor, bool) {
+func (o *DataObject) getProperty(name utf16.Str) (*PropertyDescriptor, bool) {
 	prop, ok := o.getOwnProperty(name)
 	if ok {
 		return prop, true
@@ -280,27 +353,19 @@ func (o *Object) getProperty(name utf16.Str) (*PropertyDescriptor, bool) {
 		return nil, false
 	}
 
-	obj := protoval.(*Object)
-
+	obj := protoval.(Object)
 	return obj.getProperty(name)
 }
 
-func (o *Object) GetProperty(name utf16.Str) Value {
-	prop := o.GetOwnProperty(name)
-	if !StrictEqual(prop, Undefined) {
-		return prop
+func (o *DataObject) GetProperty(name utf16.Str) Value {
+	prop, ok := o.getProperty(name)
+	if ok {
+		return prop.ToObject()
 	}
-
-	proto := o.GetOwnProperty(protoAttr)
-	if proto.Kind() != KindObject {
-		return Undefined
-	}
-
-	obj := proto.(*Object)
-	return obj.GetProperty(name)
+	return Undefined
 }
 
-func (o *Object) DefineOwnProperty(
+func (o *DataObject) DefineOwnProperty(
 	name utf16.Str, desc Value, throw bool,
 ) (bool, error) {
 	if desc.Kind() != KindObject {
@@ -313,13 +378,13 @@ func (o *Object) DefineOwnProperty(
 		return false, nil
 	}
 
-	descobj := desc.(*Object)
+	descobj := desc.(*DataObject)
 
 	return o.DefineOwnPropertyP(name, descobj.ToPropertyDescriptor(), throw)
 }
 
 // https://es5.github.io/#x8.12.9
-func (o *Object) DefineOwnPropertyP(
+func (o *DataObject) DefineOwnPropertyP(
 	name utf16.Str, desc *PropertyDescriptor, throw bool,
 ) (bool, error) {
 	// throw exception if requested, otherwise quietly returns
@@ -335,11 +400,11 @@ func (o *Object) DefineOwnPropertyP(
 		return true, nil
 	}
 
-	notExtensible := o.NotExtensible
+	notExtensible := o.notExtensible
 	current, ok := o.getOwnProperty(name)
 	if !ok {
 		if notExtensible {
-			return retOrThrow(NewTypeError("Object %s is not extensible",
+			return retOrThrow(NewTypeError("DataObject %s is not extensible",
 				o.Class))
 		}
 
@@ -419,7 +484,7 @@ func (o *Object) DefineOwnPropertyP(
 
 // setOwnProperty just sets the property. Calls from ECMAScript
 // must invoke DefineOwnProperty that does the correct validations.
-func (o *Object) setOwnProperty(name utf16.Str, desc *PropertyDescriptor, throw bool) (bool, error) {
+func (o *DataObject) setOwnProperty(name utf16.Str, desc *PropertyDescriptor, throw bool) (bool, error) {
 	if desc.IsGenericDescriptor() ||
 		desc.IsDataDescriptor() {
 		newdesc := DefaultDataPropDesc()
@@ -438,13 +503,13 @@ func (o *Object) setOwnProperty(name utf16.Str, desc *PropertyDescriptor, throw 
 	return true, nil
 }
 
-func (o *Object) HasProperty(name utf16.Str) bool {
+func (o *DataObject) HasProperty(name utf16.Str) bool {
 	prop := o.GetProperty(name)
 	return !StrictEqual(prop, Undefined)
 }
 
 // https://es5.github.io/#x8.12.8
-func (o *Object) DefaultValue(hint Kind) (Value, error) {
+func (o *DataObject) DefaultValue(hint Kind) (Value, error) {
 	if hint == KindString {
 		//TODO(i4k): || hint == KindDate {
 		return o.defaultString()
@@ -453,9 +518,9 @@ func (o *Object) DefaultValue(hint Kind) (Value, error) {
 	return o.defaultNumber()
 }
 
-func (o *Object) defaultString() (Value, error) {
+func (o *DataObject) defaultString() (Value, error) {
 	toString, _ := o.Get(toStringAttr)
-	if stringify, ok := toString.(callable); ok {
+	if stringify, ok := toString.(Function); ok {
 		str := stringify.Call(o, []Value{})
 		if IsPrimitive(str) {
 			return str, nil
@@ -470,10 +535,10 @@ func (o *Object) defaultString() (Value, error) {
 		}
 	}
 
-	return nil, NewTypeError("Object has no defaultValue")
+	return nil, NewTypeError("DataObject has no defaultValue")
 }
 
-func (o *Object) defaultNumber() (Value, error) {
+func (o *DataObject) defaultNumber() (Value, error) {
 	valueOf, _ := o.Get(valueOfAttr)
 	if valuefunc, ok := valueOf.(callable); ok {
 		val := valuefunc.Call(o, []Value{})
@@ -490,9 +555,14 @@ func (o *Object) defaultNumber() (Value, error) {
 		}
 	}
 
-	return nil, NewTypeError("Object has no defaultValue")
+	return nil, NewTypeError("DataObject has no defaultValue")
 }
 
-func (o *Object) String() string {
-	return "[object Object]"
+func (o *DataObject) String() string {
+	v, err := o.defaultString()
+	if err != nil {
+		panic(err)
+	}
+
+	return v.ToString().String()
 }

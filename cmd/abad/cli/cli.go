@@ -17,8 +17,13 @@ type (
 	}
 )
 
-func NewCli(fname string, in io.Reader, out io.Writer) *Cli {
-	return NewWithJS(abad.NewAbad(fname), in, out)
+func NewCli(fname string, in io.Reader, out io.Writer) (*Cli, error) {
+	ecma, err := abad.NewAbad(fname)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewWithJS(ecma, in, out), nil
 }
 
 func NewWithJS(js *abad.Abad, in io.Reader, out io.Writer) *Cli {
@@ -34,17 +39,15 @@ func (c *Cli) ReadEval() {
 	bio := bufio.NewReader(c.in)
 	line, err := bio.ReadString('\n')
 	if err != nil {
-		c.errorf(err)
+		c.error(err)
 		return
 	}
 
-	if len(line) > 0 {
-		line = line[:len(line)-1]
-	}
+	line = trimnl(line)
 
 	obj, err := c.js.Eval(line)
 	if err != nil {
-		c.errorf(err)
+		c.error(err)
 		return
 	}
 
@@ -57,6 +60,10 @@ func (c *Cli) Repl() {
 	}
 }
 
-func (c *Cli) errorf(err error) {
+func (c *Cli) error(err error) {
 	fmt.Fprintf(c.out, "%s\n", err)
+}
+
+func trimnl(line string) string {
+	return line[:len(line)-1]
 }

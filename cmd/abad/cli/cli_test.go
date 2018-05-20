@@ -40,13 +40,14 @@ func TestCli(t *testing.T) {
 	} {
 		var inb bytes.Buffer
 		var outb bytes.Buffer
-		cli := cli.NewCli("test.js", &inb, &outb)
+		cli, err := cli.NewCli("test.js", &inb, &outb)
+		assert.NoError(t, err, "failed to start the cli")
 
-		_, err := inb.Write([]byte(tc.in + "\n"))
+		_, err = inb.WriteString(tc.in + "\n")
 		assert.NoError(t, err)
 		cli.ReadEval()
 
-		got := trim(string(outb.Bytes()))
+		got := trim(outb.String())
 		expected := "> < " + trim(tc.out)
 		assert.EqualStrings(t, expected, got, "cli output")
 	}

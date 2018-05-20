@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/NeowayLabs/abad/ast"
+	"github.com/NeowayLabs/abad/builtins"
+	"github.com/NeowayLabs/abad/internal/utf16"
 	"github.com/NeowayLabs/abad/parser"
 	"github.com/NeowayLabs/abad/token"
 	"github.com/NeowayLabs/abad/types"
@@ -14,19 +16,41 @@ type (
 	Abad struct {
 		filename string
 
-		vars map[string]types.Value
+		global *types.DataObject
 	}
 )
 
-func NewAbad(filename string) *Abad {
-	return &Abad{
+var (
+	consoleAttr = utf16.S("console")
+)
+
+func NewAbad(filename string) (*Abad, error) {
+	ecma := &Abad{
 		filename: filename,
-		vars: map[string]types.Value{
-			// TODO(i4k): remove
-			// used to test reference until var decl is implemented
-			"a": types.Number(666.),
-		},
 	}
+
+	err := ecma.setup()
+	if err != nil {
+		return nil, err
+	}
+
+	return ecma, nil
+}
+
+func (a *Abad) setup() error {
+	console, err := builtins.NewConsole()
+	if err != nil {
+		return err
+	}
+
+	global := types.NewBaseDataObject()
+	err = global.Put(consoleAttr, console, true)
+	if err != nil {
+		return err
+	}
+
+	a.global = global
+	return nil
 }
 
 func (a *Abad) Eval(code string) (types.Value, error) {
@@ -105,9 +129,14 @@ func (a *Abad) evalUnaryExpr(expr *ast.UnaryExpr) (types.Value, error) {
 }
 
 func (a *Abad) evalIdentExpr(ident ast.Ident) (types.Value, error) {
-	val, ok := a.vars[ident.String()]
-	if !ok {
-		return nil, fmt.Errorf("%s is not defined", ident)
+	val, err := a.global.Get(utf16.Str(ident))
+	if err != nil {
+		return nil, err
+	}
+
+	if types.StrictEqual(val, types.Undefined) {
+		return nil, fmt.Errorf("%s is not defined", 
+			ident.String())
 	}
 
 	return val, nil

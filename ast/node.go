@@ -26,6 +26,11 @@ type (
 		Nodes []Node
 	}
 
+	// Function Body
+	FnBody struct {
+		Nodes []Node
+	}
+
 	Number float64
 
 	// UnaryExpr is a unary expression (-a, +a, ~a, and so on)
@@ -39,6 +44,7 @@ type (
 
 const (
 	NodeProgram NodeType = iota + 1
+	NodeFnBody
 
 	exprBegin
 
@@ -86,6 +92,16 @@ func (p *Program) Equal(other Node) bool {
 		}
 	}
 	return true
+}
+
+func (_ *FnBody) Type() NodeType { return NodeFnBody }
+
+func (f *FnBody) String() string {
+	var stmts []string
+	for _, stmt := range f.Nodes {
+		stmts = append(stmts, stmt.String())
+	}
+	return strings.Join(stmts, "\n")
 }
 
 func NewNumber(a float64) Number {

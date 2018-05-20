@@ -54,7 +54,8 @@ func TestNumberEval(t *testing.T) {
 			err:  E("<anonymous>:1:0: invalid token: 0.1."),
 		},
 	} {
-		js := abad.NewAbad("<anonymous>")
+		js, err := abad.NewAbad("<anonymous>")
+		assert.NoError(t, err, "failed to start ecma")
 		obj, err := js.Eval(tc.code)
 		assert.EqualErrs(t, tc.err, err, "errors differ")
 
@@ -76,33 +77,31 @@ func TestNumberEval(t *testing.T) {
 func TestIdentExprEval(t *testing.T) {
 	for _, tc := range []struct {
 		code string
-		obj  types.Value
+		ret  string
 		err  error
 	}{
 		{
-			code: "a",
-			obj:  types.Number(666.),
+			code: "console",
+			ret:  "[object Object]",
 		},
 		{
 			code: "angular",
 			err:  E("angular is not defined"),
 		},
 	} {
-		js := abad.NewAbad("<anonymous>")
-		obj, err := js.Eval(tc.code)
+		js, err := abad.NewAbad("<anonymous>")
+		assert.NoError(t, err, "failed to start interpreter")
+		val, err := js.Eval(tc.code)
 		assert.EqualErrs(t, tc.err, err, "errors differ")
 
 		if err != nil {
 			continue
 		}
 
-		got, ok := obj.(types.Number)
-		if !ok {
-			t.Fatalf("got value other than number: %s", obj)
-		}
+		obj := val.(types.Object)
 
-		want := tc.obj.(types.Number)
-		assert.EqualFloats(t, float64(want), float64(got),
-			"number differs")
+		gotstr := obj.String()
+	
+		assert.EqualStrings(t, tc.ret, gotstr, "strings don't match")
 	}
 }

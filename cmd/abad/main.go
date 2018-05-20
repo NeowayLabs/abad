@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/NeowayLabs/abad/cmd/abad/cli"
@@ -8,11 +9,20 @@ import (
 
 const filename = "<anonymous>"
 
-func run() {
-	cli := cli.NewCli(filename, os.Stdin, os.Stdout)
+func run() error {
+	cli, err := cli.NewCli(filename, os.Stdin, os.Stdout)
+	if err != nil {
+		return err
+	}
+
 	cli.Repl()
+	return nil
 }
 
 func main() {
-	run()
+	err := run()
+	if err != nil {
+		fmt.Printf("error: %s\n", err)
+		os.Exit(1)
+	}
 }

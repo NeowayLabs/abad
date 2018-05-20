@@ -1,5 +1,9 @@
 package types
 
+import (
+	"github.com/NeowayLabs/abad/internal/utf16"
+)
+
 type (
 	Kind int
 
@@ -21,6 +25,28 @@ type (
 		ToNumber() Number
 		ToString() String
 	}
+
+	ECMAObject interface {
+		Get(name utf16.Str) (Value, error)
+		CanPut(name utf16.Str) bool
+		Put(name utf16.Str, value Value, throw bool) error
+		DefineOwnProperty(n utf16.Str, v Value, throw bool) (bool, error)
+	}
+
+	Object interface {
+		ECMAObject
+
+		Class() string
+		getProperty(name utf16.Str) (*PropertyDescriptor, bool)
+
+		String() string
+	}
+
+	Function interface {
+		Object
+
+		Call(this Object, args []Value) Value
+	}
 )
 
 const (
@@ -34,12 +60,18 @@ const (
 
 func (k Kind) String() string {
 	switch k {
-	case KindUndefined: return "undefined"
-	case KindNull: return "null"
-	case KindNumber: return "number"
-	case KindString: return "string"
-	case KindBool: return "bool"
-	case KindObject: return "object"
+	case KindUndefined:
+		return "undefined"
+	case KindNull:
+		return "null"
+	case KindNumber:
+		return "number"
+	case KindString:
+		return "string"
+	case KindBool:
+		return "bool"
+	case KindObject:
+		return "object"
 	}
 
 	panic("unrecognized type")
@@ -54,7 +86,7 @@ func StrictEqual(a, b Value) bool {
 		return false
 	}
 
-	if akind == KindUndefined || 
+	if akind == KindUndefined ||
 		akind == KindNull {
 		return true
 	}
@@ -78,9 +110,9 @@ func StrictEqual(a, b Value) bool {
 		return ab.Equal(bb)
 	}
 
-	if akind == KindObject {	
-		aobj := a.(*Object)
-		bobj := b.(*Object)
+	if akind == KindObject {
+		aobj := a.(*DataObject)
+		bobj := b.(*DataObject)
 		return aobj == bobj // pointer comparison
 	}
 

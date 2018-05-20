@@ -13,8 +13,8 @@ var (
 	protoAttr = S("prototype")
 )
 
-func TestRawObjectExtendsNull(t *testing.T) {
-	obj := types.NewRawObject()
+func TestBaseObjectExtendsNull(t *testing.T) {
+	obj := types.NewBaseDataObject()
 	proto, err := obj.Get(protoAttr)
 	assert.NoError(t, err, "failed getting proto")
 
@@ -24,8 +24,8 @@ func TestRawObjectExtendsNull(t *testing.T) {
 }
 
 func TestNewObjectExtendsProto(t *testing.T) {
-	proto := types.NewRawObject()
-	obj := types.NewObject(proto)
+	proto := types.NewBaseDataObject()
+	obj := types.NewDataObject(proto)
 
 	gotproto, err := obj.Get(protoAttr)
 	assert.NoError(t, err, "prototypes differs")
@@ -34,7 +34,7 @@ func TestNewObjectExtendsProto(t *testing.T) {
 		t.Fatalf("got type %s", gotproto.Kind())
 	}
 
-	gotobj := gotproto.(*types.Object)
+	gotobj := gotproto.(*types.DataObject)
 	if !types.StrictEqual(proto, gotobj) {
 		t.Fatalf("%s and %s are not the same prototype",
 			proto, gotobj)
@@ -43,7 +43,7 @@ func TestNewObjectExtendsProto(t *testing.T) {
 
 func TestObjectDefineOwnProperty(t *testing.T) {
 	// new property never fails
-	obj := types.NewRawObject()
+	obj := types.NewBaseDataObject()
 	propName := S("madlab")
 	expected := types.True
 	prop := types.NewDataPropDesc(expected, true, true, true)
@@ -63,7 +63,7 @@ func TestObjectDefineOwnProperty(t *testing.T) {
 		t.Fatalf("got property of wrong type")
 	}
 
-	got := gotprop.(*types.Object)
+	got := gotprop.(*types.DataObject)
 	gotdesc := got.ToPropertyDescriptor()
 	if !types.IsSameDescriptor(gotdesc, prop) {
 		t.Fatalf("Property descriptors differ")

@@ -87,6 +87,10 @@ func (p *PropertyDescriptor) put(name string, value Value) {
 }
 
 func (p *PropertyDescriptor) get(name string) Value {
+	if p == nil || p.attrs == nil {
+		panic(p)
+	}
+
 	v, ok := p.attrs[name]
 	if ok {
 		return v
@@ -195,8 +199,8 @@ func (p *PropertyDescriptor) IsAbsentDescriptor() bool {
 		!p.HasEnum() && !p.HasCfg()
 }
 
-func (p *PropertyDescriptor) ToObject() *Object {
-	obj := NewObject(Null)
+func (p *PropertyDescriptor) ToObject() *DataObject {
+	obj := NewDataObject(Null)
 
 	if p.IsDataDescriptor() {
 		if p.has("value") {
@@ -240,12 +244,20 @@ func (p *PropertyDescriptor) ToObject() *Object {
 }
 
 func IsSameDescriptor(a, b *PropertyDescriptor) bool {
-	return StrictEqual(a.Value(), b.Value()) &&
-		StrictEqual(a.Writable(), b.Writable()) &&
-		StrictEqual(a.Enum(), b.Enum()) &&
-		StrictEqual(a.Cfg(), b.Cfg()) &&
-		StrictEqual(a.Get(), b.Get()) &&
-		StrictEqual(a.Set(), b.Set())
+	var ok = true
+
+	if a.IsDataDescriptor() {
+		ok = ok && StrictEqual(a.Value(), b.Value()) &&
+			StrictEqual(a.Writable(), b.Writable())
+	} else if a.IsAcessorDescriptor() {
+		ok = ok && StrictEqual(a.Get(), b.Get()) &&
+			StrictEqual(a.Set(), b.Set())
+	}
+
+	ok = ok && StrictEqual(a.Enum(), b.Enum()) &&
+		StrictEqual(a.Cfg(), b.Cfg())
+
+	return ok
 }
 
 func CopyProperties(dst, src *PropertyDescriptor) {
