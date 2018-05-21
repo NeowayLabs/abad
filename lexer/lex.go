@@ -16,6 +16,10 @@ func Lex(code utf16.Str) <-chan Tokval {
 	tokens := make(chan Tokval)
 	
 	go func() {
+		tokens <- Tokval{
+			Type: token.Decimal,
+			Value: code,
+		}
 		close(tokens)
 	}()
 
