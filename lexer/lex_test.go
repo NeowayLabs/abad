@@ -8,27 +8,25 @@ import (
 	"github.com/NeowayLabs/abad/internal/utf16"
 )
 
-type Token struct {
-	Type token.Type
-	Value string
-}
 
 type TestCase struct {
 	name string
-	code string
-	want []Token
+	code utf16.Str
+	want []lexer.Tokval
 }
+
+var Str func(string) utf16.Str = utf16.S
 
 func TestNumericLiterals(t *testing.T) {
 
 	runTests(t, []TestCase{
 		{
 			name: "Zero",
-			code: "0",
-			want: []Token{
+			code: Str("0"),
+			want: []lexer.Tokval{
 				{
 					Type: token.Decimal,
-					Value: "0",
+					Value: Str("0"),
 				},
 			},
 		},
@@ -39,14 +37,14 @@ func runTests(t *testing.T, testcases []TestCase) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			tokensStream := lexer.Lex(utf16.S(tc.code))
+			tokensStream := lexer.Lex(tc.code)
 			tokens := []lexer.Tokval{}
 			
 			for t := range tokensStream {
 				tokens = append(tokens, t)
 			}
 			
-			assertEqualTokens(t, tokvals(tc.want), tokens)
+			assertEqualTokens(t, tc.want, tokens)
 		})
 	}
 }
@@ -63,17 +61,4 @@ func assertEqualTokens(t *testing.T, want []lexer.Tokval, got []lexer.Tokval) {
 			t.Errorf("wanted token[%s] != got token[%s]", w, g)
 		}
 	} 
-}
-
-func tokvals(tokens []Token) []lexer.Tokval {
-	tokvals := make([]lexer.Tokval, len(tokens))
-	
-	for i, t := range tokens {
-		tokvals[i] = lexer.Tokval{
-			Type: t.Type,
-			Value: utf16.S(t.Value),
-		}
-	}
-	
-	return tokvals
 }
