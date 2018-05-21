@@ -45,8 +45,9 @@ func init() {
 
 // Parse input source into an AST representation.
 func Parse(fname string, code string) (*ast.Program, error) {
+	// FIXME: Use real lexer instead of fake one
 	p := Parser{
-		tokens:   lexer.Lex(utf16.Encode(code)),
+		tokens:   lexer.FakeLex(utf16.Encode(code)),
 		filename: fname,
 	}
 
