@@ -5,17 +5,25 @@ import (
 	"github.com/NeowayLabs/abad/token"
 )
 
-type (
-	Tokval struct {
-		Type  token.Type
-		Value utf16.Str
-	}
-)
+type Tokval struct {
+	Type  token.Type
+	Value utf16.Str
+}
 
 func (t Tokval) Equal(other Tokval) bool {
 	return t.Type == other.Type && t.Value.Equal(other.Value)
 }
 
+// Lex will lex the given crappy JS code (utf16 yay) and provide a
+// stream of tokens as a result (the returned channel).
+//
+// The caller should iterate on the given channel until it is
+// closed indicating a EOF (or an error). Errors should be
+// handled by checking the type of the token.
+//
+// A goroutine will be started to lex the given code, if you
+// do not iterate the returned channel the goroutine will leak,
+// you MUST drain the provided channel.
 func Lex(code utf16.Str) <-chan Tokval {
 	tokens := make(chan Tokval)
 	
@@ -77,29 +85,32 @@ func decimalOrHexadecimalState(code utf16.Str, position uint) lexerState {
 func hexadecimalState(code utf16.Str, position uint) lexerState {
 	// TODO: need more tests to validate x/X before continuing
 	// TODO: tests validating invalid hexadecimals
+	
 	return func() (*Tokval, lexerState) {
-		if isEOF(code, position) {
-			return &Tokval{
-				Type: token.Hexadecimal,
-				Value: code,
-			}, nil
+	
+		for !isEOF(code, position) {
+			position += 1
 		}
 		
-		return nil, hexadecimalState(code, position + 1)
+		return &Tokval{
+			Type: token.Hexadecimal,
+			Value: code,
+		}, nil
 	}
 }
 
 func decimalState(code utf16.Str, position uint) lexerState {
 	// TODO: tests validating invalid decimals
 	return func() (*Tokval, lexerState) {
-		if isEOF(code, position) {
-			return &Tokval{
-				Type: token.Decimal,
-				Value: code,
-			}, nil
+	
+		for !isEOF(code, position) {
+			position += 1
 		}
-		
-		return nil, decimalState(code, position + 1)
+	
+		return &Tokval{
+			Type: token.Decimal,
+			Value: code,
+		}, nil
 	}
 }
 
