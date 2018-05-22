@@ -276,7 +276,38 @@ func TestNumericLiterals(t *testing.T) {
 }
 
 func TestIllegalNumericLiterals(t *testing.T) {
-	// TODO
+	runTests(t, []TestCase{
+		{
+			name: "EmptyHexadecimal",
+			code: Str("0x"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Illegal,
+					Value: Str("0x"),
+				},
+			},
+		},
+		{
+			name: "EmptyHexadecimalUpperX",
+			code: Str("0X"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Illegal,
+					Value: Str("0X"),
+				},
+			},
+		},
+		{
+			name: "LikeHexadecimal",
+			code: Str("0b1234"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Illegal,
+					Value: Str("0b1234"),
+				},
+			},
+		},
+	})
 }
 
 func TestNoOutputFor(t *testing.T) {

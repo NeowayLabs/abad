@@ -81,9 +81,22 @@ func decimalOrHexadecimalState(code utf16.Str, position uint) lexerState {
 			return nil, decimalState(code, position + 1)
 		}
 		
-		// TODO: need more tests to validate input 0x and 0X
-		return nil, hexadecimalState(code, position) 
+		if isHexStart(code[position]) {
+			if isEOF(code, position + 1) {
+				return illegalToken(code)
+			}
+			return nil, hexadecimalState(code, position)
+		}
+		
+		return illegalToken(code)
 	}
+}
+
+func illegalToken(code utf16.Str) (*Tokval, lexerState) {
+	return &Tokval{
+		Type: token.Illegal,
+		Value: code,
+	}, nil
 }
 
 func hexadecimalState(code utf16.Str, position uint) lexerState {
@@ -132,6 +145,11 @@ func isDot(utf16char uint16) bool {
 	return dot.Equal(str)
 }
 
+func isHexStart(utf16char uint16) bool {
+	str := strFromChar(utf16char)
+	return hexStart.Contains(str)
+}
+
 func strFromChar(utf16char uint16) utf16.Str {
 	return utf16.Str([]uint16{utf16char})
 }
@@ -140,9 +158,11 @@ func strFromChar(utf16char uint16) utf16.Str {
 var numbers utf16.Str
 var dot utf16.Str
 var exponents utf16.Str
+var hexStart utf16.Str
 
 func init() {
 	numbers = utf16.NewStr("0123456789")
 	dot = utf16.NewStr(".")
 	exponents = utf16.NewStr("eE")
+	hexStart = utf16.NewStr("xX")
 }
