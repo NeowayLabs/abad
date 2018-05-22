@@ -51,6 +51,10 @@ func lexerInitialState(code utf16.Str) lexerState {
 	return func() (*Tokval, lexerState) {
 		// TODO: handle empty input
 		
+		if len(code) == 0 {
+			return nil, nil
+		}
+		
 		if isNumber(code[0]) {
 			return nil, decimalOrHexadecimalState(code, 1)
 		}

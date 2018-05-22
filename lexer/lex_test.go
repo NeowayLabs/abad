@@ -279,6 +279,19 @@ func TestIllegalNumericLiterals(t *testing.T) {
 	// TODO
 }
 
+func TestNoOutputFor(t *testing.T) {
+	runTests(t, []TestCase{
+		{
+			name: "EmptyString",
+			code: Str(""),
+		},
+		{
+			name: "JustSpaces",
+			code: Str("        "),
+		},
+	})
+}
+
 func runTests(t *testing.T, testcases []TestCase) {
 
 	for _, tc := range testcases {
