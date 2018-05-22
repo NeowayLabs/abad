@@ -172,6 +172,106 @@ func TestNumericLiterals(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "ZeroHexadecimal",
+			code: Str("0x0"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Hexadecimal,
+					Value: Str("0x0"),
+				},
+			},
+		},
+		{
+			name: "BigHexadecimal",
+			code: Str("0x123456789abcdef"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Hexadecimal,
+					Value: Str("0x123456789abcdef"),
+				},
+			},
+		},
+		{
+			name: "BigHexadecimalUppercase",
+			code: Str("0x123456789ABCDEF"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Hexadecimal,
+					Value: Str("0x123456789ABCDEF"),
+				},
+			},
+		},
+		{
+			name: "LettersOnlyHexadecimal",
+			code: Str("0xabcdef"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Hexadecimal,
+					Value: Str("0xabcdef"),
+				},
+			},
+		},
+		{
+			name: "LettersOnlyHexadecimalUppercase",
+			code: Str("0xABCDEF"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Hexadecimal,
+					Value: Str("0xABCDEF"),
+				},
+			},
+		},
+		{
+			name: "ZeroHexadecimalUpperX",
+			code: Str("0X0"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Hexadecimal,
+					Value: Str("0X0"),
+				},
+			},
+		},
+		{
+			name: "BigHexadecimalUpperX",
+			code: Str("0X123456789abcdef"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Hexadecimal,
+					Value: Str("0X123456789abcdef"),
+				},
+			},
+		},
+		{
+			name: "BigHexadecimalUppercaseUpperX",
+			code: Str("0X123456789ABCDEF"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Hexadecimal,
+					Value: Str("0X123456789ABCDEF"),
+				},
+			},
+		},
+		{
+			name: "LettersOnlyHexadecimalUpperX",
+			code: Str("0Xabcdef"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Hexadecimal,
+					Value: Str("0Xabcdef"),
+				},
+			},
+		},
+		{
+			name: "LettersOnlyHexadecimalUppercaseUpperX",
+			code: Str("0XABCDEF"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Hexadecimal,
+					Value: Str("0XABCDEF"),
+				},
+			},
+		},
 	})
 }
 
