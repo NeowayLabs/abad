@@ -29,7 +29,7 @@ func Lex(code utf16.Str) <-chan Tokval {
 	
 	go func() {
 	
-		currentState := lexerInitialState(code)
+		currentState := initialState(code)
 		
 		for currentState != nil {
 			token, newState := currentState()
@@ -47,7 +47,7 @@ func Lex(code utf16.Str) <-chan Tokval {
 
 type lexerState func() (*Tokval, lexerState)
 
-func lexerInitialState(code utf16.Str) lexerState {
+func initialState(code utf16.Str) lexerState {
 	return func() (*Tokval, lexerState) {
 		// TODO: handle empty input
 		
@@ -56,7 +56,7 @@ func lexerInitialState(code utf16.Str) lexerState {
 		}
 		
 		if isNumber(code[0]) {
-			return nil, decimalOrHexadecimalState(code, 1)
+			return nil, numberState(code, 1)
 		}
 		
 		if isDot(code[0]) {
@@ -68,7 +68,7 @@ func lexerInitialState(code utf16.Str) lexerState {
 	}
 }
 
-func decimalOrHexadecimalState(code utf16.Str, position uint) lexerState {
+func numberState(code utf16.Str, position uint) lexerState {
 	return func() (*Tokval, lexerState) {
 		if isEOF(code, position) {
 			return &Tokval{
