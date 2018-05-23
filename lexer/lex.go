@@ -48,6 +48,7 @@ func Lex(code utf16.Str) <-chan Tokval {
 type lexerState func() (*Tokval, lexerState)
 
 func initialState(code utf16.Str) lexerState {
+
 	return func() (*Tokval, lexerState) {
 		// TODO: handle empty input
 		
@@ -56,11 +57,11 @@ func initialState(code utf16.Str) lexerState {
 		}
 		
 		if isNumber(code[0]) {
-			return nil, numberState(code, 1)
+			return numberState(code, 1)
 		}
 		
 		if isDot(code[0]) {
-			return nil, decimalState(code, 1)
+			return decimalState(code, 1)
 		}
 		
 		// TODO: Almost everything =)
@@ -68,28 +69,26 @@ func initialState(code utf16.Str) lexerState {
 	}
 }
 
-func numberState(code utf16.Str, position uint) lexerState {
-	return func() (*Tokval, lexerState) {
-		if isEOF(code, position) {
-			return &Tokval{
-				Type: token.Decimal,
-				Value: code,
-			}, nil
-		}
-		
-		if isNumber(code[position]) || isDot(code[position]) {
-			return nil, decimalState(code, position + 1)
-		}
-		
-		if isHexStart(code[position]) {
-			if isEOF(code, position + 1) {
-				return illegalToken(code)
-			}
-			return nil, hexadecimalState(code, position)
-		}
-		
-		return illegalToken(code)
+func numberState(code utf16.Str, position uint) (*Tokval, lexerState) {
+	if isEOF(code, position) {
+		return &Tokval{
+			Type: token.Decimal,
+			Value: code,
+		}, nil
 	}
+	
+	if isNumber(code[position]) || isDot(code[position]) {
+		return decimalState(code, position + 1)
+	}
+	
+	if isHexStart(code[position]) {
+		if isEOF(code, position + 1) {
+			return illegalToken(code)
+		}
+		return hexadecimalState(code, position)
+	}	
+		
+	return illegalToken(code)
 }
 
 func illegalToken(code utf16.Str) (*Tokval, lexerState) {
@@ -99,36 +98,29 @@ func illegalToken(code utf16.Str) (*Tokval, lexerState) {
 	}, nil
 }
 
-func hexadecimalState(code utf16.Str, position uint) lexerState {
+func hexadecimalState(code utf16.Str, position uint) (*Tokval, lexerState) {
 	// TODO: need more tests to validate x/X before continuing
 	// TODO: tests validating invalid hexadecimals
-	
-	return func() (*Tokval, lexerState) {
-	
-		for !isEOF(code, position) {
-			position += 1
-		}
-		
-		return &Tokval{
-			Type: token.Hexadecimal,
-			Value: code,
-		}, nil
+	for !isEOF(code, position) {
+		position += 1
 	}
+		
+	return &Tokval{
+		Type: token.Hexadecimal,
+		Value: code,
+	}, nil
 }
 
-func decimalState(code utf16.Str, position uint) lexerState {
+func decimalState(code utf16.Str, position uint) (*Tokval, lexerState) {
 	// TODO: tests validating invalid decimals
-	return func() (*Tokval, lexerState) {
-	
-		for !isEOF(code, position) {
-			position += 1
-		}
-	
-		return &Tokval{
-			Type: token.Decimal,
-			Value: code,
-		}, nil
+	for !isEOF(code, position) {
+		position += 1
 	}
+	
+	return &Tokval{
+		Type: token.Decimal,
+			Value: code,
+	}, nil
 }
 
 func isNumber(utf16char uint16) bool {
