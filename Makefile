@@ -17,6 +17,10 @@ coverage-html: coverage
 
 coverage-show: coverage-html
 	xdg-open coverage.html
+	
+analysis:
+	go get honnef.co/go/tools/cmd/megacheck
+	megacheck ./...
 
 vendor:
 	go get github.com/madlambda/vendor

@@ -8,6 +8,7 @@ go:
   - "1.10"
 
 script:
+  - make analysis
   - make coverage
   
 after_success:
