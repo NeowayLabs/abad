@@ -16,6 +16,7 @@ type TestCase struct {
 }
 
 var Str func(string) utf16.Str = utf16.S
+var EOF lexer.Tokval = lexer.Tokval{ Type: token.EOF }
 
 func TestNumericLiterals(t *testing.T) {
 
@@ -30,6 +31,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Decimal,
 					Value: Str("0"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -40,6 +42,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Decimal,
 					Value: Str("1236547987794465977"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -50,6 +53,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Decimal,
 					Value: Str(".1"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -60,6 +64,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Decimal,
 					Value: Str("1."),
 				},
+				EOF,
 			},
 		},
 		{
@@ -70,6 +75,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Decimal,
 					Value: Str(".123456789"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -80,6 +86,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Decimal,
 					Value: Str("1.6"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -90,6 +97,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Decimal,
 					Value: Str("11223243554.63445465789"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -100,6 +108,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Decimal,
 					Value: Str("1.0e1"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -110,6 +119,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Decimal,
 					Value: Str("666666666666.0e66"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -120,6 +130,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Decimal,
 					Value: Str("1.0e-1"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -130,6 +141,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Decimal,
 					Value: Str("1.0e-50"),
 				},
+				EOF,
 			},
 		},		
 		{
@@ -140,6 +152,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Decimal,
 					Value: Str("1.0E1"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -150,6 +163,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Decimal,
 					Value: Str("666666666666.0E66"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -160,6 +174,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Decimal,
 					Value: Str("1.0E-1"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -170,6 +185,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Decimal,
 					Value: Str("1.0E-50"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -180,6 +196,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Hexadecimal,
 					Value: Str("0x0"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -190,6 +207,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Hexadecimal,
 					Value: Str("0x123456789abcdef"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -200,6 +218,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Hexadecimal,
 					Value: Str("0x123456789ABCDEF"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -210,6 +229,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Hexadecimal,
 					Value: Str("0xabcdef"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -220,6 +240,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Hexadecimal,
 					Value: Str("0xABCDEF"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -230,6 +251,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Hexadecimal,
 					Value: Str("0X0"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -240,6 +262,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Hexadecimal,
 					Value: Str("0X123456789abcdef"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -250,6 +273,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Hexadecimal,
 					Value: Str("0X123456789ABCDEF"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -260,6 +284,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Hexadecimal,
 					Value: Str("0Xabcdef"),
 				},
+				EOF,
 			},
 		},
 		{
@@ -270,6 +295,7 @@ func TestNumericLiterals(t *testing.T) {
 					Type: token.Hexadecimal,
 					Value: Str("0XABCDEF"),
 				},
+				EOF,
 			},
 		},
 	})
@@ -315,10 +341,12 @@ func TestNoOutputFor(t *testing.T) {
 		{
 			name: "EmptyString",
 			code: Str(""),
+			want: []lexer.Tokval{ EOF },
 		},
 		{
 			name: "JustSpaces",
 			code: Str("        "),
+			want: []lexer.Tokval{ EOF },
 		},
 	})
 }
@@ -340,6 +368,8 @@ func runTests(t *testing.T, testcases []TestCase) {
 }
 
 func assertEqualTokens(t *testing.T, want []lexer.Tokval, got []lexer.Tokval) {
+	t.Helper()
+	
 	if len(want) != len(got) {
 		t.Errorf("wanted [%d] tokens, got [%d] tokens", len(want), len(got))
 		t.Fatalf("want[%v] != got[%v]", want, got)
