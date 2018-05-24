@@ -1,4 +1,4 @@
-.PHONY: all build test
+.PHONY: all build test coverage coverage-html coverage-show
 
 all: build test
 
@@ -7,6 +7,20 @@ build:
 
 test:
 	go test -race -v ./...
+
+coverage:
+	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+	
+coverage-html: coverage
+	go tool cover -html=coverage.txt -o coverage.html
+	@echo "coverage file: coverage.html"
+
+coverage-show: coverage-html
+	xdg-open coverage.html
+	
+analysis:
+	go get honnef.co/go/tools/cmd/megacheck
+	megacheck ./...
 
 vendor:
 	go get github.com/madlambda/vendor
