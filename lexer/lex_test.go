@@ -2,6 +2,7 @@ package lexer_test
 
 import (
 	"testing"
+	"unicode"
 	
 	"github.com/NeowayLabs/abad/token"
 	"github.com/NeowayLabs/abad/lexer"
@@ -302,35 +303,52 @@ func TestNumericLiterals(t *testing.T) {
 }
 
 func TestIllegalNumericLiterals(t *testing.T) {
+	
+	corruptedHex := messStr(Str("0x01234"), 4)
+	corruptedDecimal := messStr(Str("1234"), 3)
+	corruptedNumber := messStr(Str("0"), 1)
+	
 	runTests(t, []TestCase{
 		{
 			name: "EmptyHexadecimal",
 			code: Str("0x"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Illegal,
-					Value: Str("0x"),
-				},
+				illegalToken(Str("0x")),
 			},
 		},
 		{
 			name: "EmptyHexadecimalUpperX",
 			code: Str("0X"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Illegal,
-					Value: Str("0X"),
-				},
+				illegalToken(Str("0X")),
 			},
 		},
 		{
 			name: "LikeHexadecimal",
 			code: Str("0b1234"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Illegal,
-					Value: Str("0b1234"),
-				},
+				illegalToken(Str("0b1234")),
+			},
+		},
+		{
+			name: "CorruptedHexadecimal",
+			code: corruptedHex,
+			want: []lexer.Tokval{
+				illegalToken(corruptedHex),
+			},
+		},
+		{
+			name: "CorruptedDecimal",
+			code: corruptedDecimal,
+			want: []lexer.Tokval{
+				illegalToken(corruptedDecimal),
+			},
+		},
+		{
+			name: "CorruptedNumber",
+			code: corruptedNumber,
+			want: []lexer.Tokval{
+				illegalToken(corruptedNumber),
 			},
 		},
 	})
@@ -351,6 +369,16 @@ func TestNoOutputFor(t *testing.T) {
 	})
 }
 
+func TestCorruptedInput(t *testing.T) {
+	runTests(t, []TestCase{
+		{
+			name: "AtStart",
+			code: messStr(Str(""), 0),
+			want: []lexer.Tokval{ illegalToken(messStr(Str(""), 0)) },
+		},
+	})
+}
+
 func runTests(t *testing.T, testcases []TestCase) {
 
 	for _, tc := range testcases {
@@ -364,6 +392,13 @@ func runTests(t *testing.T, testcases []TestCase) {
 			
 			assertEqualTokens(t, tc.want, tokens)
 		})
+	}
+}
+
+func illegalToken(val utf16.Str) lexer.Tokval {
+	return lexer.Tokval{
+		Type: token.Illegal,
+		Value: val,
 	}
 }
 
@@ -381,4 +416,15 @@ func assertEqualTokens(t *testing.T, want []lexer.Tokval, got []lexer.Tokval) {
 			t.Errorf("wanted token[%s] != got token[%s]", w, g)
 		}
 	} 
+}
+
+func messStr(s utf16.Str, pos uint) utf16.Str {
+	// WHY: The go's utf16 package uses the replacement char everytime a some
+	// encoding/decoding error happens, so we inject one on the uint16 array to simulate
+	// encoding/decoding errors.
+	// Not safe but the idea is to fuck up the string	
+
+	r := append(s[0:pos], uint16(unicode.ReplacementChar))
+	r = append(r, s[pos:]...)
+	return r
 }
