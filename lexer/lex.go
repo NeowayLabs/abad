@@ -97,7 +97,6 @@ func numberState(code []rune, position uint) (Tokval, lexerState) {
 	}
 	
 	if isExponentPartStart(code[position]) {
-		// TODO: can exponent be like: 1.0e ?
 		return exponentPartState(code, position + 1)
 	}
 		
@@ -131,8 +130,11 @@ func hexadecimalState(code []rune, position uint) (Tokval, lexerState) {
 func decimalState(code []rune, position uint) (Tokval, lexerState) {
 	// TODO: tests validating invalid decimals
 	for !isEOF(code, position) {
-		if isInvalidRune(code[position]) {
-			// TODO: Test to dont send all code
+		if isExponentPartStart(code[position]) {
+			return exponentPartState(code, position + 1)
+		}
+		if !isNumber(code[position]) && !isDot(code[position]) {
+			// TODO: Test to dont send all code, just slice
 			return illegalToken(code)
 		}
 		position += 1
@@ -147,6 +149,13 @@ func decimalState(code []rune, position uint) (Tokval, lexerState) {
 func exponentPartState(code []rune, position uint) (Tokval, lexerState) {
 	// TODO: Need to validate malformed exponent numbers to improve this
 	// eg: 1.0e123e
+	// TODO: can exponent be like: 1.0e ?
+	
+	if isMinusSign(code[position]) || isPlusSign(code[position]) {
+		// TODO: test 1.0e- and 1.0e+
+		position += 1
+	}
+	
 	return decimalState(code, position)
 }
 
@@ -183,18 +192,30 @@ func isInvalidRune(r rune) bool {
 	return unicode.ReplacementChar == r
 }
 
+func isMinusSign(r rune) bool {
+	return r == minusSign
+}
+
+func isPlusSign(r rune) bool {
+	return r == plusSign
+}
+
 func isExponentPartStart(r rune) bool {
 	return containsRune(exponentPartStart, r)
 }
 
 var numbers []rune
 var dot rune
+var minusSign rune
+var plusSign rune
 var hexStart []rune
 var exponentPartStart []rune
 
 func init() {
 	numbers = []rune("0123456789")
 	dot = rune('.')
+	minusSign = rune('-')
+	plusSign = rune('+')
 	hexStart = []rune("xX")
 	exponentPartStart = []rune("eE")
 }

@@ -332,6 +332,20 @@ func TestIllegalNumericLiterals(t *testing.T) {
 	
 	runTests(t, []TestCase{
 		{
+			name: "OnlyStartAsDecimal",
+			code: Str("0LALALA"),
+			want: []lexer.Tokval{
+				illegalToken(Str("0LALALA")),
+			},
+		},
+		{
+			name: "EndIsNotDecimal",
+			code: Str("0123344546I4K"),
+			want: []lexer.Tokval{
+				illegalToken(Str("0123344546I4K")),
+			},
+		},
+		{
 			name: "EmptyHexadecimal",
 			code: Str("0x"),
 			want: []lexer.Tokval{
