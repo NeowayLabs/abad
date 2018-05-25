@@ -212,6 +212,28 @@ func TestNumericLiterals(t *testing.T) {
 			},
 		},
 		{
+			name: "StartWithDotUpperExponent",
+			code: Str(".0E-50"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Decimal,
+					Value: Str(".0E-50"),
+				},
+				EOF,
+			},
+		},
+		{
+			name: "StartWithDotExponent",
+			code: Str(".0e5"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Decimal,
+					Value: Str(".0e5"),
+				},
+				EOF,
+			},
+		},
+		{
 			name: "ZeroHexadecimal",
 			code: Str("0x0"),
 			want: []lexer.Tokval{
@@ -350,6 +372,34 @@ func TestIllegalNumericLiterals(t *testing.T) {
 			code: Str("0x"),
 			want: []lexer.Tokval{
 				illegalToken(Str("0x")),
+			},
+		},
+		{
+			name: "OnlyStartAsReal",
+			code: Str("0.b"),
+			want: []lexer.Tokval{
+				illegalToken(Str("0.b")),
+			},
+		},
+		{
+			name: "RealWithTwoDotsStartingWithDot",
+			code: Str(".1.2"),
+			want: []lexer.Tokval{
+				illegalToken(Str(".1.2")),
+			},
+		},
+		{
+			name: "RealWithTwoDots",
+			code: Str("0.1.2"),
+			want: []lexer.Tokval{
+				illegalToken(Str("0.1.2")),
+			},
+		},
+		{
+			name: "BifRealWithTwoDots",
+			code: Str("1234.666.2342"),
+			want: []lexer.Tokval{
+				illegalToken(Str("1234.666.2342")),
 			},
 		},
 		{

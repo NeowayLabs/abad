@@ -53,8 +53,6 @@ type lexerState func() (Tokval, lexerState)
 func initialState(code []rune) lexerState {
 
 	return func() (Tokval, lexerState) {
-		// TODO: handle empty input
-		
 		if len(code) == 0 {
 			return EOF, nil
 		}
@@ -68,10 +66,9 @@ func initialState(code []rune) lexerState {
 		}
 		
 		if isDot(code[0]) {
-			return decimalState(code, 1)
+			return realDecimalState(code, 1)
 		}
 		
-		// TODO: Almost everything =)
 		return EOF, nil
 	}
 }
@@ -85,7 +82,11 @@ func numberState(code []rune, position uint) (Tokval, lexerState) {
 		}, initialState(code[position:])
 	}
 	
-	if isNumber(code[position]) || isDot(code[position]) {
+	if isDot(code[position]) {
+		return realDecimalState(code, position + 1)
+	}
+	
+	if isNumber(code[position]) {
 		return decimalState(code, position + 1)
 	}
 	
@@ -111,11 +112,9 @@ func illegalToken(code []rune) (Tokval, lexerState) {
 }
 
 func hexadecimalState(code []rune, position uint) (Tokval, lexerState) {
-	// TODO: need more tests to validate x/X before continuing
-	// TODO: tests validating invalid hexadecimals
+
 	for !isEOF(code, position) {
 		if !isHexadecimal(code[position]) {
-			// TODO: Test to dont send all code, just slice
 			return illegalToken(code)
 		}
 		position += 1
@@ -127,14 +126,38 @@ func hexadecimalState(code []rune, position uint) (Tokval, lexerState) {
 	}, initialState(code[position:])
 }
 
-func decimalState(code []rune, position uint) (Tokval, lexerState) {
-	// TODO: tests validating invalid decimals
+func realDecimalState(code []rune, position uint) (Tokval, lexerState) {
+
 	for !isEOF(code, position) {
 		if isExponentPartStart(code[position]) {
 			return exponentPartState(code, position + 1)
 		}
-		if !isNumber(code[position]) && !isDot(code[position]) {
-			// TODO: Test to dont send all code, just slice
+		
+		if !isNumber(code[position]) {
+			return illegalToken(code)
+		}
+		
+		position += 1
+	}
+	
+	return Tokval{
+		Type: token.Decimal,
+		Value: newStr(code),
+	}, initialState(code[position:])
+}
+
+func decimalState(code []rune, position uint) (Tokval, lexerState) {
+
+	for !isEOF(code, position) {
+		if isExponentPartStart(code[position]) {
+			return exponentPartState(code, position + 1)
+		}
+		
+		if isDot(code[position]) {
+			return realDecimalState(code, position + 1)
+		}
+		
+		if !isNumber(code[position]) {
 			return illegalToken(code)
 		}
 		position += 1
