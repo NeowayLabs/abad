@@ -113,6 +113,28 @@ func TestNumericLiterals(t *testing.T) {
 			},
 		},
 		{
+			name: "SmallDecimalWithSmallExponent",
+			code: Str("1e1"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Decimal,
+					Value: Str("1e1"),
+				},
+				EOF,
+			},
+		},
+		{
+			name: "SmallDecimalWithSmallExponentUpperExponent",
+			code: Str("1E1"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Decimal,
+					Value: Str("1E1"),
+				},
+				EOF,
+			},
+		},
+		{
 			name: "BigRealDecimalWithBigExponent",
 			code: Str("666666666666.0e66"),
 			want: []lexer.Tokval{
