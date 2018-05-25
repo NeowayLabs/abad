@@ -17,7 +17,7 @@ type TestCase struct {
 }
 
 var Str func(string) utf16.Str = utf16.S
-var EOF lexer.Tokval = lexer.Tokval{ Type: token.EOF }
+var EOF lexer.Tokval = lexer.EOF
 
 func TestNumericLiterals(t *testing.T) {
 

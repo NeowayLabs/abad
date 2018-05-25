@@ -29,12 +29,13 @@ func (t Tokval) Equal(other Tokval) bool {
 // do not iterate the returned channel the goroutine will leak,
 // you MUST drain the provided channel.
 func Lex(code utf16.Str) <-chan Tokval {
+
 	tokens := make(chan Tokval)
 	
 	go func() {
 	
 		decodedCode := code.Runes()
-		currentState := initialState(decodedCode)
+		currentState := newLexer(decodedCode).initialState
 		
 		for currentState != nil {
 			token, newState := currentState()
@@ -48,187 +49,195 @@ func Lex(code utf16.Str) <-chan Tokval {
 	return tokens
 }
 
+type lexer struct {
+	code []rune
+	position uint
+}
+
 type lexerState func() (Tokval, lexerState)
 
-func initialState(code []rune) lexerState {
+func newLexer(code []rune) *lexer {
+	return &lexer {code:code}
+}
 
-	return func() (Tokval, lexerState) {
-		if len(code) == 0 {
-			return EOF, nil
-		}
-		
-		if isInvalidRune(code[0]) {
-			return illegalToken(code)
-		}
-		
-		if isNumber(code[0]) {
-			return numberState(code, 1)
-		}
-		
-		if isDot(code[0]) {
-			return realDecimalState(code, 1)
-		}
-		
+func (l *lexer) initialState() (Tokval, lexerState) {
+
+	if l.isEOF() {
 		return EOF, nil
 	}
-}
-
-func numberState(code []rune, position uint) (Tokval, lexerState) {
-
-	if isEOF(code, position) {
-		return Tokval{
-			Type: token.Decimal,
-			Value: newStr(code),
-		}, initialState(code[position:])
-	}
-	
-	if isDot(code[position]) {
-		return realDecimalState(code, position + 1)
-	}
-	
-	if isNumber(code[position]) {
-		return decimalState(code, position + 1)
-	}
-	
-	if isHexStart(code[position]) {
-		if isEOF(code, position + 1) {
-			return illegalToken(code)
-		}
-		return hexadecimalState(code, position + 1)
-	}
-	
-	if isExponentPartStart(code[position]) {
-		return exponentPartState(code, position + 1)
+		
+	if l.isInvalidRune() {
+		return l.illegalToken()
 	}
 		
-	return illegalToken(code)
+	if l.isNumber() {
+		l.fwd()
+		return l.numberState()
+	}
+		
+	if l.isDot() {
+		l.fwd()
+		return l.realDecimalState()
+	}
+		
+	return EOF, nil
 }
 
-func illegalToken(code []rune) (Tokval, lexerState) {
+func (l *lexer) numberState() (Tokval, lexerState) {
+
+	if l.isEOF() {
+		return l.token(token.Decimal), l.initialState
+	}
+	
+	if l.isDot() {
+		l.fwd()
+		return l.realDecimalState()
+	}
+	
+	if l.isNumber() {
+		l.fwd()
+		return l.decimalState()
+	}
+	
+	if l.isHexStart() {
+		l.fwd()
+		
+		if l.isEOF() {
+			return l.illegalToken()
+		}
+		return l.hexadecimalState()
+	}
+	
+	if l.isExponentPartStart() {
+		l.fwd()
+		return l.exponentPartState()
+	}
+		
+	return l.illegalToken()
+}
+
+func (l *lexer) illegalToken() (Tokval, lexerState) {
 	return Tokval{
 		Type: token.Illegal,
-		Value: newStr(code),
+		Value: newStr(l.code),
 	}, nil
 }
 
-func hexadecimalState(code []rune, position uint) (Tokval, lexerState) {
+func (l *lexer) hexadecimalState() (Tokval, lexerState) {
 
-	for !isEOF(code, position) {
-		if !isHexadecimal(code[position]) {
-			return illegalToken(code)
+	for !l.isEOF() {
+		if !l.isHexadecimal() {
+			return l.illegalToken()
 		}
-		position += 1
+		l.fwd()
 	}
 		
-	return Tokval{
-		Type: token.Hexadecimal,
-		Value: newStr(code),
-	}, initialState(code[position:])
+	return l.token(token.Hexadecimal), l.initialState
 }
 
-func realDecimalState(code []rune, position uint) (Tokval, lexerState) {
+func (l *lexer) realDecimalState() (Tokval, lexerState) {
 
-	for !isEOF(code, position) {
-		if isExponentPartStart(code[position]) {
-			return exponentPartState(code, position + 1)
+	for !l.isEOF() {
+		if l.isExponentPartStart() {
+			l.fwd()
+			return l.exponentPartState()
 		}
 		
-		if !isNumber(code[position]) {
-			return illegalToken(code)
+		if !l.isNumber() {
+			return l.illegalToken()
 		}
 		
-		position += 1
+		l.fwd()
 	}
 	
-	return Tokval{
-		Type: token.Decimal,
-		Value: newStr(code),
-	}, initialState(code[position:])
+	return l.token(token.Decimal), l.initialState
 }
 
-func decimalState(code []rune, position uint) (Tokval, lexerState) {
+func (l *lexer) decimalState() (Tokval, lexerState) {
 
-	for !isEOF(code, position) {
-		if isExponentPartStart(code[position]) {
-			return exponentPartState(code, position + 1)
+	for !l.isEOF() {
+		if l.isExponentPartStart() {
+			l.fwd()
+			return l.exponentPartState()
 		}
 		
-		if isDot(code[position]) {
-			return realDecimalState(code, position + 1)
+		if l.isDot() {
+			l.fwd()
+			return l.realDecimalState()
 		}
 		
-		if !isNumber(code[position]) {
-			return illegalToken(code)
+		if !l.isNumber() {
+			return l.illegalToken()
 		}
-		position += 1
+		
+		l.fwd()
 	}
 	
-	return Tokval{
-		Type: token.Decimal,
-		Value: newStr(code),
-	}, initialState(code[position:])
+	return l.token(token.Decimal), l.initialState
 }
 
-func exponentPartState(code []rune, position uint) (Tokval, lexerState) {
+func (l *lexer) exponentPartState() (Tokval, lexerState) {
 	// TODO: Need to validate malformed exponent numbers to improve this
 	// eg: 1.0e123e
 	// TODO: can exponent be like: 1.0e ?
 	
-	if isMinusSign(code[position]) || isPlusSign(code[position]) {
+	if l.isMinusSign() || l.isPlusSign() {
 		// TODO: test 1.0e- and 1.0e+
-		position += 1
+		l.fwd()
 	}
 	
-	return decimalState(code, position)
+	return l.decimalState()
 }
 
-func isNumber(r rune) bool {
-	return containsRune(numbers, r)
+func (l *lexer) cur() rune {
+	return l.code[l.position]
 }
 
-func containsRune(runes []rune, r rune) bool {
-	for _, n := range runes {
-		if r == n {
-			return true
-		}
-	}
-	return false	
+func (l *lexer) isNumber() bool {
+	return containsRune(numbers, l.cur())
 }
 
-func isEOF(code []rune, position uint) bool {
-	return position >= uint(len(code))
+func (l *lexer) isEOF() bool {
+	return l.position >= uint(len(l.code))
 }
 
-func isDot(r rune) bool {
-	return r == dot
+func (l *lexer) isDot() bool {
+	return l.cur() == dot
 }
 
-func isHexStart(r rune) bool {
-	return containsRune(hexStart, r)
+func (l *lexer) isHexStart() bool {
+	return containsRune(hexStart, l.cur())
 }
 
-func newStr(r []rune) utf16.Str {
-	return utf16.NewFromRunes(r)
+func (l *lexer) isInvalidRune() bool {
+	return unicode.ReplacementChar == l.cur()
 }
 
-func isInvalidRune(r rune) bool {
-	return unicode.ReplacementChar == r
+func (l *lexer) isMinusSign() bool {
+	return l.cur() == minusSign
 }
 
-func isMinusSign(r rune) bool {
-	return r == minusSign
+func (l *lexer) isPlusSign() bool {
+	return l.cur() == plusSign
 }
 
-func isPlusSign(r rune) bool {
-	return r == plusSign
+func (l *lexer) isHexadecimal() bool {
+	return containsRune(hexnumbers, l.cur())
 }
 
-func isHexadecimal(r rune) bool {
-	return containsRune(hexnumbers, r)
+func (l *lexer) isExponentPartStart() bool {
+	return containsRune(exponentPartStart, l.cur())
 }
 
-func isExponentPartStart(r rune) bool {
-	return containsRune(exponentPartStart, r)
+func (l *lexer) fwd() {
+	l.position += 1
+}
+
+func (l *lexer) token(t token.Type) Tokval {
+	// TODO: test to get only correct slice here =)
+	val := l.code
+	l.code = l.code[l.position:]
+	return Tokval{Type:t, Value: newStr(val)}
 }
 
 var numbers []rune
@@ -247,4 +256,17 @@ func init() {
 	plusSign = rune('+')
 	hexStart = []rune("xX")
 	exponentPartStart = []rune("eE")
+}
+
+func containsRune(runes []rune, r rune) bool {
+	for _, n := range runes {
+		if r == n {
+			return true
+		}
+	}
+	return false	
+}
+
+func newStr(r []rune) utf16.Str {
+	return utf16.NewFromRunes(r)
 }
