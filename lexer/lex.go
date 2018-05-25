@@ -31,7 +31,8 @@ func Lex(code utf16.Str) <-chan Tokval {
 	
 	go func() {
 	
-		currentState := initialState(code)
+		decodedCode := code.Runes()
+		currentState := initialState(decodedCode)
 		
 		for currentState != nil {
 			token, newState := currentState()
@@ -47,7 +48,7 @@ func Lex(code utf16.Str) <-chan Tokval {
 
 type lexerState func() (Tokval, lexerState)
 
-func initialState(code utf16.Str) lexerState {
+func initialState(code []rune) lexerState {
 
 	return func() (Tokval, lexerState) {
 		// TODO: handle empty input
@@ -69,12 +70,12 @@ func initialState(code utf16.Str) lexerState {
 	}
 }
 
-func numberState(code utf16.Str, position uint) (Tokval, lexerState) {
+func numberState(code []rune, position uint) (Tokval, lexerState) {
 
 	if isEOF(code, position) {
 		return Tokval{
 			Type: token.Decimal,
-			Value: code,
+			Value: newStr(code),
 		}, initialState(code[position:])
 	}
 	
@@ -92,14 +93,14 @@ func numberState(code utf16.Str, position uint) (Tokval, lexerState) {
 	return illegalToken(code)
 }
 
-func illegalToken(code utf16.Str) (Tokval, lexerState) {
+func illegalToken(code []rune) (Tokval, lexerState) {
 	return Tokval{
 		Type: token.Illegal,
-		Value: code,
+		Value: newStr(code),
 	}, nil
 }
 
-func hexadecimalState(code utf16.Str, position uint) (Tokval, lexerState) {
+func hexadecimalState(code []rune, position uint) (Tokval, lexerState) {
 	// TODO: need more tests to validate x/X before continuing
 	// TODO: tests validating invalid hexadecimals
 	for !isEOF(code, position) {
@@ -108,11 +109,11 @@ func hexadecimalState(code utf16.Str, position uint) (Tokval, lexerState) {
 		
 	return Tokval{
 		Type: token.Hexadecimal,
-		Value: code,
+		Value: newStr(code),
 	}, initialState(code[position:])
 }
 
-func decimalState(code utf16.Str, position uint) (Tokval, lexerState) {
+func decimalState(code []rune, position uint) (Tokval, lexerState) {
 	// TODO: tests validating invalid decimals
 	for !isEOF(code, position) {
 		position += 1
@@ -120,42 +121,45 @@ func decimalState(code utf16.Str, position uint) (Tokval, lexerState) {
 	
 	return Tokval{
 		Type: token.Decimal,
-			Value: code,
+		Value: newStr(code),
 	}, initialState(code[position:])
 }
 
-func isNumber(utf16char uint16) bool {
-	str := strFromChar(utf16char)
-	return numbers.Contains(str)
+func isNumber(r rune) bool {
+	return containsRune(numbers, r)
 }
 
-func isEOF(code utf16.Str, position uint) bool {
+func containsRune(runes []rune, r rune) bool {
+	for _, n := range runes {
+		if r == n {
+			return true
+		}
+	}
+	return false	
+}
+
+func isEOF(code []rune, position uint) bool {
 	return position >= uint(len(code))
 }
 
-func isDot(utf16char uint16) bool {
-	str := strFromChar(utf16char)
-	return dot.Equal(str)
+func isDot(r rune) bool {
+	return r == dot
 }
 
-func isHexStart(utf16char uint16) bool {
-	str := strFromChar(utf16char)
-	return hexStart.Contains(str)
+func isHexStart(r rune) bool {
+	return containsRune(hexStart, r)
 }
 
-func strFromChar(utf16char uint16) utf16.Str {
-	return utf16.Str([]uint16{utf16char})
+func newStr(r []rune) utf16.Str {
+	return utf16.NewFromRunes(r)
 }
 
-
-var numbers utf16.Str
-var dot utf16.Str
-var exponents utf16.Str
-var hexStart utf16.Str
+var numbers []rune
+var dot rune
+var hexStart []rune
 
 func init() {
-	numbers = utf16.NewStr("0123456789")
-	dot = utf16.NewStr(".")
-	exponents = utf16.NewStr("eE")
-	hexStart = utf16.NewStr("xX")
+	numbers = []rune("0123456789")
+	dot = rune('.')
+	hexStart = []rune("xX")
 }
