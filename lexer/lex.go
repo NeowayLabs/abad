@@ -1,6 +1,8 @@
 package lexer
 
 import (
+	"unicode"
+	
 	"github.com/NeowayLabs/abad/internal/utf16"
 	"github.com/NeowayLabs/abad/token"
 )
@@ -57,6 +59,10 @@ func initialState(code []rune) lexerState {
 			return EOF, nil
 		}
 		
+		if isInvalidRune(code[0]) {
+			return illegalToken(code)
+		}
+		
 		if isNumber(code[0]) {
 			return numberState(code, 1)
 		}
@@ -104,6 +110,10 @@ func hexadecimalState(code []rune, position uint) (Tokval, lexerState) {
 	// TODO: need more tests to validate x/X before continuing
 	// TODO: tests validating invalid hexadecimals
 	for !isEOF(code, position) {
+		if isInvalidRune(code[position]) {
+			// TODO: Test to dont send all code
+			return illegalToken(code)
+		}
 		position += 1
 	}
 		
@@ -116,6 +126,10 @@ func hexadecimalState(code []rune, position uint) (Tokval, lexerState) {
 func decimalState(code []rune, position uint) (Tokval, lexerState) {
 	// TODO: tests validating invalid decimals
 	for !isEOF(code, position) {
+		if isInvalidRune(code[position]) {
+			// TODO: Test to dont send all code
+			return illegalToken(code)
+		}
 		position += 1
 	}
 	
@@ -152,6 +166,10 @@ func isHexStart(r rune) bool {
 
 func newStr(r []rune) utf16.Str {
 	return utf16.NewFromRunes(r)
+}
+
+func isInvalidRune(r rune) bool {
+	return unicode.ReplacementChar == r
 }
 
 var numbers []rune
