@@ -93,7 +93,7 @@ func numberState(code []rune, position uint) (Tokval, lexerState) {
 		if isEOF(code, position + 1) {
 			return illegalToken(code)
 		}
-		return hexadecimalState(code, position)
+		return hexadecimalState(code, position + 1)
 	}
 	
 	if isExponentPartStart(code[position]) {
@@ -114,8 +114,8 @@ func hexadecimalState(code []rune, position uint) (Tokval, lexerState) {
 	// TODO: need more tests to validate x/X before continuing
 	// TODO: tests validating invalid hexadecimals
 	for !isEOF(code, position) {
-		if isInvalidRune(code[position]) {
-			// TODO: Test to dont send all code
+		if !isHexadecimal(code[position]) {
+			// TODO: Test to dont send all code, just slice
 			return illegalToken(code)
 		}
 		position += 1
@@ -200,11 +200,16 @@ func isPlusSign(r rune) bool {
 	return r == plusSign
 }
 
+func isHexadecimal(r rune) bool {
+	return containsRune(hexnumbers, r)
+}
+
 func isExponentPartStart(r rune) bool {
 	return containsRune(exponentPartStart, r)
 }
 
 var numbers []rune
+var hexnumbers []rune
 var dot rune
 var minusSign rune
 var plusSign rune
@@ -213,6 +218,7 @@ var exponentPartStart []rune
 
 func init() {
 	numbers = []rune("0123456789")
+	hexnumbers = append(numbers, []rune("abcdefABCDEF")...)
 	dot = rune('.')
 	minusSign = rune('-')
 	plusSign = rune('+')

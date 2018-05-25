@@ -367,6 +367,20 @@ func TestIllegalNumericLiterals(t *testing.T) {
 			},
 		},
 		{
+			name: "OnlyStartAsHexadecimal",
+			code: Str("0xI4K"),
+			want: []lexer.Tokval{
+				illegalToken(Str("0xI4K")),
+			},
+		},
+		{
+			name: "EndIsNotHexadecimal",
+			code: Str("0x123456G"),
+			want: []lexer.Tokval{
+				illegalToken(Str("0x123456G")),
+			},
+		},
+		{
 			name: "CorruptedHexadecimal",
 			code: corruptedHex,
 			want: []lexer.Tokval{
