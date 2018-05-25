@@ -102,3 +102,7 @@ func (s Str) Len() int {
 func (s Str) Runes() []rune {
 	return DecodeRunes(s)
 }
+
+func (s Str) Append(o Str) Str {
+	return Str(append(s, o...))
+}

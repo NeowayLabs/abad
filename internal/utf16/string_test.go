@@ -95,3 +95,25 @@ func TestCreateStringFromRunes(t *testing.T) {
 		t.Fatalf("want[%s] != got[%s]", wantstr, str.String())
 	}
 }
+
+func TestAppendStrings(t *testing.T) {
+	type tcase struct {
+		s1 utf16.Str
+		s2 utf16.Str
+		want utf16.Str
+	}
+	
+	cases := []tcase{
+		{ s1: S("a"), s2: S("bad"), want: S("abad") },
+		{ s1: S(""), s2: S("abad"), want: S("abad") },
+		{ s1: S("abad"), s2: S(""), want: S("abad") },
+		{ s1: S(""), s2: S(""), want: S("") },
+	}
+	
+	for _, c := range cases {
+		got := c.s1.Append(c.s2)
+		if !c.want.Equal(got) {
+			t.Fatalf("got[%s] !=  want[%s]", got, c.want)
+		}
+	}
+}
