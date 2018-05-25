@@ -2,6 +2,7 @@ package utf16_test
 
 import (
 	"testing"
+	"reflect"
 
 	"github.com/NeowayLabs/abad/internal/utf16"
 )
@@ -75,5 +76,22 @@ func TestStrIndex(t *testing.T) {
 			t.Fatalf("contains differs: %v != %v",
 				gotcontains, tc.contains)
 		}
+	}
+}
+
+
+func TestCreateStringFromRunes(t *testing.T) {
+	wantstr := "hello world"
+	want := []rune(wantstr)
+	
+	str := utf16.NewFromRunes(want)
+	got := str.Runes()
+	
+	if !reflect.DeepEqual(want, got) {
+		t.Fatalf("want[%v] != got[%v]", want, got)
+	}
+	
+	if str.String() != wantstr {
+		t.Fatalf("want[%s] != got[%s]", wantstr, str.String())
 	}
 }

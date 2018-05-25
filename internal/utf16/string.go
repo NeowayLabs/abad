@@ -13,6 +13,10 @@ func NewStr(a string) Str {
 	return Encode(a)
 }
 
+func NewFromRunes(r []rune) Str {
+	return EncodeRunes(r)
+}
+
 // String is the UTF-8 string representation of Str
 func (s Str) String() string {
 	return Decode(s)
@@ -93,4 +97,8 @@ func (s Str) HasPrefix(substr Str) bool {
 
 func (s Str) Len() int {
 	return len(s)
+}
+
+func (s Str) Runes() []rune {
+	return DecodeRunes(s)
 }
