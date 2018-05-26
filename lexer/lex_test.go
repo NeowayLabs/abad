@@ -136,6 +136,28 @@ func TestNumericLiterals(t *testing.T) {
 			},
 		},
 		{
+			name: "BigDecimalWithBigExponent",
+			code: Str("666666666666e668"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Decimal,
+					Value: Str("666666666666e668"),
+				},
+				EOF,
+			},
+		},
+		{
+			name: "BigDecimalWithBigExponentUpperExponent",
+			code: Str("666666666666E668"),
+			want: []lexer.Tokval{
+				{
+					Type: token.Decimal,
+					Value: Str("666666666666E668"),
+				},
+				EOF,
+			},
+		},
+		{
 			name: "BigRealDecimalWithBigExponent",
 			code: Str("666666666666.0e66"),
 			want: []lexer.Tokval{
@@ -363,7 +385,7 @@ func TestNumericLiterals(t *testing.T) {
 	}, cases)
 	
 	plusMinusPlusMinusSignedCases := prependOnTestCases(TestCase{
-		name: "plusMinusPlusMinusSign",
+		name: "PlusMinusPlusMinusSign",
 		code: Str("+-+-"),
 		want: []lexer.Tokval{
 			{ Type: token.Plus, Value: Str("+") },
@@ -374,7 +396,7 @@ func TestNumericLiterals(t *testing.T) {
 	}, cases)
 	
 	minusPlusMinusPlusSignedCases := prependOnTestCases(TestCase{
-		name: "minusPlusMinusPlusSign",
+		name: "MinusPlusMinusPlusSign",
 		code: Str("-+-+"),
 		want: []lexer.Tokval{
 			{ Type: token.Minus, Value: Str("-") },
