@@ -106,7 +106,7 @@ func (l *lexer) numberState() (Tokval, lexerState) {
 	
 	if l.isNumber() {
 		l.fwd()
-		return l.decimalState()
+		return l.decimalState(true)
 	}
 	
 	if l.isHexStart() {
@@ -164,10 +164,13 @@ func (l *lexer) realDecimalState() (Tokval, lexerState) {
 	return l.token(token.Decimal), l.initialState
 }
 
-func (l *lexer) decimalState() (Tokval, lexerState) {
+func (l *lexer) decimalState(allowExponent bool) (Tokval, lexerState) {
 
 	for !l.isEOF() {
 		if l.isExponentPartStart() {
+			if !allowExponent {
+				return l.illegalToken()
+			}
 			l.fwd()
 			return l.exponentPartState()
 		}
@@ -188,8 +191,6 @@ func (l *lexer) decimalState() (Tokval, lexerState) {
 }
 
 func (l *lexer) exponentPartState() (Tokval, lexerState) {
-	// TODO: Need to validate malformed exponent numbers to improve this
-	// eg: 1.0e123e
 	// TODO: can exponent be like: 1.0e ?
 	
 	if l.isMinusSign() || l.isPlusSign() {
@@ -197,7 +198,7 @@ func (l *lexer) exponentPartState() (Tokval, lexerState) {
 		l.fwd()
 	}
 	
-	return l.decimalState()
+	return l.decimalState(false)
 }
 
 func (l *lexer) cur() rune {
