@@ -69,6 +69,11 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 	if l.isInvalidRune() {
 		return l.illegalToken()
 	}
+	
+	if l.isPlusSign() {
+		// TODO: handle ++
+		return l.token(token.Plus), l.initialState
+	}
 		
 	if l.isNumber() {
 		l.fwd()
@@ -105,6 +110,7 @@ func (l *lexer) numberState() (Tokval, lexerState) {
 		if l.isEOF() {
 			return l.illegalToken()
 		}
+		
 		return l.hexadecimalState()
 	}
 	
@@ -233,10 +239,20 @@ func (l *lexer) fwd() {
 	l.position += 1
 }
 
+// token will generating a token consuming all the code
+// until the current position.
 func (l *lexer) token(t token.Type) Tokval {
-	// TODO: test to get only correct slice here =)
-	val := l.code
-	l.code = l.code[l.position:]
+	var val []rune
+	
+	if l.isEOF() {
+		val = l.code
+		l.code = nil
+	} else {
+		val = l.code[:l.position + 1]
+		l.code = l.code[l.position + 1:]
+	}
+	
+	l.position = 0	
 	return Tokval{Type:t, Value: newStr(val)}
 }
 
