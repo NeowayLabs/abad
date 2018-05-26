@@ -421,17 +421,31 @@ func TestIllegalNumericLiterals(t *testing.T) {
 	
 	runTests(t, []TestCase{
 		{
-			name: "DuplicatedUpperExponentPart",
+			name: "DecimalDuplicatedUpperExponentPart",
 			code: Str("123E123E123"),
 			want: []lexer.Tokval{
 				illegalToken(Str("123E123E123")),
 			},
 		},
 		{
-			name: "DuplicatedExponentPart",
+			name: "DecimalDuplicatedExponentPart",
 			code: Str("123e123e123"),
 			want: []lexer.Tokval{
 				illegalToken(Str("123e123e123")),
+			},
+		},
+		{
+			name: "RealDecimalDuplicatedUpperExponentPart",
+			code: Str("123.1E123E123"),
+			want: []lexer.Tokval{
+				illegalToken(Str("123.1E123E123")),
+			},
+		},
+		{
+			name: "RealDecimalDuplicatedExponentPart",
+			code: Str("123.6e123e123"),
+			want: []lexer.Tokval{
+				illegalToken(Str("123.6e123e123")),
 			},
 		},
 		{
