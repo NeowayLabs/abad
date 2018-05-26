@@ -354,8 +354,41 @@ func TestNumericLiterals(t *testing.T) {
 		},
 	}, cases)
 	
+	minusSignedCases := prependOnTestCases(TestCase{
+		name: "MinusSign",
+		code: Str("-"),
+		want: []lexer.Tokval{
+			{ Type: token.Minus, Value: Str("-") },
+		},
+	}, cases)
+	
+	plusMinusPlusMinusSignedCases := prependOnTestCases(TestCase{
+		name: "plusMinusPlusMinusSign",
+		code: Str("+-+-"),
+		want: []lexer.Tokval{
+			{ Type: token.Plus, Value: Str("+") },
+			{ Type: token.Minus, Value: Str("-") },
+			{ Type: token.Plus, Value: Str("+") },
+			{ Type: token.Minus, Value: Str("-") },
+		},
+	}, cases)
+	
+	minusPlusMinusPlusSignedCases := prependOnTestCases(TestCase{
+		name: "minusPlusMinusPlusSign",
+		code: Str("-+-+"),
+		want: []lexer.Tokval{
+			{ Type: token.Minus, Value: Str("-") },
+			{ Type: token.Plus, Value: Str("+") },
+			{ Type: token.Minus, Value: Str("-") },
+			{ Type: token.Plus, Value: Str("+") },
+		},
+	}, cases)
+	
 	runTests(t, cases)
-	runTests(t, plusSignedCases) 
+	runTests(t, plusSignedCases)
+	runTests(t, minusSignedCases)
+	runTests(t, plusMinusPlusMinusSignedCases)
+	runTests(t, minusPlusMinusPlusSignedCases)
 }
 
 func TestIllegalNumericLiterals(t *testing.T) {

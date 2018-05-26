@@ -74,6 +74,11 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 		// TODO: handle ++
 		return l.token(token.Plus), l.initialState
 	}
+	
+	if l.isMinusSign() {
+		// TODO: handle --
+		return l.token(token.Minus), l.initialState
+	}
 		
 	if l.isNumber() {
 		l.fwd()
@@ -239,8 +244,10 @@ func (l *lexer) fwd() {
 	l.position += 1
 }
 
-// token will generating a token consuming all the code
-// until the current position.
+// token will generate a token consuming all the code
+// until the current position. After calling this method
+// the token will not be available anymore (it has been consumed)
+// on the code and the position will be reset to zero.
 func (l *lexer) token(t token.Type) Tokval {
 	var val []rune
 	
