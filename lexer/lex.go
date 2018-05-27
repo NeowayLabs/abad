@@ -10,12 +10,18 @@ import (
 type Tokval struct {
 	Type  token.Type
 	Value utf16.Str
+	Line uint
+	Column uint
 }
 
 var EOF Tokval = Tokval{ Type: token.EOF }
 
 func (t Tokval) Equal(other Tokval) bool {
 	return t.Type == other.Type && t.Value.Equal(other.Value)
+}
+
+func (t Tokval) EqualPos(other Tokval) bool {
+	return t.Line == other.Line && t.Column == other.Column
 }
 
 // Lex will lex the given crappy JS code (utf16 yay) and provide a
@@ -52,12 +58,14 @@ func Lex(code utf16.Str) <-chan Tokval {
 type lexer struct {
 	code []rune
 	position uint
+	line uint
+	column uint
 }
 
 type lexerState func() (Tokval, lexerState)
 
 func newLexer(code []rune) *lexer {
-	return &lexer {code:code}
+	return &lexer {code:code, line: 1, column: 1}
 }
 
 func (l *lexer) initialState() (Tokval, lexerState) {
@@ -260,8 +268,12 @@ func (l *lexer) token(t token.Type) Tokval {
 		l.code = l.code[l.position + 1:]
 	}
 	
+	// FIXME: should use position, but for now this works for the lack of tests
+	c := l.column
+	l.column += 1
+	
 	l.position = 0	
-	return Tokval{Type:t, Value: newStr(val)}
+	return Tokval{Type:t, Value: newStr(val), Line: l.line, Column: c}
 }
 
 var numbers []rune
