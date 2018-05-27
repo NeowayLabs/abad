@@ -198,10 +198,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "ZeroHexadecimal",
 			code: Str("0x0"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Hexadecimal,
-					Value: Str("0x0"),
-				},
+				hexToken("0x0"),
 				EOF,
 			},
 		},
@@ -209,10 +206,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "BigHexadecimal",
 			code: Str("0x123456789abcdef"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Hexadecimal,
-					Value: Str("0x123456789abcdef"),
-				},
+				hexToken("0x123456789abcdef"),
 				EOF,
 			},
 		},
@@ -220,10 +214,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "BigHexadecimalUppercase",
 			code: Str("0x123456789ABCDEF"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Hexadecimal,
-					Value: Str("0x123456789ABCDEF"),
-				},
+				hexToken("0x123456789ABCDEF"),
 				EOF,
 			},
 		},
@@ -231,10 +222,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "LettersOnlyHexadecimal",
 			code: Str("0xabcdef"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Hexadecimal,
-					Value: Str("0xabcdef"),
-				},
+				hexToken("0xabcdef"),
 				EOF,
 			},
 		},
@@ -242,10 +230,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "LettersOnlyHexadecimalUppercase",
 			code: Str("0xABCDEF"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Hexadecimal,
-					Value: Str("0xABCDEF"),
-				},
+				hexToken("0xABCDEF"),
 				EOF,
 			},
 		},
@@ -253,10 +238,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "ZeroHexadecimalUpperX",
 			code: Str("0X0"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Hexadecimal,
-					Value: Str("0X0"),
-				},
+				hexToken("0X0"),
 				EOF,
 			},
 		},
@@ -264,10 +246,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "BigHexadecimalUpperX",
 			code: Str("0X123456789abcdef"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Hexadecimal,
-					Value: Str("0X123456789abcdef"),
-				},
+				hexToken("0X123456789abcdef"),
 				EOF,
 			},
 		},
@@ -275,10 +254,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "BigHexadecimalUppercaseUpperX",
 			code: Str("0X123456789ABCDEF"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Hexadecimal,
-					Value: Str("0X123456789ABCDEF"),
-				},
+				hexToken("0X123456789ABCDEF"),
 				EOF,
 			},
 		},
@@ -286,10 +262,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "LettersOnlyHexadecimalUpperX",
 			code: Str("0Xabcdef"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Hexadecimal,
-					Value: Str("0Xabcdef"),
-				},
+				hexToken("0Xabcdef"),
 				EOF,
 			},
 		},
@@ -297,10 +270,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "LettersOnlyHexadecimalUppercaseUpperX",
 			code: Str("0XABCDEF"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Hexadecimal,
-					Value: Str("0XABCDEF"),
-				},
+				hexToken("0XABCDEF"),
 				EOF,
 			},
 		},
@@ -309,27 +279,23 @@ func TestNumericLiterals(t *testing.T) {
 	plusSignedCases := prependOnTestCases(TestCase{
 		name: "PlusSign",
 		code: Str("+"),
-		want: []lexer.Tokval{
-			{ Type: token.Plus, Value: Str("+") },
-		},
+		want: []lexer.Tokval{ plusToken() },
 	}, cases)
 	
 	minusSignedCases := prependOnTestCases(TestCase{
 		name: "MinusSign",
 		code: Str("-"),
-		want: []lexer.Tokval{
-			{ Type: token.Minus, Value: Str("-") },
-		},
+		want: []lexer.Tokval{ minusToken() },
 	}, cases)
 	
 	plusMinusPlusMinusSignedCases := prependOnTestCases(TestCase{
 		name: "PlusMinusPlusMinusSign",
 		code: Str("+-+-"),
 		want: []lexer.Tokval{
-			{ Type: token.Plus, Value: Str("+") },
-			{ Type: token.Minus, Value: Str("-") },
-			{ Type: token.Plus, Value: Str("+") },
-			{ Type: token.Minus, Value: Str("-") },
+			plusToken(),
+			minusToken(),
+			plusToken(),
+			minusToken(),
 		},
 	}, cases)
 	
@@ -337,10 +303,10 @@ func TestNumericLiterals(t *testing.T) {
 		name: "MinusPlusMinusPlusSign",
 		code: Str("-+-+"),
 		want: []lexer.Tokval{
-			{ Type: token.Minus, Value: Str("-") },
-			{ Type: token.Plus, Value: Str("+") },
-			{ Type: token.Minus, Value: Str("-") },
-			{ Type: token.Plus, Value: Str("+") },
+			minusToken(),
+			plusToken(),
+			minusToken(),
+			plusToken(),
 		},
 	}, cases)
 	
@@ -629,6 +595,20 @@ func prependOnTestCases(tcase TestCase, tcases []TestCase) []TestCase{
 	return newcases
 }
 
+func minusToken() lexer.Tokval {
+	return lexer.Tokval{
+		Type: token.Minus,
+		Value: Str("-"),
+	}
+}
+
+func plusToken() lexer.Tokval {
+	return lexer.Tokval{
+		Type: token.Plus,
+		Value: Str("+"),
+	}
+}
+
 func minusTokenPos(line uint, column uint) lexer.Tokval {
 	return lexer.Tokval{
 		Type: token.Minus,
@@ -660,5 +640,12 @@ func decimalToken(dec string) lexer.Tokval {
 	return lexer.Tokval{
 		Type: token.Decimal,
 		Value: Str(dec),
+	}
+}
+
+func hexToken(hex string) lexer.Tokval {
+	return lexer.Tokval{
+		Type: token.Hexadecimal,
+		Value: Str(hex),
 	}
 }
