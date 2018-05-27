@@ -317,6 +317,41 @@ func TestNumericLiterals(t *testing.T) {
 	runTests(t, minusPlusMinusPlusSignedCases)
 }
 
+func TestIdentifiers(t *testing.T) {
+	runTests(t, []TestCase{
+		{
+			name: "Underscore",
+			code: Str("_"),
+			want: tokens(identToken("_")),
+		},
+		{
+			name: "SingleLetter",
+			code: Str("a"),
+			want: tokens(identToken("a")),
+		},
+		{
+			name: "Self",
+			code: Str("self"),
+			want: tokens(identToken("self")),
+		},
+		{
+			name: "Console",
+			code: Str("console"),
+			want: tokens(identToken("console")),
+		},
+		{
+			name: "LotsUnderscores",
+			code: Str("___hyped___"),
+			want: tokens(identToken("___hyped___")),
+		},
+		{
+			name: "DollarsInterwined",
+			code: Str("a$b$c"),
+			want: tokens(identToken("a$b$c")),
+		},
+	})
+}
+
 func TestPosition(t *testing.T) {
 	runTests(t, []TestCase{
 		{
@@ -496,11 +531,6 @@ func TestNoOutputFor(t *testing.T) {
 			code: Str(""),
 			want: []lexer.Tokval{ EOF },
 		},
-		{
-			name: "JustSpaces",
-			code: Str("        "),
-			want: []lexer.Tokval{ EOF },
-		},
 	})
 }
 
@@ -648,4 +678,15 @@ func hexToken(hex string) lexer.Tokval {
 		Type: token.Hexadecimal,
 		Value: Str(hex),
 	}
+}
+
+func identToken(s string) lexer.Tokval {
+	return lexer.Tokval{
+		Type: token.Ident,
+		Value: Str(s),
+	}
+}
+
+func tokens(t ...lexer.Tokval) []lexer.Tokval {
+	return append(t, EOF)
 }

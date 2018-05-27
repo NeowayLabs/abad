@@ -98,7 +98,7 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 		return l.realDecimalState()
 	}
 		
-	return EOF, nil
+	return l.identifierState()
 }
 
 func (l *lexer) numberState() (Tokval, lexerState) {
@@ -140,6 +140,16 @@ func (l *lexer) illegalToken() (Tokval, lexerState) {
 		Type: token.Illegal,
 		Value: newStr(l.code),
 	}, nil
+}
+
+func (l *lexer) identifierState() (Tokval, lexerState) {
+
+	// TODO: obviously not complete
+	for !l.isEOF() {
+		l.fwd()
+	}
+		
+	return l.token(token.Ident), l.initialState
 }
 
 func (l *lexer) hexadecimalState() (Tokval, lexerState) {
