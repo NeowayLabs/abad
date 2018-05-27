@@ -118,7 +118,7 @@ func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 	// in the lookahead buffer.
 	if len(p.lookahead) != 0 {
 		panic(fmt.Sprintf(
-			"parsers not handling lookahead correctly: %s",
+			"parsers not handling lookahead correctly: %v",
 			p.lookahead))
 	}
 	return node, false, nil

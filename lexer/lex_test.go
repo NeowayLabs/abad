@@ -30,10 +30,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "SingleZero",
 			code: Str("0"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("0"),
-				},
+				decimalToken("0"),
 				EOF,
 			},
 		},
@@ -41,10 +38,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "BigDecimal",
 			code: Str("1236547987794465977"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("1236547987794465977"),
-				},
+				decimalToken("1236547987794465977"),
 				EOF,
 			},
 		},
@@ -52,10 +46,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "RealDecimalStartingWithPoint",
 			code: Str(".1"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str(".1"),
-				},
+				decimalToken(".1"),
 				EOF,
 			},
 		},
@@ -63,10 +54,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "RealDecimalEndingWithPoint",
 			code: Str("1."),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("1."),
-				},
+				decimalToken("1."),
 				EOF,
 			},
 		},
@@ -74,10 +62,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "LargeRealDecimalStartingWithPoint",
 			code: Str(".123456789"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str(".123456789"),
-				},
+				decimalToken(".123456789"),
 				EOF,
 			},
 		},
@@ -85,10 +70,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "SmallRealDecimal",
 			code: Str("1.6"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("1.6"),
-				},
+				decimalToken("1.6"),
 				EOF,
 			},
 		},
@@ -96,10 +78,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "BigRealDecimal",
 			code: Str("11223243554.63445465789"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("11223243554.63445465789"),
-				},
+				decimalToken("11223243554.63445465789"),
 				EOF,
 			},
 		},
@@ -107,10 +86,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "SmallRealDecimalWithSmallExponent",
 			code: Str("1.0e1"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("1.0e1"),
-				},
+				decimalToken("1.0e1"),
 				EOF,
 			},
 		},
@@ -118,10 +94,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "SmallDecimalWithSmallExponent",
 			code: Str("1e1"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("1e1"),
-				},
+				decimalToken("1e1"),
 				EOF,
 			},
 		},
@@ -129,10 +102,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "SmallDecimalWithSmallExponentUpperExponent",
 			code: Str("1E1"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("1E1"),
-				},
+				decimalToken("1E1"),
 				EOF,
 			},
 		},
@@ -140,10 +110,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "BigDecimalWithBigExponent",
 			code: Str("666666666666e668"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("666666666666e668"),
-				},
+				decimalToken("666666666666e668"),
 				EOF,
 			},
 		},
@@ -151,10 +118,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "BigDecimalWithBigExponentUpperExponent",
 			code: Str("666666666666E668"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("666666666666E668"),
-				},
+				decimalToken("666666666666E668"),
 				EOF,
 			},
 		},
@@ -162,10 +126,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "BigRealDecimalWithBigExponent",
 			code: Str("666666666666.0e66"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("666666666666.0e66"),
-				},
+				decimalToken("666666666666.0e66"),
 				EOF,
 			},
 		},
@@ -173,10 +134,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "RealDecimalWithSmallNegativeExponent",
 			code: Str("1.0e-1"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("1.0e-1"),
-				},
+				decimalToken("1.0e-1"),
 				EOF,
 			},
 		},
@@ -184,10 +142,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "RealDecimalWithBigNegativeExponent",
 			code: Str("1.0e-50"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("1.0e-50"),
-				},
+				decimalToken("1.0e-50"),
 				EOF,
 			},
 		},		
@@ -195,10 +150,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "SmallRealDecimalWithSmallUpperExponent",
 			code: Str("1.0E1"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("1.0E1"),
-				},
+				decimalToken("1.0E1"),
 				EOF,
 			},
 		},
@@ -206,10 +158,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "BigRealDecimalWithBigUpperExponent",
 			code: Str("666666666666.0E66"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("666666666666.0E66"),
-				},
+				decimalToken("666666666666.0E66"),
 				EOF,
 			},
 		},
@@ -217,10 +166,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "RealDecimalWithSmallNegativeUpperExponent",
 			code: Str("1.0E-1"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("1.0E-1"),
-				},
+				decimalToken("1.0E-1"),
 				EOF,
 			},
 		},
@@ -228,10 +174,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "RealDecimalWithBigNegativeUpperExponent",
 			code: Str("1.0E-50"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str("1.0E-50"),
-				},
+				decimalToken("1.0E-50"),
 				EOF,
 			},
 		},
@@ -239,10 +182,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "StartWithDotUpperExponent",
 			code: Str(".0E-50"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str(".0E-50"),
-				},
+				decimalToken(".0E-50"),
 				EOF,
 			},
 		},
@@ -250,10 +190,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "StartWithDotExponent",
 			code: Str(".0e5"),
 			want: []lexer.Tokval{
-				{
-					Type: token.Decimal,
-					Value: Str(".0e5"),
-				},
+				decimalToken(".0e5"),
 				EOF,
 			},
 		},
@@ -716,5 +653,12 @@ func decimalTokenPos(dec string, line uint, column uint) lexer.Tokval {
 		Value: Str(dec),
 		Line: line,
 		Column: column,
+	}
+}
+
+func decimalToken(dec string) lexer.Tokval {
+	return lexer.Tokval{
+		Type: token.Decimal,
+		Value: Str(dec),
 	}
 }
