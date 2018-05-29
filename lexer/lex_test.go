@@ -21,6 +21,7 @@ type TestCase struct {
 var Str func(string) utf16.Str = utf16.S
 var EOF lexer.Tokval = lexer.EOF
 
+
 func TestNumericLiterals(t *testing.T) {
 
 	// SPEC: https://es5.github.io/#x7.8.3
@@ -29,250 +30,157 @@ func TestNumericLiterals(t *testing.T) {
 		{
 			name: "SingleZero",
 			code: Str("0"),
-			want: []lexer.Tokval{
-				decimalToken("0"),
-				EOF,
-			},
+			want: tokens(decimalToken("0")),
 		},
 		{
 			name: "BigDecimal",
 			code: Str("1236547987794465977"),
-			want: []lexer.Tokval{
-				decimalToken("1236547987794465977"),
-				EOF,
-			},
+			want: tokens(decimalToken("1236547987794465977")),
 		},
 		{
 			name: "RealDecimalStartingWithPoint",
 			code: Str(".1"),
-			want: []lexer.Tokval{
-				decimalToken(".1"),
-				EOF,
-			},
+			want: tokens(decimalToken(".1")),
 		},
 		{
 			name: "RealDecimalEndingWithPoint",
 			code: Str("1."),
-			want: []lexer.Tokval{
-				decimalToken("1."),
-				EOF,
-			},
+			want: tokens(decimalToken("1.")),
 		},
 		{
 			name: "LargeRealDecimalStartingWithPoint",
 			code: Str(".123456789"),
-			want: []lexer.Tokval{
-				decimalToken(".123456789"),
-				EOF,
-			},
+			want: tokens(decimalToken(".123456789")),
 		},
 		{
 			name: "SmallRealDecimal",
 			code: Str("1.6"),
-			want: []lexer.Tokval{
-				decimalToken("1.6"),
-				EOF,
-			},
+			want: tokens(decimalToken("1.6")),
 		},
 		{
 			name: "BigRealDecimal",
 			code: Str("11223243554.63445465789"),
-			want: []lexer.Tokval{
-				decimalToken("11223243554.63445465789"),
-				EOF,
-			},
+			want: tokens(decimalToken("11223243554.63445465789")),
 		},
 		{
 			name: "SmallRealDecimalWithSmallExponent",
 			code: Str("1.0e1"),
-			want: []lexer.Tokval{
-				decimalToken("1.0e1"),
-				EOF,
-			},
+			want: tokens(decimalToken("1.0e1")),
 		},
 		{
 			name: "SmallDecimalWithSmallExponent",
 			code: Str("1e1"),
-			want: []lexer.Tokval{
-				decimalToken("1e1"),
-				EOF,
-			},
+			want: tokens(decimalToken("1e1")),
 		},
 		{
 			name: "SmallDecimalWithSmallExponentUpperExponent",
 			code: Str("1E1"),
-			want: []lexer.Tokval{
-				decimalToken("1E1"),
-				EOF,
-			},
+			want: tokens(decimalToken("1E1")),
 		},
 		{
 			name: "BigDecimalWithBigExponent",
 			code: Str("666666666666e668"),
-			want: []lexer.Tokval{
-				decimalToken("666666666666e668"),
-				EOF,
-			},
+			want: tokens(decimalToken("666666666666e668")),
 		},
 		{
 			name: "BigDecimalWithBigExponentUpperExponent",
 			code: Str("666666666666E668"),
-			want: []lexer.Tokval{
-				decimalToken("666666666666E668"),
-				EOF,
-			},
+			want: tokens(decimalToken("666666666666E668")),
 		},
 		{
 			name: "BigRealDecimalWithBigExponent",
 			code: Str("666666666666.0e66"),
-			want: []lexer.Tokval{
-				decimalToken("666666666666.0e66"),
-				EOF,
-			},
+			want: tokens(decimalToken("666666666666.0e66")),
 		},
 		{
 			name: "RealDecimalWithSmallNegativeExponent",
 			code: Str("1.0e-1"),
-			want: []lexer.Tokval{
-				decimalToken("1.0e-1"),
-				EOF,
-			},
+			want: tokens(decimalToken("1.0e-1")),
 		},
 		{
 			name: "RealDecimalWithBigNegativeExponent",
 			code: Str("1.0e-50"),
-			want: []lexer.Tokval{
-				decimalToken("1.0e-50"),
-				EOF,
-			},
+			want: tokens(decimalToken("1.0e-50")),
 		},		
 		{
 			name: "SmallRealDecimalWithSmallUpperExponent",
 			code: Str("1.0E1"),
-			want: []lexer.Tokval{
-				decimalToken("1.0E1"),
-				EOF,
-			},
+			want: tokens(decimalToken("1.0E1")),
 		},
 		{
 			name: "BigRealDecimalWithBigUpperExponent",
 			code: Str("666666666666.0E66"),
-			want: []lexer.Tokval{
-				decimalToken("666666666666.0E66"),
-				EOF,
-			},
+			want: tokens(decimalToken("666666666666.0E66")),
 		},
 		{
 			name: "RealDecimalWithSmallNegativeUpperExponent",
 			code: Str("1.0E-1"),
-			want: []lexer.Tokval{
-				decimalToken("1.0E-1"),
-				EOF,
-			},
+			want: tokens(decimalToken("1.0E-1")),
 		},
 		{
 			name: "RealDecimalWithBigNegativeUpperExponent",
 			code: Str("1.0E-50"),
-			want: []lexer.Tokval{
-				decimalToken("1.0E-50"),
-				EOF,
-			},
+			want: tokens(decimalToken("1.0E-50")),
 		},
 		{
 			name: "StartWithDotUpperExponent",
 			code: Str(".0E-50"),
-			want: []lexer.Tokval{
-				decimalToken(".0E-50"),
-				EOF,
-			},
+			want: tokens(decimalToken(".0E-50")),
 		},
 		{
 			name: "StartWithDotExponent",
 			code: Str(".0e5"),
-			want: []lexer.Tokval{
-				decimalToken(".0e5"),
-				EOF,
-			},
+			want: tokens(decimalToken(".0e5")),
 		},
 		{
 			name: "ZeroHexadecimal",
 			code: Str("0x0"),
-			want: []lexer.Tokval{
-				hexToken("0x0"),
-				EOF,
-			},
+			want: tokens(hexToken("0x0")),
 		},
 		{
 			name: "BigHexadecimal",
 			code: Str("0x123456789abcdef"),
-			want: []lexer.Tokval{
-				hexToken("0x123456789abcdef"),
-				EOF,
-			},
+			want: tokens(hexToken("0x123456789abcdef")),
 		},
 		{
 			name: "BigHexadecimalUppercase",
 			code: Str("0x123456789ABCDEF"),
-			want: []lexer.Tokval{
-				hexToken("0x123456789ABCDEF"),
-				EOF,
-			},
+			want: tokens(hexToken("0x123456789ABCDEF")),
 		},
 		{
 			name: "LettersOnlyHexadecimal",
 			code: Str("0xabcdef"),
-			want: []lexer.Tokval{
-				hexToken("0xabcdef"),
-				EOF,
-			},
+			want: tokens(hexToken("0xabcdef")),
 		},
 		{
 			name: "LettersOnlyHexadecimalUppercase",
 			code: Str("0xABCDEF"),
-			want: []lexer.Tokval{
-				hexToken("0xABCDEF"),
-				EOF,
-			},
+			want: tokens(hexToken("0xABCDEF")),
 		},
 		{
 			name: "ZeroHexadecimalUpperX",
 			code: Str("0X0"),
-			want: []lexer.Tokval{
-				hexToken("0X0"),
-				EOF,
-			},
+			want: tokens(hexToken("0X0")),
 		},
 		{
 			name: "BigHexadecimalUpperX",
 			code: Str("0X123456789abcdef"),
-			want: []lexer.Tokval{
-				hexToken("0X123456789abcdef"),
-				EOF,
-			},
+			want: tokens(hexToken("0X123456789abcdef")),
 		},
 		{
 			name: "BigHexadecimalUppercaseUpperX",
 			code: Str("0X123456789ABCDEF"),
-			want: []lexer.Tokval{
-				hexToken("0X123456789ABCDEF"),
-				EOF,
-			},
+			want: tokens(hexToken("0X123456789ABCDEF")),
 		},
 		{
 			name: "LettersOnlyHexadecimalUpperX",
 			code: Str("0Xabcdef"),
-			want: []lexer.Tokval{
-				hexToken("0Xabcdef"),
-				EOF,
-			},
+			want: tokens(hexToken("0Xabcdef")),
 		},
 		{
 			name: "LettersOnlyHexadecimalUppercaseUpperX",
 			code: Str("0XABCDEF"),
-			want: []lexer.Tokval{
-				hexToken("0XABCDEF"),
-				EOF,
-			},
+			want: tokens(hexToken("0XABCDEF")),
 		},
 	}
 	
