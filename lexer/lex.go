@@ -14,7 +14,7 @@ type Tokval struct {
 	Column uint
 }
 
-var EOF Tokval = Tokval{ Type: token.EOF }
+var EOF Tokval = Tokval{ Type: token.EOF, Value: utf16.S("EOF") }
 
 func (t Tokval) Equal(other Tokval) bool {
 	return t.Type == other.Type && t.Value.Equal(other.Value)
@@ -181,6 +181,11 @@ func (l *lexer) leftParenState() (Tokval, lexerState) {
 }
 
 func (l *lexer) startIdentifierState() (Tokval, lexerState) {
+
+	if l.isEOF() {
+		return EOF, nil
+	}
+	
 	if l.isNumber() {
 		return l.illegalToken()
 	}

@@ -311,6 +311,14 @@ func TestIdentifiers(t *testing.T) {
 			),
 		},
 		{
+			name: "AccessingNoMember",
+			code: Str("console."),
+			want: tokens(
+				identToken("console"),
+				dotToken(),
+			),
+		},
+		{
 			name: "AccessingMemberOfMember",
 			code: Str("console.log.toString"),
 			want: tokens(
