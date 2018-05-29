@@ -190,6 +190,10 @@ func (l *lexer) accessMemberState() (Tokval, lexerState) {
 func (l *lexer) hexadecimalState() (Tokval, lexerState) {
 
 	for !l.isEOF() {
+		if l.isRightParen() {
+			l.bwd()
+			return l.token(token.Hexadecimal), l.initialState
+		}
 		if !l.isHexadecimal() {
 			return l.illegalToken()
 		}
@@ -205,6 +209,11 @@ func (l *lexer) realDecimalState() (Tokval, lexerState) {
 		if l.isExponentPartStart() {
 			l.fwd()
 			return l.exponentPartState()
+		}
+		
+		if l.isRightParen() {
+			l.bwd()
+			return l.token(token.Decimal), l.initialState
 		}
 		
 		if !l.isNumber() {

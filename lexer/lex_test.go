@@ -346,6 +346,106 @@ func TestFuncall(t *testing.T) {
 				rightParenToken(),
 			),
 		},
+		{
+			name: "DecimalWithExponentParameter",
+			code: Str("test(1e6)"),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				decimalToken("1e6"),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "DecimalWithUpperExponentParameter",
+			code: Str("test(1E6)"),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				decimalToken("1E6"),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "WithSmallestRealDecimalParameter",
+			code: Str("test(.1)"),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				decimalToken(".1"),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "RealDecimalWithExponentParameter",
+			code: Str("test(1.1e6)"),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				decimalToken("1.1e6"),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "RealDecimalWithUpperExponentParameter",
+			code: Str("test(1.1E6)"),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				decimalToken("1.1E6"),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "WithRealDecimalParameter",
+			code: Str("test(6.6)"),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				decimalToken("6.6"),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "WithOneDigitHexadecimalParameter",
+			code: Str("test(0x6)"),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				hexToken("0x6"),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "WithOneDigitUpperHexadecimalParameter",
+			code: Str("test(0X6)"),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				hexToken("0X6"),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "WithTwoDigitHexadecimalParameter",
+			code: Str("test(0x66)"),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				hexToken("0x66"),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "WithTwoDigitUpperHexadecimalParameter",
+			code: Str("test(0X66)"),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				hexToken("0X66"),
+				rightParenToken(),
+			),
+		},
 	})
 }
 
