@@ -285,6 +285,20 @@ func TestIdentifiers(t *testing.T) {
 	})
 }
 
+func TestFuncall(t *testing.T) {
+	runTests(t, []TestCase{
+		{
+			name: "OneLetterFunction",
+			code: Str("a()"),
+			want: tokens(
+				identToken("a"),
+				leftParenToken(),
+				rightParenToken(),
+			),
+		},
+	})
+}
+
 func TestPosition(t *testing.T) {
 	runTests(t, []TestCase{
 		{
@@ -529,7 +543,7 @@ func assertWantedTokens(t *testing.T, tc TestCase, got []lexer.Tokval) {
 	
 	if len(tc.want) != len(got) {
 		t.Errorf("wanted [%d] tokens, got [%d] tokens", len(tc.want), len(got))
-		t.Fatalf("\nwant=%+v\ngot= %+v\nare not equal.", tc.want, got)
+		t.Fatalf("\nwant=%v\ngot= %v\nare not equal.", tc.want, got)
 	}
 	
 	for i, w := range tc.want {
@@ -593,6 +607,20 @@ func plusToken() lexer.Tokval {
 	return lexer.Tokval{
 		Type: token.Plus,
 		Value: Str("+"),
+	}
+}
+
+func leftParenToken() lexer.Tokval {
+	return lexer.Tokval{
+		Type: token.LParen,
+		Value: Str("("),
+	}
+}
+
+func rightParenToken() lexer.Tokval {
+	return lexer.Tokval{
+		Type: token.RParen,
+		Value: Str(")"),
 	}
 }
 

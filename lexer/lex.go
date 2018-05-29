@@ -97,6 +97,10 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 		l.fwd()
 		return l.realDecimalState()
 	}
+	
+	if l.isRightParen() {
+		return l.token(token.RParen), l.initialState
+	}
 		
 	return l.identifierState()
 }
@@ -149,10 +153,19 @@ func (l *lexer) identifierState() (Tokval, lexerState) {
 			l.bwd()
 			return l.token(token.Ident), l.accessMemberState
 		}
+		// TODO: test and code right parenthesis on this state
+		if l.isLeftParen() {
+			l.bwd()
+			return l.token(token.Ident), l.leftParenState
+		}
 		l.fwd()
 	}
 		
 	return l.token(token.Ident), l.initialState
+}
+
+func (l *lexer) leftParenState() (Tokval, lexerState) {
+	return l.token(token.LParen), l.initialState
 }
 
 func (l *lexer) startIdentifierState() (Tokval, lexerState) {
@@ -268,6 +281,14 @@ func (l *lexer) isPlusSign() bool {
 	return l.cur() == plusSign
 }
 
+func (l *lexer) isLeftParen() bool {
+	return l.cur() == leftParen
+}
+
+func (l *lexer) isRightParen() bool {
+	return l.cur() == rightParen
+}
+
 func (l *lexer) isHexadecimal() bool {
 	return containsRune(hexnumbers, l.cur())
 }
@@ -312,6 +333,8 @@ var hexnumbers []rune
 var dot rune
 var minusSign rune
 var plusSign rune
+var leftParen rune
+var rightParen rune
 var hexStart []rune
 var exponentPartStart []rune
 
@@ -321,6 +344,8 @@ func init() {
 	dot = rune('.')
 	minusSign = rune('-')
 	plusSign = rune('+')
+	leftParen = rune('(')
+	rightParen = rune(')')
 	hexStart = []rune("xX")
 	exponentPartStart = []rune("eE")
 }
