@@ -144,12 +144,20 @@ func (l *lexer) illegalToken() (Tokval, lexerState) {
 
 func (l *lexer) identifierState() (Tokval, lexerState) {
 
-	// TODO: obviously not complete
 	for !l.isEOF() {
+		if l.isDot() {
+			l.bwd()
+			return l.token(token.Ident), l.accessMemberState
+		}
 		l.fwd()
 	}
 		
 	return l.token(token.Ident), l.initialState
+}
+
+func (l *lexer) accessMemberState() (Tokval, lexerState) {
+	// TODO: check if identifier does not start with number
+	return l.token(token.Dot), l.identifierState
 }
 
 func (l *lexer) hexadecimalState() (Tokval, lexerState) {
@@ -261,6 +269,10 @@ func (l *lexer) isExponentPartStart() bool {
 
 func (l *lexer) fwd() {
 	l.position += 1
+}
+
+func (l *lexer) bwd() {
+	l.position -= 1
 }
 
 // token will generate a token consuming all the code

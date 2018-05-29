@@ -257,6 +257,26 @@ func TestIdentifiers(t *testing.T) {
 			code: Str("a$b$c"),
 			want: tokens(identToken("a$b$c")),
 		},
+		{
+			name: "AccessingMember",
+			code: Str("console.log"),
+			want: tokens(
+				identToken("console"),
+				dotToken(),
+				identToken("log"),
+			),
+		},
+		{
+			name: "AccessingMemberOfMember",
+			code: Str("console.log.toString"),
+			want: tokens(
+				identToken("console"),
+				dotToken(),
+				identToken("log"),
+				dotToken(),
+				identToken("toString"),
+			),
+		},
 	})
 }
 
@@ -578,6 +598,13 @@ func decimalToken(dec string) lexer.Tokval {
 	return lexer.Tokval{
 		Type: token.Decimal,
 		Value: Str(dec),
+	}
+}
+
+func dotToken() lexer.Tokval {
+	return lexer.Tokval{
+		Type: token.Dot,
+		Value: Str("."),
 	}
 }
 
