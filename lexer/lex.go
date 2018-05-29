@@ -107,8 +107,24 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 	if l.isComma() {
 		return l.token(token.Comma), l.initialState
 	}
+	
+	if l.isDoubleQuote() {
+		l.fwd()
+		return l.stringState()
+	}
 		
 	return l.identifierState()
+}
+
+func (l *lexer) stringState() (Tokval, lexerState) {
+	// TODO: add test to check for EOF here
+	
+	for !l.isDoubleQuote() {
+		l.fwd()
+	}
+	
+	// TODO: add more test to check for EOF here
+	return l.stringToken(), l.initialState
 }
 
 func (l *lexer) numberState() (Tokval, lexerState) {
@@ -291,6 +307,10 @@ func (l *lexer) isComma() bool {
 	return l.cur() == comma
 }
 
+func (l *lexer) isDoubleQuote() bool {
+	return l.cur() == doubleQuote
+}
+
 // tokenEnd tries to capture the most common causes of a token ending
 func (l *lexer) isTokenEnd() bool {
 	return l.isRightParen() || l.isComma()
@@ -319,12 +339,36 @@ func (l *lexer) token(t token.Type) Tokval {
 		l.code = l.code[l.position + 1:]
 	}
 	
+	l.position = 0	
+	return Tokval{Type:t, Value: newStr(val), Line: l.line, Column: l.updateColumn()}
+}
+
+func (l *lexer) stringToken() Tokval {
+	// WHY: strings cant finish on EOF and we need to remove the double quotes
+	// around the string.
+	
+	var val []rune
+	
+	val = l.code[1:l.position]
+	
+	// TODO: add tests
+	l.code = nil
+	
+	l.position = 0
+	
+	return Tokval{
+		Type:token.String,
+		Value: newStr(val),
+		Line: l.line,
+		Column: l.updateColumn(),
+	}
+}
+
+func (l *lexer) updateColumn() uint {
 	// FIXME: should use position, but for now this works for the lack of tests
 	c := l.column
 	l.column += 1
-	
-	l.position = 0	
-	return Tokval{Type:t, Value: newStr(val), Line: l.line, Column: c}
+	return c
 }
 
 var numbers []rune
@@ -335,6 +379,7 @@ var plusSign rune
 var leftParen rune
 var rightParen rune
 var comma rune
+var doubleQuote rune
 var hexStart []rune
 var exponentPartStart []rune
 
@@ -347,6 +392,7 @@ func init() {
 	leftParen = rune('(')
 	rightParen = rune(')')
 	comma = rune(',')
+	doubleQuote = rune('"')
 	hexStart = []rune("xX")
 	exponentPartStart = []rune("eE")
 }

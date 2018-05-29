@@ -225,6 +225,27 @@ func TestNumericLiterals(t *testing.T) {
 	runTests(t, minusPlusMinusPlusSignedCases)
 }
 
+func TestStrings(t *testing.T) {
+	// TODO: multiline strings
+	runTests(t, []TestCase{
+		{
+			name: "Empty",
+			code: Str(`""`),
+			want: tokens(stringToken("")),
+		},
+		{
+			name: "SpacesOnly",
+			code: Str(`"  "`),
+			want: tokens(stringToken("  ")),
+		},
+		{
+			name: "LotsOfCrap",
+			code: Str(`"1234567890-+=abcdefg${[]})(()%_ /|/ yay %xi4klindaum"`),
+			want: tokens(stringToken("1234567890-+=abcdefg${[]})(()%_ /|/ yay %xi4klindaum")),
+		},
+	})
+}
+
 func TestIdentifiers(t *testing.T) {
 	runTests(t, []TestCase{
 		{
@@ -519,6 +540,10 @@ func TestPosition(t *testing.T) {
 	})
 }
 
+func TestIllegalIdentifiers(t *testing.T) {
+	t.Skip("TODO")
+}
+
 func TestIllegalMemberAccess(t *testing.T) {
 
 	runTests(t, []TestCase{
@@ -733,8 +758,8 @@ func assertWantedTokens(t *testing.T, tc TestCase, got []lexer.Tokval) {
 	for i, w := range tc.want {
 		g := got[i]
 		if !w.Equal(g) {
-			t.Errorf("wanted token[%d][%+v] != got token[%d][%+v]", i, w, i, g)
-			t.Errorf("wanted tokens[%+v] != got tokens[%+v]", tc.want, got)
+			t.Errorf("\nwanted:\ntoken[%d][%v]\n\ngot:\ntoken[%d][%v]", i, w, i, g)
+			t.Errorf("\nwanted:\n%v\ngot:\n%v\n", tc.want, got)
 		}
 		
 		if tc.checkPosition {
@@ -853,6 +878,13 @@ func hexToken(hex string) lexer.Tokval {
 	return lexer.Tokval{
 		Type: token.Hexadecimal,
 		Value: Str(hex),
+	}
+}
+
+func stringToken(s string) lexer.Tokval {
+	return lexer.Tokval{
+		Type: token.String,
+		Value: Str(s),
 	}
 }
 
