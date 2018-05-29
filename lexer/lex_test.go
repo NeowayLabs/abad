@@ -246,6 +246,23 @@ func TestStrings(t *testing.T) {
 	})
 }
 
+func TestInvalidStrings(t *testing.T) {
+	// TODO: add newline tests
+	
+	runTests(t, []TestCase {
+		{
+			name: "SingleDoubleQuote",
+			code: Str(`"`),
+			want: []lexer.Tokval { illegalToken(`"`) },
+		},
+		{
+			name: "NoFinishingDoubleQuote",
+			code: Str(`"dsadasdsa123456`),
+			want: []lexer.Tokval { illegalToken(`"dsadasdsa123456`) },
+		},
+	})
+}
+
 func TestIdentifiers(t *testing.T) {
 	runTests(t, []TestCase{
 		{
