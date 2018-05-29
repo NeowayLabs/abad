@@ -227,6 +227,7 @@ func TestNumericLiterals(t *testing.T) {
 
 func TestStrings(t *testing.T) {
 	// TODO: multiline strings
+	// - escaped double quotes
 	runTests(t, []TestCase{
 		{
 			name: "Empty",
@@ -256,7 +257,7 @@ func TestInvalidStrings(t *testing.T) {
 			want: []lexer.Tokval { illegalToken(`"`) },
 		},
 		{
-			name: "NoFinishingDoubleQuote",
+			name: "NoEndingDoubleQuote",
 			code: Str(`"dsadasdsa123456`),
 			want: []lexer.Tokval { illegalToken(`"dsadasdsa123456`) },
 		},
@@ -516,9 +517,31 @@ func TestFuncall(t *testing.T) {
 				rightParenToken(),
 			),
 		},
+		{
+			name: "CommaSeparatedNumbersAndStringsParameters",
+			code: Str(`test("",5,"i",4,"k",6.6,0x5,"jssucks")`),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				stringToken(""),
+				commaToken(),
+				decimalToken("5"),
+				commaToken(),
+				stringToken("i"),
+				commaToken(),
+				decimalToken("4"),
+				commaToken(),
+				stringToken("k"),
+				commaToken(),
+				decimalToken("6.6"),
+				commaToken(),
+				hexToken("0x5"),
+				commaToken(),
+				stringToken("jssucks"),
+				rightParenToken(),
+			),
+		},
 	})
-	
-	// TODO: Multiple parameters separeted by comma
 }
 
 func TestPosition(t *testing.T) {

@@ -353,9 +353,7 @@ func (l *lexer) stringToken() Tokval {
 	var val []rune
 	
 	val = l.code[1:l.position]
-	
-	// TODO: add tests
-	l.code = nil
+	l.code = l.code[l.position + 1:]
 	
 	l.position = 0
 	
