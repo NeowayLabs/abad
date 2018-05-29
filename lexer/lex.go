@@ -95,7 +95,9 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 		
 	if l.isDot() {
 		l.fwd()
-		return l.realDecimalState()
+		allowExponent := true
+		allowDot := false
+		return l.decimalState(allowExponent, allowDot)
 	}
 	
 	if l.isRightParen() {
@@ -113,12 +115,16 @@ func (l *lexer) numberState() (Tokval, lexerState) {
 	
 	if l.isDot() {
 		l.fwd()
-		return l.realDecimalState()
+		allowExponent := true
+		allowDot := false
+		return l.decimalState(allowExponent, allowDot)
 	}
 	
 	if l.isNumber() {
 		l.fwd()
-		return l.decimalState(true)
+		allowExponent := true
+		allowDot := true
+		return l.decimalState(allowExponent, allowDot)
 	}
 	
 	if l.isHexStart() {
@@ -203,30 +209,7 @@ func (l *lexer) hexadecimalState() (Tokval, lexerState) {
 	return l.token(token.Hexadecimal), l.initialState
 }
 
-func (l *lexer) realDecimalState() (Tokval, lexerState) {
-
-	for !l.isEOF() {
-		if l.isExponentPartStart() {
-			l.fwd()
-			return l.exponentPartState()
-		}
-		
-		if l.isRightParen() {
-			l.bwd()
-			return l.token(token.Decimal), l.initialState
-		}
-		
-		if !l.isNumber() {
-			return l.illegalToken()
-		}
-		
-		l.fwd()
-	}
-	
-	return l.token(token.Decimal), l.initialState
-}
-
-func (l *lexer) decimalState(allowExponent bool) (Tokval, lexerState) {
+func (l *lexer) decimalState(allowExponent bool, allowDot bool) (Tokval, lexerState) {
 
 	for !l.isEOF() {
 		if l.isExponentPartStart() {
@@ -238,8 +221,11 @@ func (l *lexer) decimalState(allowExponent bool) (Tokval, lexerState) {
 		}
 		
 		if l.isDot() {
+			if !allowDot {
+				return l.illegalToken()
+			}
 			l.fwd()
-			return l.realDecimalState()
+			return l.decimalState(allowExponent, false)
 		}
 		
 		if l.isRightParen() {
@@ -265,7 +251,9 @@ func (l *lexer) exponentPartState() (Tokval, lexerState) {
 		l.fwd()
 	}
 	
-	return l.decimalState(false)
+	allowExponent := false
+	allowDot := true
+	return l.decimalState(allowExponent, allowDot)
 }
 
 func (l *lexer) cur() rune {
