@@ -446,7 +446,41 @@ func TestFuncall(t *testing.T) {
 				rightParenToken(),
 			),
 		},
+		{
+			name: "CommaSeparatedNumbersParameters",
+			code: Str("test(0X6,0x7,0x78,0X69,8,69,669,6.9,.9,3e1,4E7,4e7)"),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				hexToken("0X6"),
+				commaToken(),
+				hexToken("0x7"),
+				commaToken(),
+				hexToken("0x78"),
+				commaToken(),
+				hexToken("0X69"),
+				commaToken(),
+				decimalToken("8"),
+				commaToken(),
+				decimalToken("69"),
+				commaToken(),
+				decimalToken("669"),
+				commaToken(),
+				decimalToken("6.9"),
+				commaToken(),
+				decimalToken(".9"),
+				commaToken(),
+				decimalToken("3e1"),
+				commaToken(),
+				decimalToken("4E7"),
+				commaToken(),
+				decimalToken("4e7"),
+				rightParenToken(),
+			),
+		},
 	})
+	
+	// TODO: Multiple parameters separeted by comma
 }
 
 func TestPosition(t *testing.T) {
@@ -826,6 +860,13 @@ func identToken(s string) lexer.Tokval {
 	return lexer.Tokval{
 		Type: token.Ident,
 		Value: Str(s),
+	}
+}
+
+func commaToken() lexer.Tokval {
+	return lexer.Tokval{
+		Type: token.Comma,
+		Value: Str(","),
 	}
 }
 

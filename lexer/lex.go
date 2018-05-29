@@ -103,6 +103,10 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 	if l.isRightParen() {
 		return l.token(token.RParen), l.initialState
 	}
+	
+	if l.isComma() {
+		return l.token(token.Comma), l.initialState
+	}
 		
 	return l.identifierState()
 }
@@ -174,7 +178,7 @@ func (l *lexer) accessMemberState() (Tokval, lexerState) {
 func (l *lexer) hexadecimalState() (Tokval, lexerState) {
 
 	for !l.isEOF() {
-		if l.isRightParen() {
+		if l.isTokenEnd() {
 			l.bwd()
 			return l.token(token.Hexadecimal), l.initialState
 		}
@@ -186,6 +190,7 @@ func (l *lexer) hexadecimalState() (Tokval, lexerState) {
 		
 	return l.token(token.Hexadecimal), l.initialState
 }
+
 
 func (l *lexer) decimalState(allowExponent bool, allowDot bool) (Tokval, lexerState) {
 
@@ -206,7 +211,7 @@ func (l *lexer) decimalState(allowExponent bool, allowDot bool) (Tokval, lexerSt
 			return l.decimalState(allowExponent, false)
 		}
 		
-		if l.isRightParen() {
+		if l.isTokenEnd() {
 			l.bwd()
 			return l.token(token.Decimal), l.initialState
 		}
@@ -282,6 +287,15 @@ func (l *lexer) isExponentPartStart() bool {
 	return containsRune(exponentPartStart, l.cur())
 }
 
+func (l *lexer) isComma() bool {
+	return l.cur() == comma
+}
+
+// tokenEnd tries to capture the most common causes of a token ending
+func (l *lexer) isTokenEnd() bool {
+	return l.isRightParen() || l.isComma()
+}
+
 func (l *lexer) fwd() {
 	l.position += 1
 }
@@ -320,6 +334,7 @@ var minusSign rune
 var plusSign rune
 var leftParen rune
 var rightParen rune
+var comma rune
 var hexStart []rune
 var exponentPartStart []rune
 
@@ -331,6 +346,7 @@ func init() {
 	plusSign = rune('+')
 	leftParen = rune('(')
 	rightParen = rune(')')
+	comma = rune(',')
 	hexStart = []rune("xX")
 	exponentPartStart = []rune("eE")
 }
