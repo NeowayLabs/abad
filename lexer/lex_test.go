@@ -258,6 +258,11 @@ func TestIdentifiers(t *testing.T) {
 			want: tokens(identToken("a$b$c")),
 		},
 		{
+			name: "NumbersInterwined",
+			code: Str("a1b2c"),
+			want: tokens(identToken("a1b2c")),
+		},
+		{
 			name: "AccessingMember",
 			code: Str("console.log"),
 			want: tokens(
@@ -316,6 +321,30 @@ func TestPosition(t *testing.T) {
 	})
 }
 
+func TestIllegalMemberAccess(t *testing.T) {
+
+	runTests(t, []TestCase{
+		{
+			name: "CantAccessMemberThatStartsWithNumber",
+			code: Str("test.123"),
+			want: []lexer.Tokval{
+				identToken("test"),
+				dotToken(),
+				illegalToken("123"),
+			},
+		},
+		{
+			name: "CantAccessMemberThatStartsWithDot",
+			code: Str("test.."),
+			want: []lexer.Tokval{
+				identToken("test"),
+				dotToken(),
+				illegalToken("."),
+			},
+		},
+	})
+}
+
 func TestIllegalNumericLiterals(t *testing.T) {
 	
 	corruptedHex := messStr(Str("0x01234"), 4)
@@ -327,126 +356,126 @@ func TestIllegalNumericLiterals(t *testing.T) {
 			name: "DecimalDuplicatedUpperExponentPart",
 			code: Str("123E123E123"),
 			want: []lexer.Tokval{
-				illegalToken(Str("123E123E123")),
+				illegalToken("123E123E123"),
 			},
 		},
 		{
 			name: "DecimalDuplicatedExponentPart",
 			code: Str("123e123e123"),
 			want: []lexer.Tokval{
-				illegalToken(Str("123e123e123")),
+				illegalToken("123e123e123"),
 			},
 		},
 		{
 			name: "RealDecimalDuplicatedUpperExponentPart",
 			code: Str("123.1E123E123"),
 			want: []lexer.Tokval{
-				illegalToken(Str("123.1E123E123")),
+				illegalToken("123.1E123E123"),
 			},
 		},
 		{
 			name: "RealDecimalDuplicatedExponentPart",
 			code: Str("123.6e123e123"),
 			want: []lexer.Tokval{
-				illegalToken(Str("123.6e123e123")),
+				illegalToken("123.6e123e123"),
 			},
 		},
 		{
 			name: "OnlyStartAsDecimal",
 			code: Str("0LALALA"),
 			want: []lexer.Tokval{
-				illegalToken(Str("0LALALA")),
+				illegalToken("0LALALA"),
 			},
 		},
 		{
 			name: "EndIsNotDecimal",
 			code: Str("0123344546I4K"),
 			want: []lexer.Tokval{
-				illegalToken(Str("0123344546I4K")),
+				illegalToken("0123344546I4K"),
 			},
 		},
 		{
 			name: "EmptyHexadecimal",
 			code: Str("0x"),
 			want: []lexer.Tokval{
-				illegalToken(Str("0x")),
+				illegalToken("0x"),
 			},
 		},
 		{
 			name: "OnlyStartAsReal",
 			code: Str("0.b"),
 			want: []lexer.Tokval{
-				illegalToken(Str("0.b")),
+				illegalToken("0.b"),
 			},
 		},
 		{
 			name: "RealWithTwoDotsStartingWithDot",
 			code: Str(".1.2"),
 			want: []lexer.Tokval{
-				illegalToken(Str(".1.2")),
+				illegalToken(".1.2"),
 			},
 		},
 		{
 			name: "RealWithTwoDots",
 			code: Str("0.1.2"),
 			want: []lexer.Tokval{
-				illegalToken(Str("0.1.2")),
+				illegalToken("0.1.2"),
 			},
 		},
 		{
 			name: "BifRealWithTwoDots",
 			code: Str("1234.666.2342"),
 			want: []lexer.Tokval{
-				illegalToken(Str("1234.666.2342")),
+				illegalToken("1234.666.2342"),
 			},
 		},
 		{
 			name: "EmptyHexadecimalUpperX",
 			code: Str("0X"),
 			want: []lexer.Tokval{
-				illegalToken(Str("0X")),
+				illegalToken("0X"),
 			},
 		},
 		{
 			name: "LikeHexadecimal",
 			code: Str("0b1234"),
 			want: []lexer.Tokval{
-				illegalToken(Str("0b1234")),
+				illegalToken("0b1234"),
 			},
 		},
 		{
 			name: "OnlyStartAsHexadecimal",
 			code: Str("0xI4K"),
 			want: []lexer.Tokval{
-				illegalToken(Str("0xI4K")),
+				illegalToken("0xI4K"),
 			},
 		},
 		{
 			name: "EndIsNotHexadecimal",
 			code: Str("0x123456G"),
 			want: []lexer.Tokval{
-				illegalToken(Str("0x123456G")),
+				illegalToken("0x123456G"),
 			},
 		},
 		{
 			name: "CorruptedHexadecimal",
 			code: corruptedHex,
 			want: []lexer.Tokval{
-				illegalToken(corruptedHex),
+				illegalToken(corruptedHex.String()),
 			},
 		},
 		{
 			name: "CorruptedDecimal",
 			code: corruptedDecimal,
 			want: []lexer.Tokval{
-				illegalToken(corruptedDecimal),
+				illegalToken(corruptedDecimal.String()),
 			},
 		},
 		{
 			name: "CorruptedNumber",
 			code: corruptedNumber,
 			want: []lexer.Tokval{
-				illegalToken(corruptedNumber),
+				illegalToken(corruptedNumber.String()),
 			},
 		},
 	})
@@ -467,7 +496,7 @@ func TestCorruptedInput(t *testing.T) {
 		{
 			name: "AtStart",
 			code: messStr(Str(""), 0),
-			want: []lexer.Tokval{ illegalToken(messStr(Str(""), 0)) },
+			want: []lexer.Tokval{ illegalToken(messStr(Str(""), 0).String()) },
 		},
 	})
 }
@@ -488,10 +517,10 @@ func runTests(t *testing.T, testcases []TestCase) {
 	}
 }
 
-func illegalToken(val utf16.Str) lexer.Tokval {
+func illegalToken(val string) lexer.Tokval {
 	return lexer.Tokval{
 		Type: token.Illegal,
-		Value: val,
+		Value: Str(val),
 	}
 }
 
@@ -500,7 +529,7 @@ func assertWantedTokens(t *testing.T, tc TestCase, got []lexer.Tokval) {
 	
 	if len(tc.want) != len(got) {
 		t.Errorf("wanted [%d] tokens, got [%d] tokens", len(tc.want), len(got))
-		t.Fatalf("want[%+v] != got[%+v]", tc.want, got)
+		t.Fatalf("\nwant=%+v\ngot= %+v\nare not equal.", tc.want, got)
 	}
 	
 	for i, w := range tc.want {
@@ -512,7 +541,7 @@ func assertWantedTokens(t *testing.T, tc TestCase, got []lexer.Tokval) {
 		
 		if tc.checkPosition {
 			if !w.EqualPos(g) {
-				t.Errorf("want[%+v] got[%+v] are equal but dont have the same position",w, g)
+				t.Errorf("want=%+v\ngot=%+v\nare equal but dont have the same position",w, g)
 			}
 		}
 	} 

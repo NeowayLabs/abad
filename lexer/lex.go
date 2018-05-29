@@ -155,9 +155,18 @@ func (l *lexer) identifierState() (Tokval, lexerState) {
 	return l.token(token.Ident), l.initialState
 }
 
+func (l *lexer) startIdentifierState() (Tokval, lexerState) {
+	if l.isNumber() {
+		return l.illegalToken()
+	}
+	if l.isDot() {
+		return l.illegalToken()
+	}
+	return l.identifierState()
+}
+
 func (l *lexer) accessMemberState() (Tokval, lexerState) {
-	// TODO: check if identifier does not start with number
-	return l.token(token.Dot), l.identifierState
+	return l.token(token.Dot), l.startIdentifierState
 }
 
 func (l *lexer) hexadecimalState() (Tokval, lexerState) {
