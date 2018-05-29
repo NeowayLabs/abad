@@ -135,6 +135,11 @@ func (l *lexer) numberState() (Tokval, lexerState) {
 		l.fwd()
 		return l.exponentPartState()
 	}
+	
+	if l.isRightParen() {
+		l.bwd()
+		return l.token(token.Decimal), l.initialState
+	}
 		
 	return l.illegalToken()
 }
@@ -226,6 +231,11 @@ func (l *lexer) decimalState(allowExponent bool) (Tokval, lexerState) {
 		if l.isDot() {
 			l.fwd()
 			return l.realDecimalState()
+		}
+		
+		if l.isRightParen() {
+			l.bwd()
+			return l.token(token.Decimal), l.initialState
 		}
 		
 		if !l.isNumber() {

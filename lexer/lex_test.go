@@ -296,6 +296,56 @@ func TestFuncall(t *testing.T) {
 				rightParenToken(),
 			),
 		},
+		{
+			name: "BigFunctionName",
+			code: Str("veryBigFunctionNameThatWouldAnnoyNatel()"),
+			want: tokens(
+				identToken("veryBigFunctionNameThatWouldAnnoyNatel"),
+				leftParenToken(),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "MemberFunction",
+			code: Str("console.log()"),
+			want: tokens(
+				identToken("console"),
+				dotToken(),
+				identToken("log"),
+				leftParenToken(),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "WithThreeDigitsDecimalParameter",
+			code: Str("test(666)"),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				decimalToken("666"),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "WithTwoDigitsDecimalParameter",
+			code: Str("test(66)"),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				decimalToken("66"),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "WithOneDigitDecimalParameter",
+			code: Str("test(6)"),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				decimalToken("6"),
+				rightParenToken(),
+			),
+		},
 	})
 }
 
