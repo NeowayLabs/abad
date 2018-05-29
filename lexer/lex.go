@@ -165,7 +165,7 @@ func (l *lexer) identifierState() (Tokval, lexerState) {
 			l.bwd()
 			return l.token(token.Ident), l.accessMemberState
 		}
-		// TODO: test and code right parenthesis on this state
+	
 		if l.isLeftParen() {
 			l.bwd()
 			return l.token(token.Ident), l.leftParenState
@@ -350,9 +350,7 @@ func (l *lexer) stringToken() Tokval {
 	// WHY: strings cant finish on EOF and we need to remove the double quotes
 	// around the string.
 	
-	var val []rune
-	
-	val = l.code[1:l.position]
+	val := l.code[1:l.position]
 	l.code = l.code[l.position + 1:]
 	
 	l.position = 0
