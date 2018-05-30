@@ -1,14 +1,12 @@
 package types_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/NeowayLabs/abad/types"
 )
 
 var Str = types.NewString
-var F = fmt.Sprintf
 
 func TestBuiltin(t *testing.T) {
 	for _, tc := range []struct {

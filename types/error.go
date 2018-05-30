@@ -2,8 +2,6 @@ package types
 
 import (
 	"fmt"
-
-	"github.com/NeowayLabs/abad/internal/utf16"
 )
 
 type (
@@ -11,8 +9,6 @@ type (
 		msg string
 	}
 )
-
-var messageAttr = utf16.S("message")
 
 func NewTypeError(format string, args ...interface{}) TypeError {
 	err := TypeError{

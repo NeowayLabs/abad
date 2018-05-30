@@ -308,11 +308,8 @@ func (o *DataObject) CanPut(name utf16.Str) bool {
 	if inherited.IsAcessorDescriptor() {
 		return !StrictEqual(inherited.Set(), Undefined)
 	} else if inherited.IsDataDescriptor() {
-		if o.NotExtensible() {
-			return false
-		}
-
-		return true
+		// TODO: Perhaps a o.IsExtensible here would be more clear
+		return !o.NotExtensible()
 	}
 
 	panic("inherited isn't acessor not data descriptor")

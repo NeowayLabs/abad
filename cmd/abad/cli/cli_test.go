@@ -15,7 +15,6 @@ func TestCli(t *testing.T) {
 	for _, tc := range []struct {
 		in  string
 		out string
-		err error
 	}{
 		{
 			in:  "0",

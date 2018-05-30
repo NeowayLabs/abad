@@ -37,7 +37,8 @@ func NewConsole() (*Console, error) {
 		toStringer("[object Object]"),
 	)
 
-	err = console.Put(toStringAttr, toStrfn, true)
+	// TODO: handle error
+	console.Put(toStringAttr, toStrfn, true)
 	return console, nil
 }
 

@@ -22,10 +22,7 @@ type (
 )
 
 // used when the tokens is over
-var tokEOF = lexer.Tokval{
-	Type:  token.EOF,
-	Value: utf16.S("EOF"),
-}
+var tokEOF = lexer.EOF
 
 var (
 	keywordParsers = map[token.Type]parserfn{}
@@ -47,7 +44,7 @@ func init() {
 func Parse(fname string, code string) (*ast.Program, error) {
 	// FIXME: Use real lexer instead of fake one
 	p := Parser{
-		tokens:   lexer.FakeLex(utf16.Encode(code)),
+		tokens:   lexer.Lex(utf16.Encode(code)),
 		filename: fname,
 	}
 
@@ -118,7 +115,7 @@ func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 	// in the lookahead buffer.
 	if len(p.lookahead) != 0 {
 		panic(fmt.Sprintf(
-			"parsers not handling lookahead correctly: %s",
+			"parsers not handling lookahead correctly: %v",
 			p.lookahead))
 	}
 	return node, false, nil
