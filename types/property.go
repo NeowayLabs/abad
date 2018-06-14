@@ -99,31 +99,38 @@ func (p *PropertyDescriptor) get(name string) Value {
 	return Undefined
 }
 
-// has checks if name is a existent property
+// has checks if name is an existent property
 func (p *PropertyDescriptor) has(name string) bool {
 	_, ok := p.attrs[name]
 	return ok
 }
 
+// HasValue tells if property has the 'value' attribute.
 func (p *PropertyDescriptor) HasValue() bool {
 	return p.has("value")
 }
 
+// HasWritable tells if the property has the 'writable' attribute.
 func (p *PropertyDescriptor) HasWritable() bool {
 	return p.has("writable")
 }
 
+// HasGet tells if the property has the 'get' property.
 func (p *PropertyDescriptor) HasGet() bool {
 	return p.has("get")
 }
+
+// HasSet tells if the property has the 'set' property.
 func (p *PropertyDescriptor) HasSet() bool {
 	return p.has("set")
 }
 
+// HasCfg tells if the property has the 'configurable' property.
 func (p *PropertyDescriptor) HasCfg() bool {
 	return p.has("configurable")
 }
 
+// HasEnum tells if the property has the 'enumerable' property.
 func (p *PropertyDescriptor) HasEnum() bool {
 	return p.has("enumerable")
 }
@@ -182,6 +189,9 @@ func (p *PropertyDescriptor) Cfg() Value {
 	return p.get("configurable")
 }
 
+// IsGenericDescriptor tells if the property is a 'generic descriptor'.
+// Generic descriptor is a descriptor that's not an Acessor Descriptor neither
+// a Data Descriptor.
 func (p *PropertyDescriptor) IsGenericDescriptor() bool {
 	return !p.IsDataDescriptor() && !p.IsAcessorDescriptor()
 }

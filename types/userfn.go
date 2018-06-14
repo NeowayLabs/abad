@@ -6,6 +6,8 @@ import (
 )
 
 type (
+	// UserFunction is functions defined by user, ie. they are
+	// defined in ecmascript code.
 	UserFunction struct {
 		*DataObject
 
@@ -28,9 +30,9 @@ func NewUserFunction(
 	params []utf16.Str, body *ast.FnBody, scope interface{}, strict bool,
 ) *UserFunction {
 	return &UserFunction{
-		params: params,
-		body:   body,
-		scope:  scope,
+		params:     params,
+		body:       body,
+		scope:      scope,
 		DataObject: NewDataObject(NewUserFunctionPrototype()),
 	}
 }

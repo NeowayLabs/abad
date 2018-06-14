@@ -8,9 +8,11 @@ import (
 )
 
 type (
+	// String is the primitive string UTF16-encoded type.
 	String utf16.Str
 )
 
+// NewString creates a new string from an UTF-8 encoded str.
 func NewString(str string) String {
 	return String(utf16.Encode(str))
 }

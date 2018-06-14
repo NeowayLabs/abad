@@ -5,6 +5,7 @@ import (
 )
 
 type (
+	// Kind of type
 	Kind int
 
 	// Value is a heavy interface.
@@ -14,6 +15,7 @@ type (
 	// in the same interface than dealing with concrete types
 	// every time.
 	// Every type implements the Value interface.
+	// It seems to be the recomended approach: http://es5.github.io/#x9
 	Value interface {
 		Kind() Kind
 
@@ -43,6 +45,7 @@ type (
 		String() string
 	}
 
+	// Function is an Object with a Call method defined.
 	Function interface {
 		Object
 
@@ -79,6 +82,7 @@ func (k Kind) String() string {
 	return ""
 }
 
+// StrictEqual compares values a and b using ECMAScript === (strict) rules.
 func StrictEqual(a, b Value) bool {
 	akind := a.Kind()
 	bkind := b.Kind()
@@ -122,6 +126,7 @@ func StrictEqual(a, b Value) bool {
 	return false
 }
 
+// IsPrimitive tells if val is a primitive value.
 func IsPrimitive(val Value) bool {
 	switch val.Kind() {
 	case KindUndefined, KindNull, KindNumber, KindString, KindBool:

@@ -8,7 +8,7 @@ import (
 )
 
 type (
-	// DataObject is a collection of named objects.
+	// DataObject is a collection of named values.
 	DataObject struct {
 		// Class is the kind of object
 		class         string
@@ -22,6 +22,7 @@ type (
 )
 
 var (
+	// S is an alias to make utf-16 strings.
 	S            = utf16.S
 	valueAttr    = S("value")
 	writableAttr = S("writable")
@@ -35,7 +36,8 @@ var (
 	valueOfAttr  = S("valueOf")
 )
 
-// Base object extends Null
+// DefaultPrototypeDesc is a base prototype object that extends Null.
+// The root of the prototype-based type hierarchy.
 func DefaultPrototypeDesc() *PropertyDescriptor {
 	return NewDataPropDesc(Null, true, false, false)
 }
