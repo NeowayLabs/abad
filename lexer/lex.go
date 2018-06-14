@@ -1,27 +1,34 @@
 package lexer
 
 import (
+	"fmt"
 	"unicode"
-	
+
 	"github.com/NeowayLabs/abad/internal/utf16"
 	"github.com/NeowayLabs/abad/token"
 )
 
 type Tokval struct {
-	Type  token.Type
-	Value utf16.Str
-	Line uint
+	Type   token.Type
+	Value  utf16.Str
+	Line   uint
 	Column uint
 }
 
-var EOF Tokval = Tokval{ Type: token.EOF, Value: utf16.S("EOF") }
+// EOF is the End of File token.
+var EOF = Tokval{Type: token.EOF, Value: utf16.S("EOF")}
 
+// Equal tells if token is the same as other.
 func (t Tokval) Equal(other Tokval) bool {
 	return t.Type == other.Type && t.Value.Equal(other.Value)
 }
 
 func (t Tokval) EqualPos(other Tokval) bool {
 	return t.Line == other.Line && t.Column == other.Column
+}
+
+func (t Tokval) String() string {
+	return fmt.Sprintf("Token %s of value '%s'", t.Type, t.Value)
 }
 
 // Lex will lex the given crappy JS code (utf16 yay) and provide a
@@ -37,18 +44,18 @@ func (t Tokval) EqualPos(other Tokval) bool {
 func Lex(code utf16.Str) <-chan Tokval {
 
 	tokens := make(chan Tokval)
-	
+
 	go func() {
-	
+
 		decodedCode := code.Runes()
 		currentState := newLexer(decodedCode).initialState
-		
+
 		for currentState != nil {
 			token, newState := currentState()
 			tokens <- token
 			currentState = newState
 		}
-		
+
 		close(tokens)
 	}()
 
@@ -56,77 +63,76 @@ func Lex(code utf16.Str) <-chan Tokval {
 }
 
 type lexer struct {
-	code []rune
+	code     []rune
 	position uint
-	line uint
-	column uint
+	line     uint
+	column   uint
 }
 
 type lexerState func() (Tokval, lexerState)
 
 func newLexer(code []rune) *lexer {
-	return &lexer {code:code, line: 1, column: 1}
+	return &lexer{code: code, line: 1, column: 1}
 }
 
 func (l *lexer) initialState() (Tokval, lexerState) {
-
 	if l.isEOF() {
 		return EOF, nil
 	}
-		
+
 	if l.isInvalidRune() {
 		return l.illegalToken()
 	}
-	
+
 	if l.isPlusSign() {
 		// TODO: handle ++
 		return l.token(token.Plus), l.initialState
 	}
-	
+
 	if l.isMinusSign() {
 		// TODO: handle --
 		return l.token(token.Minus), l.initialState
 	}
-		
+
 	if l.isNumber() {
 		l.fwd()
 		return l.numberState()
 	}
-		
+
 	if l.isDot() {
 		l.fwd()
 		allowExponent := true
 		allowDot := false
 		return l.decimalState(allowExponent, allowDot)
 	}
-	
+
 	if l.isRightParen() {
 		return l.token(token.RParen), l.initialState
 	}
-	
+
 	if l.isComma() {
 		return l.token(token.Comma), l.initialState
 	}
-	
+
 	if l.isDoubleQuote() {
 		l.fwd()
 		return l.stringState()
 	}
-		
+
 	return l.identifierState()
 }
 
 func (l *lexer) stringState() (Tokval, lexerState) {
 	// TODO: handle newlines
-	
+
 	for !l.isEOF() && !l.isDoubleQuote() {
 		l.fwd()
 	}
-	
+
 	if l.isEOF() {
 		return l.illegalToken()
 	}
-	
+
 	return l.stringToken(), l.initialState
 }
 
@@ -135,17 +141,17 @@ func (l *lexer) numberState() (Tokval, lexerState) {
 	if l.isEOF() {
 		return l.token(token.Decimal), l.initialState
 	}
-	
+
 	if l.isHexStart() {
 		l.fwd()
-		
+
 		if l.isEOF() {
 			return l.illegalToken()
 		}
-		
+
 		return l.hexadecimalState()
 	}
-	
+
 	allowExponent := true
 	allowDot := true
 	return l.decimalState(allowExponent, allowDot)
@@ -153,7 +159,7 @@ func (l *lexer) numberState() (Tokval, lexerState) {
 
 func (l *lexer) illegalToken() (Tokval, lexerState) {
 	return Tokval{
-		Type: token.Illegal,
+		Type:  token.Illegal,
 		Value: newStr(l.code),
 	}, nil
 }
@@ -165,14 +171,14 @@ func (l *lexer) identifierState() (Tokval, lexerState) {
 			l.bwd()
 			return l.token(token.Ident), l.accessMemberState
 		}
-	
+
 		if l.isLeftParen() {
 			l.bwd()
 			return l.token(token.Ident), l.leftParenState
 		}
 		l.fwd()
 	}
-		
+
 	return l.token(token.Ident), l.initialState
 }
 
@@ -185,7 +191,7 @@ func (l *lexer) startIdentifierState() (Tokval, lexerState) {
 	if l.isEOF() {
 		return EOF, nil
 	}
-	
+
 	if l.isNumber() {
 		return l.illegalToken()
 	}
@@ -211,10 +217,9 @@ func (l *lexer) hexadecimalState() (Tokval, lexerState) {
 		}
 		l.fwd()
 	}
-		
+
 	return l.token(token.Hexadecimal), l.initialState
 }
-
 
 func (l *lexer) decimalState(allowExponent bool, allowDot bool) (Tokval, lexerState) {
 
@@ -226,7 +231,7 @@ func (l *lexer) decimalState(allowExponent bool, allowDot bool) (Tokval, lexerSt
 			l.fwd()
 			return l.exponentPartState()
 		}
-		
+
 		if l.isDot() {
 			if !allowDot {
 				return l.illegalToken()
@@ -234,30 +239,30 @@ func (l *lexer) decimalState(allowExponent bool, allowDot bool) (Tokval, lexerSt
 			l.fwd()
 			return l.decimalState(allowExponent, false)
 		}
-		
+
 		if l.isTokenEnd() {
 			l.bwd()
 			return l.token(token.Decimal), l.initialState
 		}
-		
+
 		if !l.isNumber() {
 			return l.illegalToken()
 		}
-		
+
 		l.fwd()
 	}
-	
+
 	return l.token(token.Decimal), l.initialState
 }
 
 func (l *lexer) exponentPartState() (Tokval, lexerState) {
 	// TODO: can exponent be like: 1.0e ?
-	
+
 	if l.isMinusSign() || l.isPlusSign() {
 		// TODO: test 1.0e- and 1.0e+
 		l.fwd()
 	}
-	
+
 	allowExponent := false
 	allowDot := true
 	return l.decimalState(allowExponent, allowDot)
@@ -338,32 +343,32 @@ func (l *lexer) bwd() {
 // on the code and the position will be reset to zero.
 func (l *lexer) token(t token.Type) Tokval {
 	var val []rune
-	
+
 	if l.isEOF() {
 		val = l.code
 		l.code = nil
 	} else {
-		val = l.code[:l.position + 1]
-		l.code = l.code[l.position + 1:]
+		val = l.code[:l.position+1]
+		l.code = l.code[l.position+1:]
 	}
-	
-	l.position = 0	
-	return Tokval{Type:t, Value: newStr(val), Line: l.line, Column: l.updateColumn()}
+
+	l.position = 0
+	return Tokval{Type: t, Value: newStr(val), Line: l.line, Column: l.updateColumn()}
 }
 
 func (l *lexer) stringToken() Tokval {
 	// WHY: strings cant finish on EOF and we need to remove the double quotes
 	// around the string.
-	
+
 	val := l.code[1:l.position]
-	l.code = l.code[l.position + 1:]
-	
+	l.code = l.code[l.position+1:]
+
 	l.position = 0
-	
+
 	return Tokval{
-		Type:token.String,
-		Value: newStr(val),
-		Line: l.line,
+		Type:   token.String,
+		Value:  newStr(val),
+		Line:   l.line,
 		Column: l.updateColumn(),
 	}
 }
@@ -407,7 +412,7 @@ func containsRune(runes []rune, r rune) bool {
 			return true
 		}
 	}
-	return false	
+	return false
 }
 
 func newStr(r []rune) utf16.Str {
