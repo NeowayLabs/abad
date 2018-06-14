@@ -48,7 +48,7 @@ type (
 
 	CallExpr struct {
 		Callee Node
-		Args []Node
+		Args   []Node
 	}
 
 	Ident utf16.Str
@@ -72,6 +72,28 @@ const (
 // console.log(Number.EPSILON);
 // 2.220446049250313e-16
 var ε = math.Pow(2, -52)
+
+func (t NodeType) String() string {
+	switch t {
+	case NodeProgram:
+		return "PROGRAM"
+	case NodeFnBody:
+		return "FNBODY"
+	case NodeNumber:
+		return "NUMBER"
+	case NodeUnaryExpr:
+		return "UNARYEXPR"
+	case NodeMemberExpr:
+		return "MEMBEREXPR"
+	case NodeCallExpr:
+		return "CALLEXPR"
+	case NodeIdent:
+		return "IDENT"
+	}
+
+	panic(fmt.Sprintf("unexpected node type: %d", t))
+	return ""
+}
 
 func IsExpr(node Node) bool {
 	return node.Type() > exprBegin &&
@@ -216,7 +238,7 @@ func NewMemberExpr(object Node, property Ident) *MemberExpr {
 }
 
 func (m *MemberExpr) Type() NodeType { return NodeMemberExpr }
-func (m *MemberExpr) String() string { 
+func (m *MemberExpr) String() string {
 	return fmt.Sprintf("%s.%s", m.Object, m.Property)
 }
 
@@ -233,7 +255,7 @@ func (m *MemberExpr) Equal(other Node) bool {
 func NewCallExpr(callee Node, args []Node) *CallExpr {
 	return &CallExpr{
 		Callee: callee,
-		Args: args,
+		Args:   args,
 	}
 }
 
