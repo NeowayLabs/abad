@@ -83,6 +83,7 @@ func NewDataObjectP(proto *PropertyDescriptor) *DataObject {
 	return obj
 }
 
+// Class returns the object class
 func (o *DataObject) Class() string       { return o.class }
 func (o *DataObject) NotExtensible() bool { return o.notExtensible }
 
@@ -408,7 +409,7 @@ func (o *DataObject) DefineOwnPropertyP(
 	if !ok {
 		if notExtensible {
 			return retOrThrow(NewTypeError("DataObject %s is not extensible",
-				o.Class))
+				o.Class()))
 		}
 
 		return o.setOwnProperty(name, desc, throw)
