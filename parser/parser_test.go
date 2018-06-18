@@ -286,6 +286,19 @@ func TestParserFuncall(t *testing.T) {
 				[]ast.Node{ast.NewNumber(2.0)},
 			),
 		},
+		{
+			input: "self.console.log(2.0)",
+			expected: ast.NewCallExpr(
+				ast.NewMemberExpr(
+					ast.NewMemberExpr(
+						ast.NewIdent(utf16.S("self")),
+						ast.NewIdent(utf16.S("console")),
+					),
+					ast.NewIdent(utf16.S("log")),
+				),
+				[]ast.Node{ast.NewNumber(2.0)},
+			),
+		},
 	} {
 		testParser(t, tc.input, tc.expected, tc.expectedErr)
 	}
