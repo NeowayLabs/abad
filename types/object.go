@@ -47,7 +47,7 @@ func DefaultPrototypeDesc() *PropertyDescriptor {
 func NewDataObject(proto Value) *DataObject {
 	obj := NewBaseDataObject()
 
-	// is must extend proto
+	// obj must extend proto
 	delete(obj.props, "prototype")
 
 	// error ignored because it does not fail if
@@ -63,6 +63,9 @@ func NewDataObject(proto Value) *DataObject {
 	return obj
 }
 
+// NewBaseDataObject is the same as ecmascript code:
+//   Object.create(null);
+// This is the root of the prototype chain.
 func NewBaseDataObject() *DataObject {
 	return NewDataObjectP(DefaultPrototypeDesc())
 }
@@ -89,10 +92,21 @@ func (o *DataObject) NotExtensible() bool { return o.notExtensible }
 
 // Value interface implementations
 
+// IsFalse SHALL return false for objects.
 func (o *DataObject) IsFalse() bool { return false }
-func (o *DataObject) IsTrue() bool  { return true }
-func (_ *DataObject) Kind() Kind    { return KindObject }
-func (_ *DataObject) ToBool() Bool  { return True }
+
+// IsTrue SHALL return true for objects.
+func (o *DataObject) IsTrue() bool { return true }
+
+// Kind of type
+func (*DataObject) Kind() Kind { return KindObject }
+
+// ToBool SHALL return a True value for object.
+func (*DataObject) ToBool() Bool { return True }
+
+// ToNumber tries to convert the object into a number using several
+// rules (see ToNumber in the spec) but most important rule is look
+// into the valueOf attribute of the object.
 func (o *DataObject) ToNumber() Number {
 	primVal, err := o.ToPrimitive(KindNumber)
 	if err != nil {
@@ -102,6 +116,9 @@ func (o *DataObject) ToNumber() Number {
 	return primVal.ToNumber()
 }
 
+// ToString tries to convert the object into a string. It would
+// look into toString method or the valueOf attribute. See the
+// spec.
 func (o *DataObject) ToString() String {
 	primVal, err := o.ToPrimitive(KindString)
 	if err != nil {
@@ -115,10 +132,14 @@ func (o *DataObject) ToPrimitive(hint Kind) (Value, error) {
 	return o.DefaultValue(hint)
 }
 
+// ToObject returns itself.
 func (o *DataObject) ToObject() (Object, error) {
 	return o, nil
 }
 
+// ToPropertyDescriptor creates a PropertyDescriptor from a DataObject.
+// This is required because property descriptors are defined in ECMAScript
+// using objects.
 func (o *DataObject) ToPropertyDescriptor() *PropertyDescriptor {
 	var (
 		value, get, set     Value
@@ -217,6 +238,7 @@ func (o *DataObject) Get(name utf16.Str) (Value, error) {
 	return getter.Call(o, []Value{}), nil
 }
 
+// Put is the default [[Put]] implementation for Object.
 func (o *DataObject) Put(name utf16.Str, val Value, throw bool) error {
 	if !o.CanPut(name) {
 		if throw {
@@ -263,7 +285,6 @@ func (o *DataObject) Put(name utf16.Str, val Value, throw bool) error {
 	}
 
 	panic("TODO(i4k): property is not an acessor nor data. Is this a problem?")
-	return nil
 }
 
 func (o *DataObject) get(name utf16.Str) (*PropertyDescriptor, bool) {
@@ -419,9 +440,22 @@ func (o *DataObject) DefineOwnPropertyP(
 		return true, nil
 	}
 
+	fmt.Printf("DESC=%+v\n", desc)
+	fmt.Printf("CURRENT=%+v\n", current)
+
 	// uses internal SameValue(x, y)
-	// TODO
+	// TODO(i4k): review this in the spec.
 	if IsSameDescriptor(desc, current) {
+		return true, nil
+	}
+
+	if IsSameDescriptorSettings(desc, current) &&
+		current.IsDataDescriptor() {
+		if current.Writable().IsFalse() {
+			return retOrThrow(NewTypeError("Property %s has writable set to false", name))
+		}
+
+		o.put(name, desc)
 		return true, nil
 	}
 

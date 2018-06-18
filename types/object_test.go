@@ -8,6 +8,15 @@ import (
 	"github.com/madlambda/spells/assert"
 )
 
+type (
+	DataTestcase struct {
+		val types.Value
+		wrt bool
+		enu bool
+		cfg bool
+	}
+)
+
 var (
 	S         = utf16.S
 	protoAttr = S("prototype")
@@ -41,12 +50,32 @@ func TestNewObjectExtendsProto(t *testing.T) {
 	}
 }
 
-func TestObjectDefineOwnProperty(t *testing.T) {
+func TestObjectDefineOwnPropertyDATA(t *testing.T) {
+	for _, tc := range []DataTestcase{
+		{val: types.True, wrt: true, enu: true, cfg: true},
+		{val: types.Null, wrt: true, enu: true, cfg: true},
+		{val: types.NewNumber(1.0), wrt: false, enu: true, cfg: true},
+		{val: types.NewBaseDataObject(), wrt: true, enu: true, cfg: true},
+		{val: types.NewBaseDataObject(), wrt: false, enu: true, cfg: true},
+	} {
+		obj := types.NewBaseDataObject()
+		testDataDescriptor(t, obj, "madlab", tc)
+		if tc.wrt {
+			tc.val = types.NewNumber(666.0)
+			testDataDescriptor(t, obj, "madlab", tc)
+		} else {
+			tc.val = types.NewNumber(123456.7) // improbable number
+			testDataDescriptorFail(t, obj, "madlab", tc)
+		}
+	}
+}
+
+func testDataDescriptor(t *testing.T, obj *types.DataObject, property string, tc DataTestcase) {
 	// new property never fails
-	obj := types.NewBaseDataObject()
-	propName := S("madlab")
-	expected := types.True
-	prop := types.NewDataPropDesc(expected, true, true, true)
+	t.Logf("%+v", tc)
+	propName := S(property)
+	expected := tc.val
+	prop := types.NewDataPropDesc(expected, tc.wrt, tc.enu, tc.cfg)
 	ok, err := obj.DefineOwnPropertyP(propName, prop, true)
 	if !ok {
 		t.Fatal(err)
@@ -55,7 +84,7 @@ func TestObjectDefineOwnProperty(t *testing.T) {
 	gotval, err := obj.Get(propName)
 	assert.NoError(t, err, "get failed")
 	if !types.StrictEqual(expected, gotval) {
-		t.Fatalf("got wrog value: %s", gotval)
+		t.Fatalf("got wrong value: %s", gotval)
 	}
 
 	gotprop := obj.GetOwnProperty(propName)
@@ -67,5 +96,14 @@ func TestObjectDefineOwnProperty(t *testing.T) {
 	gotdesc := got.ToPropertyDescriptor()
 	if !types.IsSameDescriptor(gotdesc, prop) {
 		t.Fatalf("Property descriptors differ")
+	}
+}
+
+func testDataDescriptorFail(t *testing.T, obj *types.DataObject, property string, tc DataTestcase) {
+	propName := S(property)
+	prop := types.NewDataPropDesc(tc.val, tc.wrt, tc.enu, tc.cfg)
+	ok, _ := obj.DefineOwnPropertyP(propName, prop, true)
+	if ok {
+		t.Fatalf("should fail")
 	}
 }
