@@ -440,9 +440,6 @@ func (o *DataObject) DefineOwnPropertyP(
 		return true, nil
 	}
 
-	fmt.Printf("DESC=%+v\n", desc)
-	fmt.Printf("CURRENT=%+v\n", current)
-
 	// uses internal SameValue(x, y)
 	// TODO(i4k): review this in the spec.
 	if IsSameDescriptor(desc, current) {

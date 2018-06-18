@@ -72,7 +72,6 @@ func TestObjectDefineOwnPropertyDATA(t *testing.T) {
 
 func testDataDescriptor(t *testing.T, obj *types.DataObject, property string, tc DataTestcase) {
 	// new property never fails
-	t.Logf("%+v", tc)
 	propName := S(property)
 	expected := tc.val
 	prop := types.NewDataPropDesc(expected, tc.wrt, tc.enu, tc.cfg)
