@@ -253,14 +253,15 @@ func (p *PropertyDescriptor) ToObject() *DataObject {
 	return obj
 }
 
+// IsSameDescriptor compares if descriptors are the same.
 func IsSameDescriptor(a, b *PropertyDescriptor) bool {
-	var ok = true
+	var ok bool
 
 	if a.IsDataDescriptor() {
-		ok = ok && StrictEqual(a.Value(), b.Value()) &&
+		ok = StrictEqual(a.Value(), b.Value()) &&
 			StrictEqual(a.Writable(), b.Writable())
 	} else if a.IsAcessorDescriptor() {
-		ok = ok && StrictEqual(a.Get(), b.Get()) &&
+		ok = StrictEqual(a.Get(), b.Get()) &&
 			StrictEqual(a.Set(), b.Set())
 	}
 
@@ -270,6 +271,40 @@ func IsSameDescriptor(a, b *PropertyDescriptor) bool {
 	return ok
 }
 
+// IsSameDescriptorSettings compares if descriptors are the same ignoring the value
+// (Looking only at the configs).
+func IsSameDescriptorSettings(a, b *PropertyDescriptor) bool {
+	aIsData := a.IsDataDescriptor()
+	bIsData := b.IsDataDescriptor()
+	if aIsData != bIsData {
+		return false
+	}
+
+	aIsAcessor := a.IsAcessorDescriptor()
+	bIsAcessor := b.IsAcessorDescriptor()
+
+	if aIsAcessor != bIsAcessor {
+		return false
+	}
+
+	if aIsData {
+		return StrictEqual(a.Writable(), b.Writable()) &&
+			StrictEqual(a.Cfg(), b.Cfg()) &&
+			StrictEqual(a.Enum(), b.Enum())
+	}
+
+	if aIsAcessor {
+		return StrictEqual(a.Cfg(), b.Cfg()) &&
+			StrictEqual(a.Enum(), b.Enum()) &&
+			StrictEqual(a.Get(), b.Get()) &&
+			StrictEqual(a.Set(), b.Set())
+	}
+
+	// both are generic descriptor
+	return true
+}
+
+// CopyProperties from descriptor src to dst.
 func CopyProperties(dst, src *PropertyDescriptor) {
 	if src.IsDataDescriptor() {
 		if src.HasValue() {

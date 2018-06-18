@@ -34,8 +34,12 @@ type (
 		CanPut(name utf16.Str) bool
 		Put(name utf16.Str, value Value, throw bool) error
 		DefineOwnProperty(n utf16.Str, v Value, throw bool) (bool, error)
+
+		// Probably will have other methods like:
+		// GetOwnProperty, etc. but they are not implemented yet.
 	}
 
+	// Object is everything that's not a primitive value.
 	Object interface {
 		ECMAObject
 
@@ -45,7 +49,7 @@ type (
 		String() string
 	}
 
-	// Function is an Object with a Call method defined.
+	// Function is a kind of Object that's executable, ie. it has a Call method.
 	Function interface {
 		Object
 
