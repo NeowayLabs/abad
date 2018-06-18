@@ -225,6 +225,20 @@ func TestMemberExpr(t *testing.T) {
 			input:       "console.",
 			expectedErr: E("tests.js:1:0: unexpected EOF"),
 		},
+		{
+			input: "self.a",
+			expected: ast.NewMemberExpr(
+				ast.NewIdent(utf16.S("self")),
+				ast.NewIdent(utf16.S("a")),
+			),
+		},
+		{
+			input: "self.self.self", // same as: (self.self).self
+			expected: ast.NewMemberExpr(
+				ast.NewMemberExpr(ast.NewIdent(utf16.S("self")), ast.NewIdent(utf16.S("self"))),
+				ast.NewIdent(utf16.S("self")),
+			),
+		},
 	} {
 		testParser(t, tc.input, tc.expected, tc.expectedErr)
 	}
@@ -273,7 +287,7 @@ func testParser(
 
 	nodes := tree.Nodes
 	if len(nodes) != 1 {
-		t.Fatalf("id tests must be isolated: %v", nodes)
+		t.Fatalf("memberexpr tests must be isolated: %v", nodes)
 	}
 
 	got := nodes[0]

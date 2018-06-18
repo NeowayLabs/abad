@@ -215,7 +215,8 @@ func parseIdentExpr(p *Parser) (ast.Node, error) {
 
 	// eg.: console.
 	if next.Type == token.Dot {
-		return parseMemberExpr(p)
+		p.forget(1)
+		return parseMemberExpr(p, ast.NewIdent(tok.Value))
 	}
 
 	// eg.: console(
@@ -233,11 +234,9 @@ func parseIdentExpr(p *Parser) (ast.Node, error) {
 }
 
 // state:
-// lookahead[0] = token.Ident
-// lookahead[1] = token.Dot
-func parseMemberExpr(p *Parser) (ast.Node, error) {
-	object := ast.NewIdent(p.lookahead[0].Value)
-	p.forget(2)
+// lookahead[0] = token.Dot
+func parseMemberExpr(p *Parser, object ast.Node) (ast.Node, error) {
+	p.forget(1)
 
 	tok := p.next()
 	if tok.Type != token.Ident {
@@ -246,6 +245,14 @@ func parseMemberExpr(p *Parser) (ast.Node, error) {
 
 	member := ast.NewMemberExpr(object, ast.NewIdent(tok.Value))
 
+	// TODO(i4k): Discuss this!
+	// We can just return the MemberExpr here but then if next token is '('
+	// then the main parser loop will need to retrieve the last parsed node
+	// to use it as the object in the CallExpr.
+	// Going into the CallExpr parser from here avoid to keep some states
+	// in the parser structure but can lead to some code duplicates also.
+	// I'm not sure of what's the best approach yet... Coding the naive one
+	// for now.
 	p.scry(1)
 
 	tok = p.lookahead[0]
