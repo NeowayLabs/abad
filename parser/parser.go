@@ -260,6 +260,10 @@ func parseMemberExpr(p *Parser, object ast.Node) (ast.Node, error) {
 		return parseMemberFuncall(p, member)
 	}
 
+	if tok.Type == token.Dot {
+		return parseMemberExpr(p, member)
+	}
+
 	if tok.Type != token.EOF {
 		panic("not expected")
 	}

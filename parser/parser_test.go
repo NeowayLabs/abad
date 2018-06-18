@@ -239,6 +239,22 @@ func TestMemberExpr(t *testing.T) {
 				ast.NewIdent(utf16.S("self")),
 			),
 		},
+		{
+			input: "a.b.c.d.e.f", // same as: ((((a.b).c).d).e).f)
+			expected: ast.NewMemberExpr(
+				ast.NewMemberExpr(
+					ast.NewMemberExpr(
+						ast.NewMemberExpr(
+							ast.NewMemberExpr(ast.NewIdent(utf16.S("a")), ast.NewIdent(utf16.S("b"))),
+							ast.NewIdent(utf16.S("c")),
+						),
+						ast.NewIdent(utf16.S("d")),
+					),
+					ast.NewIdent(utf16.S("e")),
+				),
+				ast.NewIdent(utf16.S("f")),
+			),
+		},
 	} {
 		testParser(t, tc.input, tc.expected, tc.expectedErr)
 	}
