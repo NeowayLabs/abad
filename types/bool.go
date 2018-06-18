@@ -10,7 +10,7 @@ var False = Bool(false)
 func NewBool(b bool) Bool    { return Bool(b) }
 func (_ Bool) Kind() Kind    { return KindBool }
 func (b Bool) IsTrue() bool  { return bool(b) }
-func (b Bool) IsFalse() bool { return bool(b) }
+func (b Bool) IsFalse() bool { return !bool(b) }
 func (b Bool) ToBool() Bool  { return b }
 func (b Bool) ToNumber() Number {
 	if b {
