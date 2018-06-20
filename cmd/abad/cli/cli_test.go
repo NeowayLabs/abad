@@ -45,7 +45,7 @@ func TestCli(t *testing.T) {
 		assert.NoError(t, err)
 		cli.ReadEval()
 
-		got := trim(string(outb.Bytes()))
+		got := trim(outb.String())
 		expected := "> < " + trim(tc.out)
 		assert.EqualStrings(t, expected, got, "cli output")
 	}
