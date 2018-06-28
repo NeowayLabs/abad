@@ -25,3 +25,10 @@ analysis:
 vendor:
 	go get github.com/madlambda/vendor
 	vendor
+	
+devimg=neowaylabs/abadtest
+devimage:
+	docker build . -t $(devimg)
+	
+devshell: devimage
+	docker run -ti $(devimg)
