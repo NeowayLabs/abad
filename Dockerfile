@@ -1,30 +1,32 @@
-FROM ubuntu:18.04
+FROM debian:stretch-slim
 
-ENV DEPOTPATH=/depot	
-ENV PATH=${PATH}:${DEPOTPATH}
+ARG V8_VERSION=6.9.253
 
-RUN apt-get update -y  && \
-	apt-get install -y wget python git pkg-config && \
-	git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git	${DEPOTPATH} && \
-	cd /tmp && fetch v8
+RUN apt-get update && apt-get upgrade -yqq
 
-WORKDIR /tmp/v8
+RUN DEBIAN_FRONTEND=noninteractive \
+    apt-get install bison \
+                    cdbs \
+                    curl \
+                    flex \
+                    g++ \
+                    git \
+                    python \
+                    pkg-config -yqq
 
-RUN gclient sync
+RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
 
-# Google V8 Deps copied from Google install-build-deps.sh script
-# Why copied ? because the script wont work =), I lost a day with it.
-# Why not fix properly and help them ? Because fuck bloated software and I dont want
-# to be part of it, just want to compile V8.
-COPY hack/install-build-deps.sh /hack/v8/install-build-deps.sh
+ENV PATH="/depot_tools:${PATH}"
 
-RUN /hack/v8/install-build-deps.sh
-# Uncomment to run the default script
-# RUN ./build/install-build-deps.sh --no-prompt
-
-# RUN ./tools/dev/gm.py x64.release
-
-# WORKDIR /abad
-
+RUN fetch v8 && \
+    cd /v8 && \
+    git checkout ${V8_VERSION} && \
+    ./tools/dev/v8gen.py x64.release && \
+    ninja -C out.gn/x64.release
+ 
+# WHY: v8 only works when its working dir has debug crap. Otherwise it gives a nice
+# Illegal instruction (core dumped)
+RUN mkdir -p /usr/local/bin && \
+	echo "#!/bin/sh\n cd /v8/out.gb/x64.release && ./d8 $*" > /usr/local/bin/d8
 
 	
