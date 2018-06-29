@@ -31,4 +31,4 @@ devimage:
 	docker build . -t $(devimg)
 	
 devshell: devimage
-	docker run -ti $(devimg)
+	docker run -v `pwd`:/abad -ti $(devimg)
