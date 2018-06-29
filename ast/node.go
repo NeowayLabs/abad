@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/NeowayLabs/abad/internal/utf16"
 	"github.com/NeowayLabs/abad/token"
 )
 
@@ -25,6 +26,11 @@ type (
 		Nodes []Node
 	}
 
+	// Function Body
+	FnBody struct {
+		Nodes []Node
+	}
+
 	Number float64
 
 	// UnaryExpr is a unary expression (-a, +a, ~a, and so on)
@@ -32,15 +38,33 @@ type (
 		Operator token.Type
 		Operand  Node
 	}
+
+	// MemberExpr handles get of object's properties
+	// eg.: <object>.<property>
+	MemberExpr struct {
+		Object   Node
+		Property Ident
+	}
+
+	CallExpr struct {
+		Callee Node
+		Args   []Node
+	}
+
+	Ident utf16.Str
 )
 
 const (
 	NodeProgram NodeType = iota + 1
+	NodeFnBody
 
 	exprBegin
 
 	NodeNumber
 	NodeUnaryExpr
+	NodeMemberExpr
+	NodeCallExpr
+	NodeIdent
 
 	exprEnd
 )
@@ -48,6 +72,28 @@ const (
 // console.log(Number.EPSILON);
 // 2.220446049250313e-16
 var ε = math.Pow(2, -52)
+
+func (t NodeType) String() string {
+	switch t {
+	case NodeProgram:
+		return "PROGRAM"
+	case NodeFnBody:
+		return "FNBODY"
+	case NodeNumber:
+		return "NUMBER"
+	case NodeUnaryExpr:
+		return "UNARYEXPR"
+	case NodeMemberExpr:
+		return "MEMBEREXPR"
+	case NodeCallExpr:
+		return "CALLEXPR"
+	case NodeIdent:
+		return "IDENT"
+	}
+
+	panic(fmt.Sprintf("unexpected node type: %d", t))
+	return ""
+}
 
 func IsExpr(node Node) bool {
 	return node.Type() > exprBegin &&
@@ -82,6 +128,16 @@ func (p *Program) Equal(other Node) bool {
 		}
 	}
 	return true
+}
+
+func (_ *FnBody) Type() NodeType { return NodeFnBody }
+
+func (f *FnBody) String() string {
+	var stmts []string
+	for _, stmt := range f.Nodes {
+		stmts = append(stmts, stmt.String())
+	}
+	return strings.Join(stmts, "\n")
 }
 
 func NewNumber(a float64) Number {
@@ -139,6 +195,93 @@ func (a *UnaryExpr) Equal(other Node) bool {
 	}
 
 	return a.Operand.Equal(o.Operand)
+}
+
+func NewIdent(ident utf16.Str) Ident {
+	return Ident(ident)
+}
+
+func (_ Ident) Type() NodeType {
+	return NodeIdent
+}
+
+func (an Ident) String() string {
+	return utf16.Decode(utf16.Str(an))
+}
+
+func (an Ident) Equal(other Node) bool {
+	if an.Type() != other.Type() {
+		return false
+	}
+
+	astr := utf16.Str(an)
+	ostr := utf16.Str(other.(Ident))
+
+	if len(astr) != len(ostr) {
+		return false
+	}
+
+	for i := 0; i < len(astr); i++ {
+		if astr[i] != ostr[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func NewMemberExpr(object Node, property Ident) *MemberExpr {
+	return &MemberExpr{
+		Object:   object,
+		Property: property,
+	}
+}
+
+func (m *MemberExpr) Type() NodeType { return NodeMemberExpr }
+func (m *MemberExpr) String() string {
+	return fmt.Sprintf("%s.%s", m.Object, m.Property)
+}
+
+func (m *MemberExpr) Equal(other Node) bool {
+	if m.Type() != other.Type() {
+		return false
+	}
+
+	o := other.(*MemberExpr)
+	return m.Object.Equal(o.Object) &&
+		m.Property.Equal(o.Property)
+}
+
+func NewCallExpr(callee Node, args []Node) *CallExpr {
+	return &CallExpr{
+		Callee: callee,
+		Args:   args,
+	}
+}
+
+func (c *CallExpr) Type() NodeType { return NodeCallExpr }
+func (c *CallExpr) String() string {
+	return fmt.Sprintf("%s(<args>)", c.Callee)
+}
+
+func (c *CallExpr) Equal(other Node) bool {
+	if other.Type() != c.Type() {
+		return false
+	}
+
+	o := other.(*CallExpr)
+
+	if len(c.Args) != len(o.Args) {
+		return false
+	}
+
+	for i := 0; i < len(c.Args); i++ {
+		if !c.Args[i].Equal(o.Args[i]) {
+			return false
+		}
+	}
+
+	return c.Callee.Equal(o.Callee)
 }
 
 func floatEquals(a, b float64) bool {
