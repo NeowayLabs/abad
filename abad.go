@@ -133,26 +133,30 @@ func (a *Abad) evalExpr(n ast.Node) (types.Value, error) {
 		panic("internal error: not an expression")
 	}
 
+	var ret types.Value
+	var err error
+
 	switch n.Type() {
 	case ast.NodeNumber:
 		val := n.(ast.Number)
-		return types.Number(val.Value()), nil
+		ret, err = types.Number(val.Value()), nil
 	case ast.NodeIdent:
 		val := n.(ast.Ident)
-		return a.evalIdentExpr(val)
+		ret, err = a.evalIdentExpr(val)
 	case ast.NodeMemberExpr:
 		val := n.(*ast.MemberExpr)
-		return a.evalMemberExpr(val)
+		ret, err = a.evalMemberExpr(val)
 	case ast.NodeCallExpr:
 		val := n.(*ast.CallExpr)
-		return a.evalCallExpr(val)
+		ret, err = a.evalCallExpr(val)
 	case ast.NodeUnaryExpr:
 		expr := n.(*ast.UnaryExpr)
-		return a.evalUnaryExpr(expr)
+		ret, err = a.evalUnaryExpr(expr)
+	default:
+		panic(fmt.Sprintf("unknown node type: %v", n))
 	}
 
-	panic("unreachable")
-	return nil, nil
+	return ret, err
 }
 
 func (a *Abad) evalIdentExpr(ident ast.Ident) (types.Value, error) {
