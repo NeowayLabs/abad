@@ -265,7 +265,7 @@ func parseMemberExpr(p *Parser, object ast.Node) (ast.Node, error) {
 	}
 
 	if tok.Type != token.EOF {
-		panic("not expected")
+		return nil, p.errorf(tok, "unexpected %s", tok.Value)
 	}
 
 	p.forget(1)
