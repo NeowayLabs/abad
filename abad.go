@@ -24,17 +24,17 @@ var (
 	consoleAttr = utf16.S("console")
 )
 
+// NewAbad creates a new ecma script evaluator.
 func NewAbad(filename string) (*Abad, error) {
-	ecma := &Abad{
+	a := &Abad{
 		filename: filename,
 	}
 
-	err := ecma.setup()
+	err := a.setup()
 	if err != nil {
 		return nil, err
 	}
-
-	return ecma, nil
+	return a, nil
 }
 
 func (a *Abad) setup() error {
@@ -53,6 +53,7 @@ func (a *Abad) setup() error {
 	return nil
 }
 
+// Eval the code.
 func (a *Abad) Eval(code string) (types.Value, error) {
 	program, err := parser.Parse(a.filename, code)
 	if err != nil {
@@ -67,13 +68,17 @@ func (a *Abad) eval(n ast.Node) (types.Value, error) {
 		return a.evalExpr(n)
 	}
 
+	var ret types.Value
+	var err error
+
 	switch n.Type() {
 	case ast.NodeProgram:
-		return a.evalProgram(n.(*ast.Program))
+		ret, err = a.evalProgram(n.(*ast.Program))
+	default:
+		panic(fmt.Sprintf("AST(%s) not implemented", n))
 	}
 
-	panic(fmt.Sprintf("AST(%s) not implemented", n))
-	return nil, nil
+	return ret, err
 }
 
 func (a *Abad) evalProgram(stmts *ast.Program) (types.Value, error) {
