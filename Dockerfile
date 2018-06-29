@@ -27,6 +27,7 @@ RUN fetch v8 && \
 # WHY: v8 only works when its working dir has debug crap. Otherwise it gives a nice
 # Illegal instruction (core dumped)
 RUN mkdir -p /usr/local/bin && \
-	echo "#!/bin/sh\n cd /v8/out.gb/x64.release && ./d8 $*" > /usr/local/bin/d8
+	echo "#!/bin/sh\n cd /v8/out.gn/x64.release && ./d8 \$@" > /usr/local/bin/d8 && \
+	chmod +x /usr/local/bin/d8
 
 	
