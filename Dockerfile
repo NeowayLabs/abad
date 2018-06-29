@@ -10,7 +10,7 @@ RUN apt-get update -y  && \
 
 WORKDIR /tmp/v8
 
-# RUN ./build/install-build-deps.sh
+RUN ./build/install-build-deps.sh
 
 
 	
