@@ -29,5 +29,18 @@ RUN fetch v8 && \
 RUN mkdir -p /usr/local/bin && \
 	echo "#!/bin/sh\n cd /v8/out.gn/x64.release && ./d8 \$@" > /usr/local/bin/d8 && \
 	chmod +x /usr/local/bin/d8
+	
+ENV GOPATH="/go"
+ENV GOROOT="/goroot"
+ENV GOVERSION="1.10"
+ENV PATH="${GOROOT}/bin:${PATH}"
+
+RUN apt-get update && apt-get install -y wget
+
+RUN cd /tmp && \
+	wget https://storage.googleapis.com/golang/go$GOVERSION.linux-amd64.tar.gz && \
+	tar -xvf go$GOVERSION.linux-amd64.tar.gz && \
+	mkdir -p $GOROOT && \
+	mv ./go/* $GOROOT
 
 	

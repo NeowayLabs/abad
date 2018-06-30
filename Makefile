@@ -1,5 +1,8 @@
 .PHONY: all build test coverage coverage-html coverage-show
 
+abadgopath=/go/src/github.com/NeowayLabs/abad
+runabad=docker run -v `pwd`:$(abadgopath) -w $(abadgopath)
+
 all: build test
 
 build:
@@ -31,4 +34,4 @@ devimage:
 	docker build . -t $(devimg)
 	
 devshell: devimage
-	docker run -v `pwd`:/abad -ti $(devimg)
+	$(runabad) -ti $(devimg)
