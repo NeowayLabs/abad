@@ -44,4 +44,4 @@ dev-shell: devimage
 	$(runabad) -ti $(devimg)
 	
 dev-test-e2e: devimage
-	$(runabad) -ti $(devimg) make install && /bin/sh
+	$(runabad) $(devimg) make install test-e2e
