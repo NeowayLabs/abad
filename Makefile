@@ -3,13 +3,16 @@
 abadgopath=/go/src/github.com/NeowayLabs/abad
 runabad=docker run -v `pwd`:$(abadgopath) -w $(abadgopath)
 
-all: build test
+all: build test analysis
 
 build:
 	go build -o ./cmd/abad/abad -v ./cmd/abad 
 
 test:
 	go test -race -v ./... -timeout=30s
+
+test-e2e:
+	go test -v ./tests/e2e -tags e2e
 
 coverage:
 	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
@@ -29,9 +32,9 @@ vendor:
 	go get github.com/madlambda/vendor
 	vendor
 	
-devimg=neowaylabs/abadtest
+devimg=neowaylabs/abadev
 devimage:
 	docker build . -t $(devimg)
 	
-devshell: devimage
+dev-shell: devimage
 	$(runabad) -ti $(devimg)
