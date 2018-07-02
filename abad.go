@@ -24,17 +24,17 @@ var (
 	consoleAttr = utf16.S("console")
 )
 
+// NewAbad creates a new ecma script evaluator.
 func NewAbad(filename string) (*Abad, error) {
-	ecma := &Abad{
+	a := &Abad{
 		filename: filename,
 	}
 
-	err := ecma.setup()
+	err := a.setup()
 	if err != nil {
 		return nil, err
 	}
-
-	return ecma, nil
+	return a, nil
 }
 
 func (a *Abad) setup() error {
@@ -53,6 +53,7 @@ func (a *Abad) setup() error {
 	return nil
 }
 
+// Eval the code.
 func (a *Abad) Eval(code string) (types.Value, error) {
 	program, err := parser.Parse(a.filename, code)
 	if err != nil {
@@ -67,13 +68,17 @@ func (a *Abad) eval(n ast.Node) (types.Value, error) {
 		return a.evalExpr(n)
 	}
 
+	var ret types.Value
+	var err error
+
 	switch n.Type() {
 	case ast.NodeProgram:
-		return a.evalProgram(n.(*ast.Program))
+		ret, err = a.evalProgram(n.(*ast.Program))
+	default:
+		panic(fmt.Sprintf("AST(%s) not implemented", n))
 	}
 
-	panic(fmt.Sprintf("AST(%s) not implemented", n))
-	return nil, nil
+	return ret, err
 }
 
 func (a *Abad) evalProgram(stmts *ast.Program) (types.Value, error) {
@@ -128,26 +133,30 @@ func (a *Abad) evalExpr(n ast.Node) (types.Value, error) {
 		panic("internal error: not an expression")
 	}
 
+	var ret types.Value
+	var err error
+
 	switch n.Type() {
 	case ast.NodeNumber:
 		val := n.(ast.Number)
-		return types.Number(val.Value()), nil
+		ret, err = types.Number(val.Value()), nil
 	case ast.NodeIdent:
 		val := n.(ast.Ident)
-		return a.evalIdentExpr(val)
+		ret, err = a.evalIdentExpr(val)
 	case ast.NodeMemberExpr:
 		val := n.(*ast.MemberExpr)
-		return a.evalMemberExpr(val)
+		ret, err = a.evalMemberExpr(val)
 	case ast.NodeCallExpr:
 		val := n.(*ast.CallExpr)
-		return a.evalCallExpr(val)
+		ret, err = a.evalCallExpr(val)
 	case ast.NodeUnaryExpr:
 		expr := n.(*ast.UnaryExpr)
-		return a.evalUnaryExpr(expr)
+		ret, err = a.evalUnaryExpr(expr)
+	default:
+		panic(fmt.Sprintf("unknown node type: %v", n))
 	}
 
-	panic("unreachable")
-	return nil, nil
+	return ret, err
 }
 
 func (a *Abad) evalIdentExpr(ident ast.Ident) (types.Value, error) {

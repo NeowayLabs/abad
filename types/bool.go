@@ -1,11 +1,15 @@
 package types
 
 type (
+	// Bool is the ECMAScript Boolean type.
 	Bool bool
 )
 
-var True = Bool(true)
-var False = Bool(false)
+// True value
+const True Bool = true
+
+// False value
+const False Bool = false
 
 func NewBool(b bool) Bool    { return Bool(b) }
 func (_ Bool) Kind() Kind    { return KindBool }

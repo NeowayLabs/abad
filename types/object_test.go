@@ -37,7 +37,7 @@ func TestNewObjectExtendsProto(t *testing.T) {
 	obj := types.NewDataObject(proto)
 
 	gotproto, err := obj.Get(protoAttr)
-	assert.NoError(t, err, "prototypes differs")
+	assert.NoError(t, err, "failed getting prototype")
 
 	if gotproto.Kind() != types.KindObject {
 		t.Fatalf("got type %s", gotproto.Kind())
@@ -88,13 +88,13 @@ func testDataDescriptor(t *testing.T, obj *types.DataObject, property string, tc
 
 	gotprop := obj.GetOwnProperty(propName)
 	if gotprop.Kind() != types.KindObject {
-		t.Fatalf("got property of wrong type")
+		t.Fatalf("Expected KindObject property got[%s]", gotprop.Kind())
 	}
 
 	got := gotprop.(*types.DataObject)
 	gotdesc := got.ToPropertyDescriptor()
 	if !types.IsSameDescriptor(gotdesc, prop) {
-		t.Fatalf("Property descriptors differ")
+		t.Fatalf("Property descriptors differs: %+v != %+v", gotdesc, prop)
 	}
 }
 
@@ -103,6 +103,6 @@ func testDataDescriptorFail(t *testing.T, obj *types.DataObject, property string
 	prop := types.NewDataPropDesc(tc.val, tc.wrt, tc.enu, tc.cfg)
 	ok, _ := obj.DefineOwnPropertyP(propName, prop, true)
 	if ok {
-		t.Fatalf("should fail")
+		t.Fatal("should fail")
 	}
 }

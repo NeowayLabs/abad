@@ -87,10 +87,6 @@ func (p *PropertyDescriptor) put(name string, value Value) {
 }
 
 func (p *PropertyDescriptor) get(name string) Value {
-	if p == nil || p.attrs == nil {
-		panic(p)
-	}
-
 	v, ok := p.attrs[name]
 	if ok {
 		return v
