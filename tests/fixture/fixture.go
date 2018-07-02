@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"bytes"
 	"testing"
+	"path/filepath"
 )
 
 
@@ -30,6 +31,10 @@ type JsInterpreter func(codepath string) (error, Result)
 // will create a new hierarchy of subtests and the name of the dir is
 // used as the name of the test (the filename of the sample is also used).
 func Run(t *testing.T, samplesdir string) {
+	samplesdir, err := filepath.Abs(samplesdir)
+	if err != nil {
+		t.Fatal(err)
+	}
 	abadInterpreter := NewAbad(t)
 	v8Interpreter := NewV8(t)
 	

@@ -2,11 +2,15 @@
 
 abadgopath=/go/src/github.com/NeowayLabs/abad
 runabad=docker run -v `pwd`:$(abadgopath) -w $(abadgopath)
+installdir?=/usr/local/bin
 
 all: build test analysis
 
 build:
-	go build -o ./cmd/abad/abad -v ./cmd/abad 
+	go build -o ./cmd/abad/abad -v ./cmd/abad
+
+install: build
+	cp ./cmd/abad/abad $(installdir)
 
 test:
 	go test -race -v ./... -timeout=30s
@@ -38,3 +42,6 @@ devimage:
 	
 dev-shell: devimage
 	$(runabad) -ti $(devimg)
+	
+dev-test-e2e: devimage
+	$(runabad) -ti $(devimg) make install && /bin/sh

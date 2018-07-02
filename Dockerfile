@@ -35,7 +35,7 @@ ENV GOROOT="/goroot"
 ENV GOVERSION="1.10"
 ENV PATH="${GOROOT}/bin:${PATH}"
 
-RUN apt-get update && apt-get install -y wget
+RUN apt-get update && apt-get install -y wget make
 
 RUN cd /tmp && \
 	wget https://storage.googleapis.com/golang/go$GOVERSION.linux-amd64.tar.gz && \
