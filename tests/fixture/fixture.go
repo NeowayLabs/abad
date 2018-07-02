@@ -5,8 +5,18 @@
 package fixture
 
 import (
+	"os/exec"
+	"bytes"
 	"testing"
 )
+
+
+type Result struct {
+	Stdout string
+	Stderr string
+}
+
+type JsInterpreter func(codepath string) (error, Result)
 
 
 // Run will run tests using the provided samplesdir as a 
@@ -20,12 +30,47 @@ import (
 // will create a new hierarchy of subtests and the name of the dir is
 // used as the name of the test (the filename of the sample is also used).
 func Run(t *testing.T, samplesdir string) {
+	abadInterpreter := NewAbad(t)
+	v8Interpreter := NewV8(t)
+	
+	RunWithInterpreters(t, samplesdir, v8Interpreter, abadInterpreter)
 }
 
-
-type Result struct {
-	stdout string
-	stderr string
+func NewAbad(t *testing.T) JsInterpreter {
+	return newInterpreter(t, "abad")
 }
 
-type JsInterpreter func(codepath string) (error, Result)
+func NewV8(t *testing.T) JsInterpreter {
+	return newInterpreter(t, "d8")
+}
+
+func RunWithInterpreters(
+	t * testing.T,
+	samplesdir string,
+	reference JsInterpreter,
+	undertest JsInterpreter,
+) {
+} 
+
+func newInterpreter(t *testing.T, jsinterpreter string) JsInterpreter {
+	a := exec.Command(jsinterpreter, "-help")
+	err := a.Run()
+	if err != nil {
+		t.Fatalf(
+			"unable to find the interpreter[%s] installed, got error: %s",
+			jsinterpreter, err)
+	}
+	return func(codepath string) (error, Result) {
+		js := exec.Command(jsinterpreter, codepath)
+		stdout := &bytes.Buffer{}
+		stderr := &bytes.Buffer{}
+		
+		js.Stdout = stdout
+		js.Stderr = stderr
+		
+		err := js.Run()
+		
+		return err, Result{Stdout: stdout.String(), Stderr: stderr.String()}
+	}
+}
+
