@@ -1,9 +1,9 @@
 package main
 
 import (
-	"io/ioutil"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -11,9 +11,7 @@ import (
 	"github.com/NeowayLabs/abad/cmd/abad/cli"
 )
 
-
 const defaultFilename = "<anonymous>"
-
 
 func repl() error {
 
@@ -46,27 +44,27 @@ func evalCode(filename string, code string) error {
 func main() {
 	var execute string
 	var help bool
-	
+
 	flag.BoolVar(&help, "help", false, "prints usage")
 	flag.StringVar(&execute, "e", "", "execute code")
 	flag.Parse()
-	
+
 	if help {
 		fmt.Println("Abad: the bad JS interpreter")
 		flag.PrintDefaults()
 		return
 	}
-	
+
 	if execute != "" {
 		abortonerr(evalCode(defaultFilename, execute))
 		return
 	}
-	
+
 	if len(flag.Args()) == 0 {
 		abortonerr(repl())
 		return
 	}
-	
+
 	filepath := flag.Args()[0]
 	abortonerr(eval(filepath))
 }

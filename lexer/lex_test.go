@@ -4,28 +4,26 @@ import (
 	"fmt"
 	"testing"
 	"unicode"
-	
-	"github.com/NeowayLabs/abad/token"
-	"github.com/NeowayLabs/abad/lexer"
+
 	"github.com/NeowayLabs/abad/internal/utf16"
+	"github.com/NeowayLabs/abad/lexer"
+	"github.com/NeowayLabs/abad/token"
 )
 
-
 type TestCase struct {
-	name string
-	code utf16.Str
-	want []lexer.Tokval
+	name          string
+	code          utf16.Str
+	want          []lexer.Tokval
 	checkPosition bool
 }
 
 var Str func(string) utf16.Str = utf16.S
 var EOF lexer.Tokval = lexer.EOF
 
-
 func TestNumericLiterals(t *testing.T) {
 
 	// SPEC: https://es5.github.io/#x7.8.3
-	
+
 	cases := []TestCase{
 		{
 			name: "SingleZero",
@@ -101,7 +99,7 @@ func TestNumericLiterals(t *testing.T) {
 			name: "RealDecimalWithBigNegativeExponent",
 			code: Str("1.0e-50"),
 			want: tokens(decimalToken("1.0e-50")),
-		},		
+		},
 		{
 			name: "SmallRealDecimalWithSmallUpperExponent",
 			code: Str("1.0E1"),
@@ -183,19 +181,19 @@ func TestNumericLiterals(t *testing.T) {
 			want: tokens(hexToken("0XABCDEF")),
 		},
 	}
-	
+
 	plusSignedCases := prependOnTestCases(TestCase{
 		name: "PlusSign",
 		code: Str("+"),
-		want: []lexer.Tokval{ plusToken() },
+		want: []lexer.Tokval{plusToken()},
 	}, cases)
-	
+
 	minusSignedCases := prependOnTestCases(TestCase{
 		name: "MinusSign",
 		code: Str("-"),
-		want: []lexer.Tokval{ minusToken() },
+		want: []lexer.Tokval{minusToken()},
 	}, cases)
-	
+
 	plusMinusPlusMinusSignedCases := prependOnTestCases(TestCase{
 		name: "PlusMinusPlusMinusSign",
 		code: Str("+-+-"),
@@ -206,7 +204,7 @@ func TestNumericLiterals(t *testing.T) {
 			minusToken(),
 		},
 	}, cases)
-	
+
 	minusPlusMinusPlusSignedCases := prependOnTestCases(TestCase{
 		name: "MinusPlusMinusPlusSign",
 		code: Str("-+-+"),
@@ -217,7 +215,7 @@ func TestNumericLiterals(t *testing.T) {
 			plusToken(),
 		},
 	}, cases)
-	
+
 	runTests(t, cases)
 	runTests(t, plusSignedCases)
 	runTests(t, minusSignedCases)
@@ -249,17 +247,17 @@ func TestStrings(t *testing.T) {
 
 func TestInvalidStrings(t *testing.T) {
 	// TODO: add newline tests
-	
-	runTests(t, []TestCase {
+
+	runTests(t, []TestCase{
 		{
 			name: "SingleDoubleQuote",
 			code: Str(`"`),
-			want: []lexer.Tokval { illegalToken(`"`) },
+			want: []lexer.Tokval{illegalToken(`"`)},
 		},
 		{
 			name: "NoEndingDoubleQuote",
 			code: Str(`"dsadasdsa123456`),
-			want: []lexer.Tokval { illegalToken(`"dsadasdsa123456`) },
+			want: []lexer.Tokval{illegalToken(`"dsadasdsa123456`)},
 		},
 	})
 }
@@ -555,32 +553,32 @@ func TestFuncall(t *testing.T) {
 func TestPosition(t *testing.T) {
 	runTests(t, []TestCase{
 		{
-			name: "MinusDecimal",
-			code: Str("-1"),
+			name:          "MinusDecimal",
+			code:          Str("-1"),
 			checkPosition: true,
 			want: []lexer.Tokval{
-				minusTokenPos(1,1),
+				minusTokenPos(1, 1),
 				decimalTokenPos("1", 1, 2),
 				EOF,
 			},
 		},
 		{
-			name: "PlusDecimal",
-			code: Str("+1"),
+			name:          "PlusDecimal",
+			code:          Str("+1"),
 			checkPosition: true,
 			want: []lexer.Tokval{
-				plusTokenPos(1,1),
+				plusTokenPos(1, 1),
 				decimalTokenPos("1", 1, 2),
 				EOF,
 			},
 		},
 		{
-			name: "PlusMinusDecimal",
-			code: Str("+-666"),
+			name:          "PlusMinusDecimal",
+			code:          Str("+-666"),
 			checkPosition: true,
 			want: []lexer.Tokval{
-				plusTokenPos(1,1),
-				minusTokenPos(1,2),
+				plusTokenPos(1, 1),
+				minusTokenPos(1, 2),
 				decimalTokenPos("666", 1, 3),
 				EOF,
 			},
@@ -617,11 +615,11 @@ func TestIllegalMemberAccess(t *testing.T) {
 }
 
 func TestIllegalNumericLiterals(t *testing.T) {
-	
+
 	corruptedHex := messStr(Str("0x01234"), 4)
 	corruptedDecimal := messStr(Str("1234"), 3)
 	corruptedNumber := messStr(Str("0"), 1)
-	
+
 	runTests(t, []TestCase{
 		{
 			name: "DecimalDuplicatedUpperExponentPart",
@@ -757,7 +755,7 @@ func TestNoOutputFor(t *testing.T) {
 		{
 			name: "EmptyString",
 			code: Str(""),
-			want: []lexer.Tokval{ EOF },
+			want: []lexer.Tokval{EOF},
 		},
 	})
 }
@@ -767,7 +765,7 @@ func TestCorruptedInput(t *testing.T) {
 		{
 			name: "AtStart",
 			code: messStr(Str(""), 0),
-			want: []lexer.Tokval{ illegalToken(messStr(Str(""), 0).String()) },
+			want: []lexer.Tokval{illegalToken(messStr(Str(""), 0).String())},
 		},
 	})
 }
@@ -778,11 +776,11 @@ func runTests(t *testing.T, testcases []TestCase) {
 		t.Run(tc.name, func(t *testing.T) {
 			tokensStream := lexer.Lex(tc.code)
 			tokens := []lexer.Tokval{}
-			
+
 			for t := range tokensStream {
 				tokens = append(tokens, t)
 			}
-			
+
 			assertWantedTokens(t, tc, tokens)
 		})
 	}
@@ -790,39 +788,39 @@ func runTests(t *testing.T, testcases []TestCase) {
 
 func illegalToken(val string) lexer.Tokval {
 	return lexer.Tokval{
-		Type: token.Illegal,
+		Type:  token.Illegal,
 		Value: Str(val),
 	}
 }
 
 func assertWantedTokens(t *testing.T, tc TestCase, got []lexer.Tokval) {
 	t.Helper()
-	
+
 	if len(tc.want) != len(got) {
 		t.Errorf("wanted [%d] tokens, got [%d] tokens", len(tc.want), len(got))
 		t.Fatalf("\nwant=%v\ngot= %v\nare not equal.", tc.want, got)
 	}
-	
+
 	for i, w := range tc.want {
 		g := got[i]
 		if !w.Equal(g) {
 			t.Errorf("\nwanted:\ntoken[%d][%v]\n\ngot:\ntoken[%d][%v]", i, w, i, g)
 			t.Errorf("\nwanted:\n%v\ngot:\n%v\n", tc.want, got)
 		}
-		
+
 		if tc.checkPosition {
 			if !w.EqualPos(g) {
-				t.Errorf("want=%+v\ngot=%+v\nare equal but dont have the same position",w, g)
+				t.Errorf("want=%+v\ngot=%+v\nare equal but dont have the same position", w, g)
 			}
 		}
-	} 
+	}
 }
 
 func messStr(s utf16.Str, pos uint) utf16.Str {
 	// WHY: The go's utf16 package uses the replacement char everytime a some
 	// encoding/decoding error happens, so we inject one on the uint16 array to simulate
 	// encoding/decoding errors.
-	// Not safe but the idea is to fuck up the string	
+	// Not safe but the idea is to fuck up the string
 
 	r := append(s[0:pos], uint16(unicode.ReplacementChar))
 	r = append(r, s[pos:]...)
@@ -835,117 +833,117 @@ func messStr(s utf16.Str, pos uint) utf16.Str {
 // The array of TestCases is generated by prepending code and the
 // wanted tokens for each TestCases. EOF should not be provided on the
 // given tcase since it will be prepended on each test case inside given tcases.
-func prependOnTestCases(tcase TestCase, tcases []TestCase) []TestCase{
+func prependOnTestCases(tcase TestCase, tcases []TestCase) []TestCase {
 	newcases := make([]TestCase, len(tcases))
-	
+
 	for i, t := range tcases {
 		name := fmt.Sprintf("%s/%s", tcase.name, t.name)
 		code := tcase.code.Append(t.code)
 		want := append(tcase.want, t.want...)
-		
+
 		newcases[i] = TestCase{
 			name: name,
 			code: code,
 			want: want,
 		}
 	}
-	
+
 	return newcases
 }
 
 func minusToken() lexer.Tokval {
 	return lexer.Tokval{
-		Type: token.Minus,
+		Type:  token.Minus,
 		Value: Str("-"),
 	}
 }
 
 func plusToken() lexer.Tokval {
 	return lexer.Tokval{
-		Type: token.Plus,
+		Type:  token.Plus,
 		Value: Str("+"),
 	}
 }
 
 func leftParenToken() lexer.Tokval {
 	return lexer.Tokval{
-		Type: token.LParen,
+		Type:  token.LParen,
 		Value: Str("("),
 	}
 }
 
 func rightParenToken() lexer.Tokval {
 	return lexer.Tokval{
-		Type: token.RParen,
+		Type:  token.RParen,
 		Value: Str(")"),
 	}
 }
 
 func minusTokenPos(line uint, column uint) lexer.Tokval {
 	return lexer.Tokval{
-		Type: token.Minus,
-		Value: Str("-"),
-		Line: line,
+		Type:   token.Minus,
+		Value:  Str("-"),
+		Line:   line,
 		Column: column,
 	}
 }
 
 func plusTokenPos(line uint, column uint) lexer.Tokval {
 	return lexer.Tokval{
-		Type: token.Plus,
-		Value: Str("+"),
-		Line: line,
+		Type:   token.Plus,
+		Value:  Str("+"),
+		Line:   line,
 		Column: column,
 	}
 }
 
 func decimalTokenPos(dec string, line uint, column uint) lexer.Tokval {
 	return lexer.Tokval{
-		Type: token.Decimal,
-		Value: Str(dec),
-		Line: line,
+		Type:   token.Decimal,
+		Value:  Str(dec),
+		Line:   line,
 		Column: column,
 	}
 }
 
 func decimalToken(dec string) lexer.Tokval {
 	return lexer.Tokval{
-		Type: token.Decimal,
+		Type:  token.Decimal,
 		Value: Str(dec),
 	}
 }
 
 func dotToken() lexer.Tokval {
 	return lexer.Tokval{
-		Type: token.Dot,
+		Type:  token.Dot,
 		Value: Str("."),
 	}
 }
 
 func hexToken(hex string) lexer.Tokval {
 	return lexer.Tokval{
-		Type: token.Hexadecimal,
+		Type:  token.Hexadecimal,
 		Value: Str(hex),
 	}
 }
 
 func stringToken(s string) lexer.Tokval {
 	return lexer.Tokval{
-		Type: token.String,
+		Type:  token.String,
 		Value: Str(s),
 	}
 }
 
 func identToken(s string) lexer.Tokval {
 	return lexer.Tokval{
-		Type: token.Ident,
+		Type:  token.Ident,
 		Value: Str(s),
 	}
 }
 
 func commaToken() lexer.Tokval {
 	return lexer.Tokval{
-		Type: token.Comma,
+		Type:  token.Comma,
 		Value: Str(","),
 	}
 }

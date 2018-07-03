@@ -5,16 +5,15 @@
 package fixture
 
 import (
-	"os"
-	"strings"
-	"os/exec"
 	"bytes"
-	"testing"
+	"os"
+	"os/exec"
 	"path/filepath"
-	
+	"strings"
+	"testing"
+
 	"github.com/madlambda/spells/assert"
 )
-
 
 type Result struct {
 	Stdout string
@@ -23,8 +22,7 @@ type Result struct {
 
 type JsInterpreter func(codepath string) (error, Result)
 
-
-// Run will run tests using the provided samplesdir as a 
+// Run will run tests using the provided samplesdir as a
 // source of JavaScript samples. It will compare the results
 // of running the code on abad with Google's V8 engine.
 //
@@ -41,7 +39,7 @@ func Run(t *testing.T, samplesdir string) {
 	}
 	abadInterpreter := NewAbad(t)
 	v8Interpreter := NewV8(t)
-	
+
 	RunWithInterpreters(t, samplesdir, v8Interpreter, abadInterpreter)
 }
 
@@ -54,7 +52,7 @@ func NewV8(t *testing.T) JsInterpreter {
 }
 
 func RunWithInterpreters(
-	t * testing.T,
+	t *testing.T,
 	samplesdir string,
 	reference JsInterpreter,
 	undertest JsInterpreter,
@@ -62,35 +60,35 @@ func RunWithInterpreters(
 
 	err := filepath.Walk(samplesdir, func(path string, info os.FileInfo, err error) error {
 		assert.NoError(t, err, "error[%s] walking code samples dir[%s], path[%s]", err, samplesdir, path)
-		
+
 		if info.IsDir() {
 			return nil
 		}
-		
+
 		testname := strings.TrimPrefix(path, samplesdir)
 		t.Run(testname, func(t *testing.T) {
 			err, want := reference(path)
 			assert.NoError(t, err, "running reference interpreter")
-			
+
 			err, got := undertest(path)
 			assert.NoError(t, err, "running under test interperter")
-			
+
 			assertEqualOutput(t, "stdout", want.Stdout, got.Stdout)
 			assertEqualOutput(t, "stderr", want.Stderr, got.Stderr)
 		})
-		
+
 		return nil
 	})
-	
+
 	assert.NoError(t, err)
 }
 
 func assertEqualOutput(t *testing.T, outputname string, want string, got string) {
 	t.Helper()
-	
+
 	wantedlines := strings.Split(want, "\n")
 	gotlines := strings.Split(got, "\n")
-			
+
 	if len(wantedlines) != len(gotlines) {
 		t.Errorf(
 			"%s: wanted output has [%d] lines but got output has [%d]",
@@ -98,9 +96,9 @@ func assertEqualOutput(t *testing.T, outputname string, want string, got string)
 			len(wantedlines),
 			len(gotlines),
 		)
-		t.Fatalf("%s: wanted[%s] != got[%s]", outputname, want, got) 
+		t.Fatalf("%s: wanted[%s] != got[%s]", outputname, want, got)
 	}
-			
+
 	for line, wantedline := range wantedlines {
 		gotline := gotlines[line]
 		if wantedline != gotline {
@@ -127,13 +125,12 @@ func newInterpreter(t *testing.T, jsinterpreter string) JsInterpreter {
 		js := exec.Command(jsinterpreter, codepath)
 		stdout := &bytes.Buffer{}
 		stderr := &bytes.Buffer{}
-		
+
 		js.Stdout = stdout
 		js.Stderr = stderr
-		
+
 		err := js.Run()
-		
+
 		return err, Result{Stdout: stdout.String(), Stderr: stderr.String()}
 	}
 }
-

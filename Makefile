@@ -12,6 +12,9 @@ build:
 install: build
 	cp ./cmd/abad/abad $(installdir)
 
+fmt:
+	go fmt ./...
+
 test:
 	go test -failfast -race -v ./... -timeout=30s
 

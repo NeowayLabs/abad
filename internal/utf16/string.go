@@ -24,7 +24,7 @@ func (s Str) String() string {
 
 // Contains checks if substr is inside s
 func (s Str) Contains(substr Str) bool {
-	return s.Index(substr) >= 0 
+	return s.Index(substr) >= 0
 }
 
 // Index the position of substr in s
