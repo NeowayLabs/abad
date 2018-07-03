@@ -98,7 +98,7 @@ func assertEqualOutput(t *testing.T, outputname string, want string, got string)
 			len(wantedlines),
 			len(gotlines),
 		)
-		t.Fatalf("%s: wanted[%s] != got[%s]", want, got) 
+		t.Fatalf("%s: wanted[%s] != got[%s]", outputname, want, got) 
 	}
 			
 	for line, wantedline := range wantedlines {

@@ -13,7 +13,7 @@ install: build
 	cp ./cmd/abad/abad $(installdir)
 
 test:
-	go test -race -v ./... -timeout=30s
+	go test -failfast -race -v ./... -timeout=30s
 
 test-e2e:
 	go test -v ./tests/e2e -tags e2e
