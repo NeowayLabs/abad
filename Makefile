@@ -1,4 +1,4 @@
-.PHONY: all build test coverage coverage-html coverage-show
+.PHONY: all vendor build test coverage coverage-html coverage-show
 
 abadgopath=/go/src/github.com/NeowayLabs/abad
 runabad=docker run -v `pwd`:$(abadgopath) -w $(abadgopath)
