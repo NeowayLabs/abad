@@ -27,13 +27,7 @@ func repl() error {
 }
 
 func eval(codepath string) error {
-	codefile, err := os.Open(codepath)
-	if err != nil {
-		return err
-	}
-	defer codefile.Close()
-	
-	code, err := ioutil.ReadAll(codefile)
+	code, err := ioutil.ReadFile(codepath)
 	if err != nil {
 		return err
 	}

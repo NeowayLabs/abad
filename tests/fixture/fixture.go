@@ -5,10 +5,14 @@
 package fixture
 
 import (
+	"os"
+	"strings"
 	"os/exec"
 	"bytes"
 	"testing"
 	"path/filepath"
+	
+	"github.com/madlambda/spells/assert"
 )
 
 
@@ -55,7 +59,61 @@ func RunWithInterpreters(
 	reference JsInterpreter,
 	undertest JsInterpreter,
 ) {
-} 
+
+	err := filepath.Walk(samplesdir, func(path string, info os.FileInfo, err error) error {
+		assert.NoError(t, err, "error[%s] walking code samples dir[%s], path[%s]", err, samplesdir, path)
+		
+		if info.IsDir() {
+			return nil
+		}
+		
+		testname := strings.TrimPrefix(path, samplesdir)
+		t.Run(testname, func(t *testing.T) {
+			err, want := reference(path)
+			assert.NoError(t, err, "running reference interpreter")
+			
+			err, got := undertest(path)
+			assert.NoError(t, err, "running under test interperter")
+			
+			assertEqualOutput(t, "stdout", want.Stdout, got.Stdout)
+			assertEqualOutput(t, "stderr", want.Stderr, got.Stderr)
+		})
+		
+		return nil
+	})
+	
+	assert.NoError(t, err)
+}
+
+func assertEqualOutput(t *testing.T, outputname string, want string, got string) {
+	t.Helper()
+	
+	wantedlines := strings.Split(want, "\n")
+	gotlines := strings.Split(got, "\n")
+			
+	if len(wantedlines) != len(gotlines) {
+		t.Errorf(
+			"%s: wanted output has [%d] lines but got output has [%d]",
+			outputname,
+			len(wantedlines),
+			len(gotlines),
+		)
+		t.Fatalf("%s: wanted[%s] != got[%s]", want, got) 
+	}
+			
+	for line, wantedline := range wantedlines {
+		gotline := gotlines[line]
+		if wantedline != gotline {
+			t.Errorf(
+				"%s: line[%d] differ: want[%s] != got[%s]",
+				outputname,
+				line,
+				wantedline,
+				gotline,
+			)
+		}
+	}
+}
 
 func newInterpreter(t *testing.T, jsinterpreter string) JsInterpreter {
 	a := exec.Command(jsinterpreter, "-help")
