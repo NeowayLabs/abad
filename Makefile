@@ -35,13 +35,17 @@ analysis:
 vendor:
 	go get github.com/madlambda/vendor
 	vendor
-	
-devimg=neowaylabs/abadev
+
+devimgversion=0.1
+devimg=neowaylabs/abadev:$(devimgversion)
 devimage:
 	docker build . -t $(devimg)
 	
-dev-shell: devimage
+publish-devimage: devimage
+	docker push $(devimg)
+	
+dev-shell:
 	$(runabad) -ti $(devimg)
 	
-dev-test-e2e: devimage
+dev-test-e2e:
 	$(runabad) $(devimg) make install test-e2e
