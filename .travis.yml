@@ -7,6 +7,11 @@ go:
   - "tip"
   - "1.10"
 
+sudo: required
+
+services:
+  - docker
+
 script:
   - make analysis
   - make coverage
