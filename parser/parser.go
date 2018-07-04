@@ -91,7 +91,7 @@ func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 		keywordParsers,
 		literalParsers,
 		unaryParsers,
-		map[token.Type]parserfn{
+		{
 			token.Ident: parseIdentExpr,
 		},
 	} {
