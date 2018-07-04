@@ -86,7 +86,7 @@ func TestIdentExprEval(t *testing.T) {
 		},
 		{
 			code: "angular",
-			err:  E("angular is not defined"),
+			err:  E("[angular] is not defined"),
 		},
 	} {
 		js, err := abad.NewAbad("<anonymous>")

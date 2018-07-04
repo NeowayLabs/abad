@@ -166,7 +166,7 @@ func (a *Abad) evalIdentExpr(ident ast.Ident) (types.Value, error) {
 	}
 
 	if types.StrictEqual(val, types.Undefined) {
-		return nil, fmt.Errorf("%s is not defined",
+		return nil, fmt.Errorf("[%s] is not defined",
 			ident.String())
 	}
 

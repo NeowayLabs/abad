@@ -1,12 +1,22 @@
-.PHONY: all build test coverage coverage-html coverage-show
+.PHONY: all vendor build test coverage coverage-html coverage-show
 
-all: build test
+abadgopath=/go/src/github.com/NeowayLabs/abad
+runabad=docker run -v `pwd`:$(abadgopath) -w $(abadgopath)
+installdir?=/usr/local/bin
+
+all: build test analysis
 
 build:
-	go build -o ./cmd/abad/abad -v ./cmd/abad 
+	go build -o ./cmd/abad/abad -v ./cmd/abad
+
+install: build
+	cp ./cmd/abad/abad $(installdir)
 
 test:
-	go test -race -v ./... -timeout=30s
+	go test -failfast -race -v ./... -timeout=30s
+
+test-e2e:
+	go test -v ./tests/e2e -tags e2e
 
 coverage:
 	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
@@ -25,3 +35,17 @@ analysis:
 vendor:
 	go get github.com/madlambda/vendor
 	vendor
+
+devimgversion=0.1
+devimg=neowaylabs/abadev:$(devimgversion)
+devimage:
+	docker build . -t $(devimg)
+	
+publish-devimage: devimage
+	docker push $(devimg)
+	
+dev-shell:
+	$(runabad) -ti $(devimg)
+	
+dev-test-e2e:
+	$(runabad) $(devimg) make install test-e2e
