@@ -6,9 +6,9 @@ package e2e_test
 
 import (
 	"os"
-	"testing"
 	"path/filepath"
-	
+	"testing"
+
 	"github.com/NeowayLabs/abad/tests/fixture"
 )
 
@@ -17,7 +17,7 @@ func TestE2E(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	
+
 	testsamplesdir := filepath.Join(wd, "testdata")
 	t.Parallel()
 	fixture.Run(t, testsamplesdir)
