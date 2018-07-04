@@ -32,8 +32,10 @@ coverage-show: coverage-html
 	xdg-open coverage.html
 	
 analysis:
+	go get -u golang.org/x/lint/golint
 	go get honnef.co/go/tools/cmd/megacheck
 	megacheck ./...
+	golint ./...
 
 vendor:
 	go get github.com/madlambda/vendor
