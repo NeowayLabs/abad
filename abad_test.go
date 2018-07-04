@@ -101,7 +101,7 @@ func TestIdentExprEval(t *testing.T) {
 		obj := val.(types.Object)
 
 		gotstr := obj.String()
-	
+
 		assert.EqualStrings(t, tc.ret, gotstr, "strings don't match")
 	}
 }

@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/NeowayLabs/abad/builtins"
+	"github.com/NeowayLabs/abad/internal/utf16"
 	"github.com/NeowayLabs/abad/types"
 	"github.com/madlambda/spells/assert"
-	"github.com/NeowayLabs/abad/internal/utf16"
 )
 
 func TestConsoleToString(t *testing.T) {
@@ -25,7 +25,6 @@ func TestConsoleToString(t *testing.T) {
 
 	call(logfn)
 }
-
 
 func call(fn types.Function) {
 	fn.Call(nil, nil)
