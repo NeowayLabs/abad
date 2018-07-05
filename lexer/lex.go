@@ -83,6 +83,10 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 	if l.isInvalidRune() {
 		return l.illegalToken()
 	}
+	
+	if l.isLineTerminator() {
+		return l.token(token.LineTerminator), l.initialState
+	}
 
 	if l.isPlusSign() {
 		// TODO: handle ++
@@ -308,6 +312,10 @@ func (l *lexer) isRightParen() bool {
 	return l.cur() == rightParen
 }
 
+func (l *lexer) isLineTerminator() bool {
+	return containsRune(lineTerminators, l.cur())
+}
+
 func (l *lexer) isHexadecimal() bool {
 	return containsRune(hexnumbers, l.cur())
 }
@@ -382,6 +390,9 @@ func (l *lexer) updateColumn() uint {
 
 var numbers []rune
 var hexnumbers []rune
+var lineTerminators []rune
+var linefeed rune
+var carriageRet rune
 var dot rune
 var minusSign rune
 var plusSign rune
@@ -395,6 +406,11 @@ var exponentPartStart []rune
 func init() {
 	numbers = []rune("0123456789")
 	hexnumbers = append(numbers, []rune("abcdefABCDEF")...)
+	linefeed = rune('\u000A')
+	carriageRet = rune('\u000D')
+	lineSep := rune('\u2028')
+	paragraphSep := rune('\u2029')
+	lineTerminators = []rune{linefeed, carriageRet, lineSep, paragraphSep}
 	dot = rune('.')
 	minusSign = rune('-')
 	plusSign = rune('+')
