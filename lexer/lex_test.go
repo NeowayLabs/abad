@@ -272,6 +272,16 @@ func TestLineTerminator(t *testing.T) {
 					code: sfmt(`"first"%s"second"`, lt),
 					want: tokens(stringToken("first"), ltToken(lt), stringToken("second")),
 				},
+				{
+					name: "Decimals",
+					code: sfmt("1%s2", lt),
+					want: tokens(decimalToken("1"), ltToken(lt), decimalToken("2")),
+				},
+				{
+					name: "Hexadecimals",
+					code: sfmt("0xFF%s0x11", lt),
+					want: tokens(hexToken("0xFF"), ltToken(lt), hexToken("0x11")),
+				},
 			})
 		})
 	}

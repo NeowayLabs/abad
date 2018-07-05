@@ -199,9 +199,11 @@ func (l *lexer) startIdentifierState() (Tokval, lexerState) {
 	if l.isNumber() {
 		return l.illegalToken()
 	}
+	
 	if l.isDot() {
 		return l.illegalToken()
 	}
+	
 	return l.identifierState()
 }
 
@@ -334,7 +336,7 @@ func (l *lexer) isDoubleQuote() bool {
 
 // tokenEnd tries to capture the most common causes of a token ending
 func (l *lexer) isTokenEnd() bool {
-	return l.isRightParen() || l.isComma()
+	return l.isRightParen() || l.isComma() || l.isLineTerminator()
 }
 
 func (l *lexer) fwd() {
