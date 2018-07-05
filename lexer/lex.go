@@ -28,7 +28,7 @@ func (t Tokval) EqualPos(other Tokval) bool {
 }
 
 func (t Tokval) String() string {
-	return fmt.Sprintf("Token %s of value '%s'", t.Type, t.Value)
+	return fmt.Sprintf("token:type[%s],value[%s]", t.Type, t.Value)
 }
 
 // Lex will lex the given crappy JS code (utf16 yay) and provide a
