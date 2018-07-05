@@ -282,6 +282,11 @@ func TestLineTerminator(t *testing.T) {
 					code: sfmt("0xFF%s0x11", lt),
 					want: tokens(hexToken("0xFF"), ltToken(lt), hexToken("0x11")),
 				},
+				{
+					name: "Identifiers",
+					code: sfmt("hi%shello", lt),
+					want: tokens(identToken("hi"), ltToken(lt), identToken("hello")),
+				},
 			})
 		})
 	}

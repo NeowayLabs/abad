@@ -113,6 +113,10 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 	if l.isRightParen() {
 		return l.token(token.RParen), l.initialState
 	}
+	
+	if l.isLeftParen() {
+		return l.token(token.LParen), l.initialState
+	}
 
 	if l.isComma() {
 		return l.token(token.Comma), l.initialState
@@ -175,10 +179,11 @@ func (l *lexer) identifierState() (Tokval, lexerState) {
 			l.bwd()
 			return l.token(token.Ident), l.accessMemberState
 		}
-
-		if l.isLeftParen() {
+		// TODO: add test for ident(otherident)
+		// The idea is to use isTokenEnd
+		if l.isLeftParen() || l.isLineTerminator() {
 			l.bwd()
-			return l.token(token.Ident), l.leftParenState
+			return l.token(token.Ident), l.initialState
 		}
 		l.fwd()
 	}
