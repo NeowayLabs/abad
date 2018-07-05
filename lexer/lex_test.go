@@ -253,20 +253,20 @@ func TestStrings(t *testing.T) {
 func TestLineTerminator(t *testing.T) {
 	type LineTerminator struct {
 		name string
-		val string
+		val  string
 	}
-	
+
 	lineTerminators := []LineTerminator{
-		{name: "LineFeed", val: "\u000A" },
-		{name: "CarriageReturn", val: "\u000D" },
+		{name: "LineFeed", val: "\u000A"},
+		{name: "CarriageReturn", val: "\u000D"},
 		{name: "LineSeparator", val: "\u2028"},
 		{name: "ParagraphSeparator", val: "\u2029"},
 	}
-	
+
 	for _, lineTerminator := range lineTerminators {
 		t.Run(lineTerminator.name, func(t *testing.T) {
 			lt := lineTerminator.val
-			runTests(t, []TestCase {
+			runTests(t, []TestCase{
 				{
 					name: "Strings",
 					code: sfmt(`"first"%s"second"`, lt),
@@ -591,6 +591,30 @@ func TestFuncall(t *testing.T) {
 				hexToken("0x5"),
 				commaToken(),
 				stringToken("jssucks"),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "PassingIdentifierAsArg",
+			code: Str("test(arg)"),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				identToken("arg"),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "PassingIdentifiersAsArg",
+			code: Str("test(arg,arg2,i4k)"),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				identToken("arg"),
+				commaToken(),
+				identToken("arg2"),
+				commaToken(),
+				identToken("i4k"),
 				rightParenToken(),
 			),
 		},
@@ -995,7 +1019,7 @@ func identToken(s string) lexer.Tokval {
 
 func ltToken(s string) lexer.Tokval {
 	return lexer.Tokval{
-		Type: token.LineTerminator,
+		Type:  token.LineTerminator,
 		Value: Str(s),
 	}
 }

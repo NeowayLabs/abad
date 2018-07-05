@@ -83,7 +83,7 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 	if l.isInvalidRune() {
 		return l.illegalToken()
 	}
-	
+
 	if l.isLineTerminator() {
 		return l.token(token.LineTerminator), l.initialState
 	}
@@ -113,7 +113,7 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 	if l.isRightParen() {
 		return l.token(token.RParen), l.initialState
 	}
-	
+
 	if l.isLeftParen() {
 		return l.token(token.LParen), l.initialState
 	}
@@ -175,16 +175,17 @@ func (l *lexer) illegalToken() (Tokval, lexerState) {
 func (l *lexer) identifierState() (Tokval, lexerState) {
 
 	for !l.isEOF() {
+
 		if l.isDot() {
 			l.bwd()
 			return l.token(token.Ident), l.accessMemberState
 		}
-		// TODO: add test for ident(otherident)
-		// The idea is to use isTokenEnd
-		if l.isLeftParen() || l.isLineTerminator() {
+
+		if l.isLeftParen() || l.isTokenEnd() {
 			l.bwd()
 			return l.token(token.Ident), l.initialState
 		}
+
 		l.fwd()
 	}
 
@@ -204,11 +205,11 @@ func (l *lexer) startIdentifierState() (Tokval, lexerState) {
 	if l.isNumber() {
 		return l.illegalToken()
 	}
-	
+
 	if l.isDot() {
 		return l.illegalToken()
 	}
-	
+
 	return l.identifierState()
 }
 
