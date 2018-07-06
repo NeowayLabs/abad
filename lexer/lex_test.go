@@ -618,6 +618,32 @@ func TestFuncall(t *testing.T) {
 				rightParenToken(),
 			),
 		},
+		{
+			name: "CommaSeparatedEverything",
+			code: Str(`test("",5,"i",4,"k",6.6,0x5,arg,"jssucks")`),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				stringToken(""),
+				commaToken(),
+				decimalToken("5"),
+				commaToken(),
+				stringToken("i"),
+				commaToken(),
+				decimalToken("4"),
+				commaToken(),
+				stringToken("k"),
+				commaToken(),
+				decimalToken("6.6"),
+				commaToken(),
+				hexToken("0x5"),
+				commaToken(),
+				identToken("arg"),
+				commaToken(),
+				stringToken("jssucks"),
+				rightParenToken(),
+			),
+		},
 	})
 }
 
@@ -627,32 +653,19 @@ func TestPosition(t *testing.T) {
 			name:          "MinusDecimal",
 			code:          Str("-1"),
 			checkPosition: true,
-			want: []lexer.Tokval{
-				minusTokenPos(1, 1),
-				decimalTokenPos("1", 1, 2),
-				EOF,
-			},
+			want: tokens(minusTokenPos(1, 1), decimalTokenPos("1", 1, 2)),
 		},
 		{
 			name:          "PlusDecimal",
 			code:          Str("+1"),
 			checkPosition: true,
-			want: []lexer.Tokval{
-				plusTokenPos(1, 1),
-				decimalTokenPos("1", 1, 2),
-				EOF,
-			},
+			want: tokens(plusTokenPos(1, 1), decimalTokenPos("1", 1, 2)),
 		},
 		{
 			name:          "PlusMinusDecimal",
 			code:          Str("+-666"),
 			checkPosition: true,
-			want: []lexer.Tokval{
-				plusTokenPos(1, 1),
-				minusTokenPos(1, 2),
-				decimalTokenPos("666", 1, 3),
-				EOF,
-			},
+			want: tokens(plusTokenPos(1, 1), minusTokenPos(1, 2), decimalTokenPos("666", 1, 3)),
 		},
 	})
 }
