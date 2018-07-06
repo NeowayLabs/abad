@@ -10,6 +10,11 @@ import (
 	"github.com/NeowayLabs/abad/token"
 )
 
+// TODO: test invalid strings with newline
+//            invalid exponent numbers with newline
+//            invalid real numbers with newline
+//            invalid hex numbers with newline
+
 type TestCase struct {
 	name          string
 	code          utf16.Str
