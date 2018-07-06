@@ -28,7 +28,8 @@ func (t Tokval) EqualPos(other Tokval) bool {
 }
 
 func (t Tokval) String() string {
-	return fmt.Sprintf("token:type[%s],value[%s]", t.Type, t.Value)
+	return fmt.Sprintf(
+		"token:type[%s],value[%s],line[%d],column[%d]", t.Type, t.Value, t.Line, t.Column)
 }
 
 // Lex will lex the given crappy JS code (utf16 yay) and provide a
@@ -85,7 +86,7 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 	}
 
 	if l.isLineTerminator() {
-		return l.token(token.LineTerminator), l.initialState
+		return l.lineTerminatorToken(), l.initialState
 	}
 
 	if l.isPlusSign() {
@@ -131,6 +132,13 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 	}
 
 	return l.identifierState()
+}
+
+func (l *lexer) lineTerminatorToken() Tokval {
+	tok := l.token(token.LineTerminator)
+	l.line += 1
+	l.column = 1
+	return tok
 }
 
 func (l *lexer) stringState() (Tokval, lexerState) {
@@ -374,9 +382,12 @@ func (l *lexer) token(t token.Type) Tokval {
 		val = l.code[:l.position+1]
 		l.code = l.code[l.position+1:]
 	}
-
+	
+	column := l.column
+	l.column += l.position + 1
 	l.position = 0
-	return Tokval{Type: t, Value: newStr(val), Line: l.line, Column: l.updateColumn()}
+	
+	return Tokval{Type: t, Value: newStr(val), Line: l.line, Column: column}
 }
 
 func (l *lexer) stringToken() Tokval {
@@ -386,21 +397,16 @@ func (l *lexer) stringToken() Tokval {
 	val := l.code[1:l.position]
 	l.code = l.code[l.position+1:]
 
+	column := l.column
+	l.column += l.position + 1
 	l.position = 0
 
 	return Tokval{
 		Type:   token.String,
 		Value:  newStr(val),
 		Line:   l.line,
-		Column: l.updateColumn(),
+		Column: column,
 	}
-}
-
-func (l *lexer) updateColumn() uint {
-	// FIXME: should use position, but for now this works for the lack of tests
-	c := l.column
-	l.column += 1
-	return c
 }
 
 var numbers []rune

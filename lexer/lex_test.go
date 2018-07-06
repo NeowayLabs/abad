@@ -683,8 +683,7 @@ func TestFuncall(t *testing.T) {
 }
 
 func TestPosition(t *testing.T) {
-	// TODO: add some funcall tests separated by newlines
-	runTests(t, []TestCase{
+	cases := []TestCase{
 		{
 			name:          "MinusDecimal",
 			code:          Str("-1"),
@@ -703,7 +702,35 @@ func TestPosition(t *testing.T) {
 			checkPosition: true,
 			want:          tokens(plusTokenPos(1, 1), minusTokenPos(1, 2), decimalTokenPos("666", 1, 3)),
 		},
-	})
+	}
+	
+	for _, lineTerminator := range lineTerminators() {
+		lt := lineTerminator.val
+		code := sfmt(`func(a)%sfuncb(1)%sfuncc("hi")`, lt, lt)
+		cases = append(cases, TestCase{
+			name: "FuncallsSeparatedBy" + lineTerminator.name,
+			code: code,
+			checkPosition: true,
+			want: tokens(
+				identTokenPos("func", 1, 1),
+				leftParenTokenPos(1, 5),
+				identTokenPos("a", 1, 6),
+				rightParenTokenPos(1,7),
+				ltTokenPos(lt, 1,8),
+				identTokenPos("funcb", 2, 1),
+				leftParenTokenPos(2, 6),
+				decimalTokenPos("1", 2, 7),
+				rightParenTokenPos(2, 8),
+				ltTokenPos(lt, 2, 9),
+				identTokenPos("funcc", 3, 1),
+				leftParenTokenPos(3, 6),
+				stringTokenPos("hi", 3, 7),
+				rightParenTokenPos(3, 11),
+			),
+		})
+	}
+	
+	runTests(t, cases)
 }
 
 func TestIllegalIdentifiers(t *testing.T) {
@@ -1000,7 +1027,7 @@ func assertWantedTokens(t *testing.T, tc TestCase, got []lexer.Tokval) {
 
 		if tc.checkPosition {
 			if !w.EqualPos(g) {
-				t.Errorf("want=%+v\ngot=%+v\nare equal but dont have the same position", w, g)
+				t.Errorf("\nwant=%+v\ngot=%+v\nare equal but dont have the same position", w, g)
 			}
 		}
 	}
@@ -1061,16 +1088,28 @@ func plusToken() lexer.Tokval {
 }
 
 func leftParenToken() lexer.Tokval {
+	return leftParenTokenPos(0, 0)
+}
+
+func leftParenTokenPos(line uint, column uint) lexer.Tokval {
 	return lexer.Tokval{
 		Type:  token.LParen,
 		Value: Str("("),
+		Line: line,
+		Column: column,
 	}
 }
 
 func rightParenToken() lexer.Tokval {
+	return rightParenTokenPos(0, 0)
+}
+
+func rightParenTokenPos(line uint, column uint) lexer.Tokval {
 	return lexer.Tokval{
 		Type:  token.RParen,
 		Value: Str(")"),
+		Line: line,
+		Column: column,
 	}
 }
 
@@ -1123,23 +1162,41 @@ func hexToken(hex string) lexer.Tokval {
 }
 
 func stringToken(s string) lexer.Tokval {
+	return stringTokenPos(s, 0, 0)
+}
+
+func stringTokenPos(s string, line uint, column uint) lexer.Tokval {
 	return lexer.Tokval{
 		Type:  token.String,
 		Value: Str(s),
+		Line: line,
+		Column: column,
 	}
 }
 
 func identToken(s string) lexer.Tokval {
+	return identTokenPos(s, 0, 0)
+}
+
+func identTokenPos(s string, line uint, column uint) lexer.Tokval {
 	return lexer.Tokval{
-		Type:  token.Ident,
+		Type: token.Ident,
 		Value: Str(s),
+		Line: line,
+		Column: column,
 	}
 }
 
 func ltToken(s string) lexer.Tokval {
+	return ltTokenPos(s, 0, 0)
+}
+
+func ltTokenPos(s string, line uint, column uint) lexer.Tokval {
 	return lexer.Tokval{
-		Type:  token.LineTerminator,
+		Type: token.LineTerminator,
 		Value: Str(s),
+		Line: line,
+		Column: column,
 	}
 }
 
