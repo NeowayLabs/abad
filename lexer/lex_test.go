@@ -306,6 +306,22 @@ func TestLineTerminator(t *testing.T) {
 					code: sfmt("hi%shello", lt),
 					want: tokens(identToken("hi"), lttok, identToken("hello")),
 				},
+				{
+					name: "TwoFuncalls",
+					code: sfmt("func1(a)%sfunc2(1)%s", lt, lt),
+					want: tokens(
+						identToken("func1"),
+						leftParenToken(),
+						identToken("a"),
+						rightParenToken(),
+						lttok,
+						identToken("func2"),
+						leftParenToken(),
+						decimalToken("1"),
+						rightParenToken(),
+						lttok,
+					),
+				},
 			})
 		})
 	}
