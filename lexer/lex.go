@@ -105,6 +105,9 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 
 	if l.isDot() {
 		l.fwd()
+		if l.isLineTerminator() {
+			return l.illegalToken()
+		}
 		allowExponent := true
 		allowDot := false
 		return l.decimalState(allowExponent, allowDot)
@@ -155,7 +158,7 @@ func (l *lexer) numberState() (Tokval, lexerState) {
 	if l.isHexStart() {
 		l.fwd()
 
-		if l.isEOF() {
+		if l.isEOF() || l.isLineTerminator() {
 			return l.illegalToken()
 		}
 
@@ -266,7 +269,14 @@ func (l *lexer) decimalState(allowExponent bool, allowDot bool) (Tokval, lexerSt
 }
 
 func (l *lexer) exponentPartState() (Tokval, lexerState) {
-	// TODO: can exponent be like: 1.0e ?
+
+	if l.isEOF() {
+		return l.illegalToken()
+	}
+	
+	if l.isTokenEnd() {
+		return l.illegalToken()
+	}
 
 	if l.isMinusSign() || l.isPlusSign() {
 		// TODO: test 1.0e- and 1.0e+

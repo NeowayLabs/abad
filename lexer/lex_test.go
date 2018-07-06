@@ -10,10 +10,6 @@ import (
 	"github.com/NeowayLabs/abad/token"
 )
 
-// TODO: test invalid strings with newline
-//            invalid exponent numbers with newline
-//            invalid real numbers with newline
-//            invalid hex numbers with newline
 
 type TestCase struct {
 	name          string
@@ -744,7 +740,35 @@ func TestIllegalNumericLiterals(t *testing.T) {
 	corruptedDecimal := messStr(Str("1234"), 3)
 	corruptedNumber := messStr(Str("0"), 1)
 
-	runTests(t, []TestCase{
+	cases := []TestCase{
+		{
+			name: "IncompleteExponentPart",
+			code: Str("1e"),
+			want: []lexer.Tokval{
+				illegalToken("1e"),
+			},
+		},
+		{
+			name: "IncompleteUpperExponentPart",
+			code: Str("1E"),
+			want: []lexer.Tokval{
+				illegalToken("1E"),
+			},
+		},
+		{
+			name: "IncompleteExponentPartByComma",
+			code: Str("1e,"),
+			want: []lexer.Tokval{
+				illegalToken("1e,"),
+			},
+		},
+		{
+			name: "IncompleteExponentPartByRightParen",
+			code: Str("1e)"),
+			want: []lexer.Tokval{
+				illegalToken("1e)"),
+			},
+		},
 		{
 			name: "DecimalDuplicatedUpperExponentPart",
 			code: Str("123E123E123"),
@@ -871,7 +895,35 @@ func TestIllegalNumericLiterals(t *testing.T) {
 				illegalToken(corruptedNumber.String()),
 			},
 		},
-	})
+	}
+	
+	for _, lineTerminator := range lineTerminators() {
+		invalidReal := sfmt(".%s5", lineTerminator.val)
+		invalidHexa := sfmt("0x%sFF", lineTerminator.val)
+		invalidExp := sfmt("1e%s1", lineTerminator.val)
+		
+		newcases := []TestCase{
+			{
+				name: fmt.Sprintf("Invalid%sOnRealDecimal", lineTerminator.name),
+				code: invalidReal,
+				want: []lexer.Tokval{ illegalToken(invalidReal.String()) },
+			},
+			{
+				name: fmt.Sprintf("Invalid%sOnHexaDecimal", lineTerminator.name),
+				code: invalidHexa,
+				want: []lexer.Tokval{ illegalToken(invalidHexa.String()) },
+			},
+			{
+				name: fmt.Sprintf("Invalid%sOnExpDecimal", lineTerminator.name),
+				code: invalidExp,
+				want: []lexer.Tokval{ illegalToken(invalidExp.String()) },
+			},
+		}
+		
+		cases = append(cases, newcases...)
+	}
+	
+	runTests(t, cases)
 }
 
 func TestNoOutputFor(t *testing.T) {
