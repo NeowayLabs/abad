@@ -270,10 +270,6 @@ func (l *lexer) decimalState(allowExponent bool, allowDot bool) (Tokval, lexerSt
 
 func (l *lexer) exponentPartState() (Tokval, lexerState) {
 
-	if l.isEOF() {
-		return l.illegalToken()
-	}
-	
 	if l.isTokenEnd() {
 		return l.illegalToken()
 	}
@@ -350,6 +346,9 @@ func (l *lexer) isDoubleQuote() bool {
 
 // tokenEnd tries to capture the most common causes of a token ending
 func (l *lexer) isTokenEnd() bool {
+	if l.isEOF() {
+		return true
+	}
 	return l.isRightParen() || l.isComma() || l.isLineTerminator()
 }
 
