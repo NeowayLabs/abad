@@ -131,9 +131,11 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 }
 
 func (l *lexer) stringState() (Tokval, lexerState) {
-	// TODO: handle newlines
 
 	for !l.isEOF() && !l.isDoubleQuote() {
+		if l.isLineTerminator() {
+			return l.illegalToken()
+		}
 		l.fwd()
 	}
 

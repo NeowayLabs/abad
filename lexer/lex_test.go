@@ -322,9 +322,8 @@ func TestLineTerminator(t *testing.T) {
 }
 
 func TestInvalidStrings(t *testing.T) {
-	// TODO: add newline tests
 
-	runTests(t, []TestCase{
+	cases := []TestCase{
 		{
 			name: "SingleDoubleQuote",
 			code: Str(`"`),
@@ -335,7 +334,18 @@ func TestInvalidStrings(t *testing.T) {
 			code: Str(`"dsadasdsa123456`),
 			want: []lexer.Tokval{illegalToken(`"dsadasdsa123456`)},
 		},
-	})
+	}
+	
+	for _, lineTerminator := range lineTerminators() {
+		code := fmt.Sprintf(`"head%stail"`, lineTerminator.val)
+		cases = append(cases, TestCase{
+			code: Str(code),
+			name: "NewlineTerminator" + lineTerminator.name,	
+			want: []lexer.Tokval{illegalToken(code)},
+		})
+	}
+	
+	runTests(t, cases)
 }
 
 func TestIdentifiers(t *testing.T) {
