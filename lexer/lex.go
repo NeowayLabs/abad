@@ -192,10 +192,6 @@ func (l *lexer) identifierState() (Tokval, lexerState) {
 	return l.token(token.Ident), l.initialState
 }
 
-func (l *lexer) leftParenState() (Tokval, lexerState) {
-	return l.token(token.LParen), l.initialState
-}
-
 func (l *lexer) startIdentifierState() (Tokval, lexerState) {
 
 	if l.isEOF() {
