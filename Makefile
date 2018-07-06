@@ -4,7 +4,7 @@ abadgopath=/go/src/github.com/NeowayLabs/abad
 runabad=docker run -v `pwd`:$(abadgopath) -w $(abadgopath)
 installdir?=/usr/local/bin
 
-all: build analysis test dev-test-e2e
+all: fmt build analysis test dev-test-e2e
 
 build:
 	go build -o ./cmd/abad/abad -v ./cmd/abad
