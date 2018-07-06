@@ -375,16 +375,19 @@ func (l *lexer) bwd() {
 func (l *lexer) token(t token.Type) Tokval {
 	var val []rune
 
+	pos := l.position + 1
+	
 	if l.isEOF() {
 		val = l.code
 		l.code = nil
 	} else {
-		val = l.code[:l.position+1]
-		l.code = l.code[l.position+1:]
+		val = l.code[:pos]
+		l.code = l.code[pos:]
 	}
 	
+	// FIXME: duplicated at stringToken()
 	column := l.column
-	l.column += l.position + 1
+	l.column += pos
 	l.position = 0
 	
 	return Tokval{Type: t, Value: newStr(val), Line: l.line, Column: column}
@@ -397,6 +400,7 @@ func (l *lexer) stringToken() Tokval {
 	val := l.code[1:l.position]
 	l.code = l.code[l.position+1:]
 
+	// FIXME: duplicated at token()
 	column := l.column
 	l.column += l.position + 1
 	l.position = 0
