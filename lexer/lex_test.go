@@ -251,19 +251,8 @@ func TestStrings(t *testing.T) {
 }
 
 func TestLineTerminator(t *testing.T) {
-	type LineTerminator struct {
-		name string
-		val  string
-	}
-
-	lineTerminators := []LineTerminator{
-		{name: "LineFeed", val: "\u000A"},
-		{name: "CarriageReturn", val: "\u000D"},
-		{name: "LineSeparator", val: "\u2028"},
-		{name: "ParagraphSeparator", val: "\u2029"},
-	}
-
-	for _, lineTerminator := range lineTerminators {
+	
+	for _, lineTerminator := range lineTerminators() {
 		t.Run(lineTerminator.name, func(t *testing.T) {
 			lt := lineTerminator.val
 			lttok := ltToken(lt)
@@ -888,6 +877,20 @@ func TestCorruptedInput(t *testing.T) {
 			want: []lexer.Tokval{illegalToken(messStr(Str(""), 0).String())},
 		},
 	})
+}
+
+type LineTerminator struct {
+		name string
+		val  string
+	}
+
+func lineTerminators() []LineTerminator {
+	return []LineTerminator{
+		{name: "LineFeed", val: "\u000A"},
+		{name: "CarriageReturn", val: "\u000D"},
+		{name: "LineSeparator", val: "\u2028"},
+		{name: "ParagraphSeparator", val: "\u2029"},
+	}
 }
 
 func runTests(t *testing.T, testcases []TestCase) {
