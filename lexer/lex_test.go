@@ -266,26 +266,45 @@ func TestLineTerminator(t *testing.T) {
 	for _, lineTerminator := range lineTerminators {
 		t.Run(lineTerminator.name, func(t *testing.T) {
 			lt := lineTerminator.val
+			lttok := ltToken(lt)
 			runTests(t, []TestCase{
 				{
 					name: "Strings",
 					code: sfmt(`"first"%s"second"`, lt),
-					want: tokens(stringToken("first"), ltToken(lt), stringToken("second")),
+					want: tokens(stringToken("first"), lttok, stringToken("second")),
 				},
 				{
 					name: "Decimals",
 					code: sfmt("1%s2", lt),
-					want: tokens(decimalToken("1"), ltToken(lt), decimalToken("2")),
+					want: tokens(decimalToken("1"), lttok, decimalToken("2")),
+				},
+				{
+					name: "ExponentDecimals",
+					code: sfmt("1e1%s1e+1%s1e-1%s1", lt, lt, lt),
+					want: tokens(
+						decimalToken("1e1"),
+						lttok,
+						decimalToken("1e+1"),
+						lttok,
+						decimalToken("1e-1"),
+						lttok,
+						decimalToken("1"),
+					),
+				},
+				{
+					name: "RealDecimals",
+					code: sfmt(".1%s245.123", lt),
+					want: tokens(decimalToken(".1"), lttok, decimalToken("245.123")),
 				},
 				{
 					name: "Hexadecimals",
 					code: sfmt("0xFF%s0x11", lt),
-					want: tokens(hexToken("0xFF"), ltToken(lt), hexToken("0x11")),
+					want: tokens(hexToken("0xFF"), lttok, hexToken("0x11")),
 				},
 				{
 					name: "Identifiers",
 					code: sfmt("hi%shello", lt),
-					want: tokens(identToken("hi"), ltToken(lt), identToken("hello")),
+					want: tokens(identToken("hi"), lttok, identToken("hello")),
 				},
 			})
 		})
@@ -648,24 +667,25 @@ func TestFuncall(t *testing.T) {
 }
 
 func TestPosition(t *testing.T) {
+	// TODO: add some funcall tests separated by newlines
 	runTests(t, []TestCase{
 		{
 			name:          "MinusDecimal",
 			code:          Str("-1"),
 			checkPosition: true,
-			want: tokens(minusTokenPos(1, 1), decimalTokenPos("1", 1, 2)),
+			want:          tokens(minusTokenPos(1, 1), decimalTokenPos("1", 1, 2)),
 		},
 		{
 			name:          "PlusDecimal",
 			code:          Str("+1"),
 			checkPosition: true,
-			want: tokens(plusTokenPos(1, 1), decimalTokenPos("1", 1, 2)),
+			want:          tokens(plusTokenPos(1, 1), decimalTokenPos("1", 1, 2)),
 		},
 		{
 			name:          "PlusMinusDecimal",
 			code:          Str("+-666"),
 			checkPosition: true,
-			want: tokens(plusTokenPos(1, 1), minusTokenPos(1, 2), decimalTokenPos("666", 1, 3)),
+			want:          tokens(plusTokenPos(1, 1), minusTokenPos(1, 2), decimalTokenPos("666", 1, 3)),
 		},
 	})
 }
