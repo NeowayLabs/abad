@@ -25,26 +25,26 @@ const (
 
 	Ident
 
-	LineTerminator
+	Newline
 
 	EOF
 )
 
 var names = map[Type]string{
-	Illegal:        "Illegal",
-	Decimal:        "Decimal",
-	Hexadecimal:    "Hexadecimal",
-	Octal:          "Octal",
-	String:         "String",
-	Minus:          "-",
-	Plus:           "+",
-	Dot:            ".",
-	LParen:         "(",
-	RParen:         ")",
-	Comma:          ",",
-	Ident:          "Ident",
-	LineTerminator: "LineTerminator",
-	EOF:            "EOF",
+	Illegal:     "Illegal",
+	Decimal:     "Decimal",
+	Hexadecimal: "Hexadecimal",
+	Octal:       "Octal",
+	String:      "String",
+	Minus:       "-",
+	Plus:        "+",
+	Dot:         ".",
+	LParen:      "(",
+	RParen:      ")",
+	Comma:       ",",
+	Ident:       "Ident",
+	Newline:     "LineTerminator",
+	EOF:         "EOF",
 }
 
 func (t Type) String() string {

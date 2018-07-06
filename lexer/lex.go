@@ -135,7 +135,7 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 }
 
 func (l *lexer) lineTerminatorToken() Tokval {
-	tok := l.token(token.LineTerminator)
+	tok := l.token(token.Newline)
 	l.line += 1
 	l.column = 1
 	return tok
@@ -376,7 +376,7 @@ func (l *lexer) token(t token.Type) Tokval {
 	var val []rune
 
 	pos := l.position + 1
-	
+
 	if l.isEOF() {
 		val = l.code
 		l.code = nil
@@ -384,12 +384,12 @@ func (l *lexer) token(t token.Type) Tokval {
 		val = l.code[:pos]
 		l.code = l.code[pos:]
 	}
-	
+
 	// FIXME: duplicated at stringToken()
 	column := l.column
 	l.column += pos
 	l.position = 0
-	
+
 	return Tokval{Type: t, Value: newStr(val), Line: l.line, Column: column}
 }
 
