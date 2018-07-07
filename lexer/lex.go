@@ -85,8 +85,8 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 		return l.illegalToken()
 	}
 
-	if l.isLineTerminator() {
-		return l.lineTerminatorToken(), l.initialState
+	if l.isNewline() {
+		return l.newlineToken(), l.initialState
 	}
 
 	if l.isPlusSign() {
@@ -106,7 +106,7 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 
 	if l.isDot() {
 		l.fwd()
-		if l.isLineTerminator() {
+		if l.isNewline() {
 			return l.illegalToken()
 		}
 		allowExponent := true
@@ -134,7 +134,7 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 	return l.identifierState()
 }
 
-func (l *lexer) lineTerminatorToken() Tokval {
+func (l *lexer) newlineToken() Tokval {
 	tok := l.token(token.Newline)
 	l.line += 1
 	l.column = 1
@@ -144,7 +144,7 @@ func (l *lexer) lineTerminatorToken() Tokval {
 func (l *lexer) stringState() (Tokval, lexerState) {
 
 	for !l.isEOF() && !l.isDoubleQuote() {
-		if l.isLineTerminator() {
+		if l.isNewline() {
 			return l.illegalToken()
 		}
 		l.fwd()
@@ -166,7 +166,7 @@ func (l *lexer) numberState() (Tokval, lexerState) {
 	if l.isHexStart() {
 		l.fwd()
 
-		if l.isEOF() || l.isLineTerminator() {
+		if l.isEOF() || l.isNewline() {
 			return l.illegalToken()
 		}
 
@@ -332,7 +332,7 @@ func (l *lexer) isRightParen() bool {
 	return l.cur() == rightParen
 }
 
-func (l *lexer) isLineTerminator() bool {
+func (l *lexer) isNewline() bool {
 	return containsRune(lineTerminators, l.cur())
 }
 
@@ -357,7 +357,7 @@ func (l *lexer) isTokenEnd() bool {
 	if l.isEOF() {
 		return true
 	}
-	return l.isRightParen() || l.isComma() || l.isLineTerminator()
+	return l.isRightParen() || l.isComma() || l.isNewline()
 }
 
 func (l *lexer) fwd() {
