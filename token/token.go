@@ -22,6 +22,7 @@ const (
 	LParen
 	RParen
 	Comma
+	SemiColon
 
 	Ident
 
@@ -43,6 +44,7 @@ var names = map[Type]string{
 	RParen:      ")",
 	Comma:       ",",
 	Ident:       "Ident",
+	SemiColon:   "SemiColon",
 	Newline:     "LineTerminator",
 	EOF:         "EOF",
 }

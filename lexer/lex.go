@@ -84,6 +84,10 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 	if l.isInvalidRune() {
 		return l.illegalToken()
 	}
+	
+	if l.isSemiColon() {
+		return l.semiColonToken(), l.initialState
+	}
 
 	if l.isNewline() {
 		return l.newlineToken(), l.initialState
@@ -132,6 +136,10 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 	}
 
 	return l.identifierState()
+}
+
+func (l *lexer) semiColonToken() Tokval {
+	return l.token(token.SemiColon)
 }
 
 func (l *lexer) newlineToken() Tokval {
@@ -352,6 +360,10 @@ func (l *lexer) isDoubleQuote() bool {
 	return l.cur() == doubleQuote
 }
 
+func (l *lexer) isSemiColon() bool {
+	return l.cur() == semiColon
+}
+
 // tokenEnd tries to capture the most common causes of a token ending
 func (l *lexer) isTokenEnd() bool {
 	if l.isEOF() {
@@ -418,6 +430,7 @@ var hexnumbers []rune
 var lineTerminators []rune
 var linefeed rune
 var carriageRet rune
+var semiColon rune
 var dot rune
 var minusSign rune
 var plusSign rune
@@ -443,6 +456,7 @@ func init() {
 	rightParen = rune(')')
 	comma = rune(',')
 	doubleQuote = rune('"')
+	semiColon = rune(';')
 	hexStart = []rune("xX")
 	exponentPartStart = []rune("eE")
 }
