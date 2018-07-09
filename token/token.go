@@ -25,6 +25,8 @@ const (
 
 	Ident
 
+	Newline
+
 	EOF
 )
 
@@ -41,13 +43,14 @@ var names = map[Type]string{
 	RParen:      ")",
 	Comma:       ",",
 	Ident:       "Ident",
+	Newline:     "LineTerminator",
 	EOF:         "EOF",
 }
 
 func (t Type) String() string {
 	str, ok := names[t]
 	if !ok {
-		panic(fmt.Sprintf("symbol %d not found", t))
+		panic(fmt.Sprintf("unknown token type[%d]", t))
 	}
 	return str
 }

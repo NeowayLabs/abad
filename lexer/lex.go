@@ -28,7 +28,8 @@ func (t Tokval) EqualPos(other Tokval) bool {
 }
 
 func (t Tokval) String() string {
-	return fmt.Sprintf("Token %s of value '%s'", t.Type, t.Value)
+	return fmt.Sprintf(
+		"token:type[%s],value[%s],line[%d],column[%d]", t.Type, t.Value, t.Line, t.Column)
 }
 
 // Lex will lex the given crappy JS code (utf16 yay) and provide a
@@ -84,6 +85,10 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 		return l.illegalToken()
 	}
 
+	if l.isNewline() {
+		return l.newlineToken(), l.initialState
+	}
+
 	if l.isPlusSign() {
 		// TODO: handle ++
 		return l.token(token.Plus), l.initialState
@@ -101,6 +106,9 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 
 	if l.isDot() {
 		l.fwd()
+		if l.isNewline() {
+			return l.illegalToken()
+		}
 		allowExponent := true
 		allowDot := false
 		return l.decimalState(allowExponent, allowDot)
@@ -108,6 +116,10 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 
 	if l.isRightParen() {
 		return l.token(token.RParen), l.initialState
+	}
+
+	if l.isLeftParen() {
+		return l.token(token.LParen), l.initialState
 	}
 
 	if l.isComma() {
@@ -122,10 +134,19 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 	return l.identifierState()
 }
 
+func (l *lexer) newlineToken() Tokval {
+	tok := l.token(token.Newline)
+	l.line += 1
+	l.column = 1
+	return tok
+}
+
 func (l *lexer) stringState() (Tokval, lexerState) {
-	// TODO: handle newlines
 
 	for !l.isEOF() && !l.isDoubleQuote() {
+		if l.isNewline() {
+			return l.illegalToken()
+		}
 		l.fwd()
 	}
 
@@ -145,7 +166,7 @@ func (l *lexer) numberState() (Tokval, lexerState) {
 	if l.isHexStart() {
 		l.fwd()
 
-		if l.isEOF() {
+		if l.isEOF() || l.isNewline() {
 			return l.illegalToken()
 		}
 
@@ -167,23 +188,21 @@ func (l *lexer) illegalToken() (Tokval, lexerState) {
 func (l *lexer) identifierState() (Tokval, lexerState) {
 
 	for !l.isEOF() {
+
 		if l.isDot() {
 			l.bwd()
 			return l.token(token.Ident), l.accessMemberState
 		}
 
-		if l.isLeftParen() {
+		if l.isLeftParen() || l.isTokenEnd() {
 			l.bwd()
-			return l.token(token.Ident), l.leftParenState
+			return l.token(token.Ident), l.initialState
 		}
+
 		l.fwd()
 	}
 
 	return l.token(token.Ident), l.initialState
-}
-
-func (l *lexer) leftParenState() (Tokval, lexerState) {
-	return l.token(token.LParen), l.initialState
 }
 
 func (l *lexer) startIdentifierState() (Tokval, lexerState) {
@@ -195,9 +214,11 @@ func (l *lexer) startIdentifierState() (Tokval, lexerState) {
 	if l.isNumber() {
 		return l.illegalToken()
 	}
+
 	if l.isDot() {
 		return l.illegalToken()
 	}
+
 	return l.identifierState()
 }
 
@@ -256,7 +277,10 @@ func (l *lexer) decimalState(allowExponent bool, allowDot bool) (Tokval, lexerSt
 }
 
 func (l *lexer) exponentPartState() (Tokval, lexerState) {
-	// TODO: can exponent be like: 1.0e ?
+
+	if l.isTokenEnd() {
+		return l.illegalToken()
+	}
 
 	if l.isMinusSign() || l.isPlusSign() {
 		// TODO: test 1.0e- and 1.0e+
@@ -308,6 +332,10 @@ func (l *lexer) isRightParen() bool {
 	return l.cur() == rightParen
 }
 
+func (l *lexer) isNewline() bool {
+	return containsRune(lineTerminators, l.cur())
+}
+
 func (l *lexer) isHexadecimal() bool {
 	return containsRune(hexnumbers, l.cur())
 }
@@ -326,7 +354,10 @@ func (l *lexer) isDoubleQuote() bool {
 
 // tokenEnd tries to capture the most common causes of a token ending
 func (l *lexer) isTokenEnd() bool {
-	return l.isRightParen() || l.isComma()
+	if l.isEOF() {
+		return true
+	}
+	return l.isRightParen() || l.isComma() || l.isNewline()
 }
 
 func (l *lexer) fwd() {
@@ -344,16 +375,22 @@ func (l *lexer) bwd() {
 func (l *lexer) token(t token.Type) Tokval {
 	var val []rune
 
+	pos := l.position + 1
+
 	if l.isEOF() {
 		val = l.code
 		l.code = nil
 	} else {
-		val = l.code[:l.position+1]
-		l.code = l.code[l.position+1:]
+		val = l.code[:pos]
+		l.code = l.code[pos:]
 	}
 
+	// FIXME: duplicated at stringToken()
+	column := l.column
+	l.column += pos
 	l.position = 0
-	return Tokval{Type: t, Value: newStr(val), Line: l.line, Column: l.updateColumn()}
+
+	return Tokval{Type: t, Value: newStr(val), Line: l.line, Column: column}
 }
 
 func (l *lexer) stringToken() Tokval {
@@ -363,25 +400,24 @@ func (l *lexer) stringToken() Tokval {
 	val := l.code[1:l.position]
 	l.code = l.code[l.position+1:]
 
+	// FIXME: duplicated at token()
+	column := l.column
+	l.column += l.position + 1
 	l.position = 0
 
 	return Tokval{
 		Type:   token.String,
 		Value:  newStr(val),
 		Line:   l.line,
-		Column: l.updateColumn(),
+		Column: column,
 	}
-}
-
-func (l *lexer) updateColumn() uint {
-	// FIXME: should use position, but for now this works for the lack of tests
-	c := l.column
-	l.column += 1
-	return c
 }
 
 var numbers []rune
 var hexnumbers []rune
+var lineTerminators []rune
+var linefeed rune
+var carriageRet rune
 var dot rune
 var minusSign rune
 var plusSign rune
@@ -395,6 +431,11 @@ var exponentPartStart []rune
 func init() {
 	numbers = []rune("0123456789")
 	hexnumbers = append(numbers, []rune("abcdefABCDEF")...)
+	linefeed = rune('\u000A')
+	carriageRet = rune('\u000D')
+	lineSep := rune('\u2028')
+	paragraphSep := rune('\u2029')
+	lineTerminators = []rune{linefeed, carriageRet, lineSep, paragraphSep}
 	dot = rune('.')
 	minusSign = rune('-')
 	plusSign = rune('+')
