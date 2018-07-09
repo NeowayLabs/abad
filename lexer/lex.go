@@ -84,7 +84,7 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 	if l.isInvalidRune() {
 		return l.illegalToken()
 	}
-	
+
 	if l.isSemiColon() {
 		return l.semiColonToken(), l.initialState
 	}

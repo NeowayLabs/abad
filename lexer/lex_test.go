@@ -226,7 +226,7 @@ func TestNumericLiterals(t *testing.T) {
 func TestStrings(t *testing.T) {
 	// TODO: multiline strings
 	// - escaped double quotes
-	
+
 	cases := []TestCase{
 		{
 			name: "Empty",
@@ -254,14 +254,14 @@ func TestStrings(t *testing.T) {
 			want: tokens(stringToken("1234567890-+=abcdefg${[]})(()%_ /|/ yay %xi4klindaum")),
 		},
 	}
-	
+
 	runTests(t, cases)
 	runTests(t, intertwineOnTestCases(semicolonToken(), cases))
 }
 
 func TestSemiColon(t *testing.T) {
 	// Almost all semicolon tests are made interwined on other tests
-	
+
 	runTests(t, []TestCase{
 		{
 			name: "SingleSemiColon",
@@ -271,7 +271,7 @@ func TestSemiColon(t *testing.T) {
 		{
 			name: "MultipleSemiColon",
 			code: Str(";;;"),
-			want: tokens(semicolonToken(),semicolonToken(), semicolonToken()),
+			want: tokens(semicolonToken(), semicolonToken(), semicolonToken()),
 		},
 	})
 }
@@ -1111,47 +1111,47 @@ func prependOnTestCases(tcase TestCase, tcases []TestCase) []TestCase {
 // acts as generic separators between other tokens, like semi colons/spaces/newlines.
 func intertwineOnTestCases(tok lexer.Tokval, tcases []TestCase) []TestCase {
 	newCases := make([]TestCase, len(tcases))
-	
+
 	for i, tcase := range tcases {
 		name := fmt.Sprintf("%s/IntertwinedWith%s", tcase.name, tok.Type)
 		want := tcase.want
-		
+
 		want, hasEOF := removeEOF(want)
 		if len(want) == 1 {
 			want = append(want, want[0])
 		}
-		
+
 		newwant := []lexer.Tokval{}
-		
-		for i := 0; i < len(want) - 1; i++ {
+
+		for i := 0; i < len(want)-1; i++ {
 			newwant = append(newwant, want[i])
 			newwant = append(newwant, tok)
 		}
-		
-		newwant = append(newwant, want[len(want) - 1])
+
+		newwant = append(newwant, want[len(want)-1])
 		if hasEOF {
 			newwant = append(newwant, EOF)
 		}
-		
+
 		newCases[i] = newTestCase(name, newwant)
 	}
-	
+
 	return newCases
 }
 
 func newTestCase(name string, tokens []lexer.Tokval) TestCase {
 	tcase := TestCase{
-		name : name,
-		want : tokens,
+		name: name,
+		want: tokens,
 	}
-	
+
 	par := Str(`"`)
-	
+
 	for _, tok := range tokens {
 		if tok.Equal(EOF) {
 			continue
 		}
-		
+
 		if tok.Type != token.String {
 			tcase.code = tcase.code.Append(tok.Value)
 		} else {
@@ -1161,7 +1161,7 @@ func newTestCase(name string, tokens []lexer.Tokval) TestCase {
 			tcase.code = tcase.code.Append(par)
 		}
 	}
-	
+
 	return tcase
 }
 
@@ -1169,13 +1169,13 @@ func removeEOF(tokens []lexer.Tokval) ([]lexer.Tokval, bool) {
 	if len(tokens) == 0 {
 		return tokens, false
 	}
-	
-	lasttoken := tokens[len(tokens) - 1]
+
+	lasttoken := tokens[len(tokens)-1]
 	if lasttoken.Equal(EOF) {
-		tokens = tokens[:len(tokens) - 1]
+		tokens = tokens[:len(tokens)-1]
 		return tokens, true
 	}
-	
+
 	return tokens, false
 }
 
@@ -1277,9 +1277,9 @@ func semicolonToken() lexer.Tokval {
 
 func semicolonTokenPos(line uint, column uint) lexer.Tokval {
 	return lexer.Tokval{
-		Type: token.SemiColon,
-		Value: Str(";"),
-		Line: line,
+		Type:   token.SemiColon,
+		Value:  Str(";"),
+		Line:   line,
 		Column: column,
 	}
 }
