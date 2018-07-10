@@ -1156,6 +1156,8 @@ func tokenSeparators() []lexer.Tokval {
 		tokens = append(tokens, ltToken(lt.val))
 	}
 	tokens = append(tokens, semiColonToken())
+	tokens = append(tokens, rightParenToken())
+	tokens = append(tokens, commaToken())
 	return tokens
 }
 
