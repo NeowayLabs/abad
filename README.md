@@ -31,3 +31,18 @@ make dev-test-e2e
 
 Adding new tests is very easy, just add new code samples to **tests/e2e/testdata** and
 they will imediately be tested when you run the end to end tests.
+
+If you need to checkout the behavior of some JS code on the V8 engine you can run:
+
+```
+make dev-d8 code=<relative path to JS code inside project dir>
+```
+
+Yeah the JS file with the code has to be inside the project and the path must be relative
+(because of docker volume mapping stuff).
+
+For example, to run a test.js file inside the project root run:
+
+```
+make dev-d8 code=test.js
+```
