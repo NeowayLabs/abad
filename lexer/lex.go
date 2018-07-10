@@ -68,7 +68,7 @@ type lexer struct {
 	position uint
 	line     uint
 	column   uint
-	
+
 	disallowSemiColon bool
 }
 
@@ -93,7 +93,7 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 		}
 		return l.semiColonToken(), l.initialState
 	}
-	
+
 	l.disallowSemiColon = false
 
 	if l.isNewline() {

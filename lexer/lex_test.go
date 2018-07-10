@@ -18,7 +18,7 @@ type TestCase struct {
 }
 
 func (tc TestCase) String() string {
-	return fmt.Sprintf("name[%s] code[%s] want[%v] checkPosition[%t]",tc.name, tc.code, tc.want, tc.checkPosition)
+	return fmt.Sprintf("name[%s] code[%s] want[%v] checkPosition[%t]", tc.name, tc.code, tc.want, tc.checkPosition)
 }
 
 var Str func(string) utf16.Str = utf16.S
@@ -224,7 +224,7 @@ func TestNumericLiterals(t *testing.T) {
 	cases = append(cases, minusSignedCases...)
 	cases = append(cases, plusMinusPlusMinusSignedCases...)
 	cases = append(cases, minusPlusMinusPlusSignedCases...)
-	
+
 	runTests(t, cases)
 	runTokenSepTests(t, cases)
 }
@@ -366,9 +366,8 @@ func TestLineTerminator(t *testing.T) {
 	}
 }
 
-
 func TestIdentifiers(t *testing.T) {
-	
+
 	identCases := []TestCase{
 		{
 			name: "Underscore",
@@ -406,7 +405,7 @@ func TestIdentifiers(t *testing.T) {
 			want: tokens(identToken("a1b2c")),
 		},
 	}
-	
+
 	accessModCases := []TestCase{
 		{
 			name: "AccessingMember",
@@ -440,7 +439,7 @@ func TestIdentifiers(t *testing.T) {
 
 	runTests(t, identCases)
 	runTests(t, accessModCases)
-	
+
 	runTokenSepTests(t, identCases)
 }
 
@@ -787,19 +786,19 @@ func TestIllegalSingleDot(t *testing.T) {
 		{
 			name: "Nothing",
 			code: Str("."),
-			want: []lexer.Tokval{ illegalToken(".") },
+			want: []lexer.Tokval{illegalToken(".")},
 		},
 	}
-	
+
 	for _, ts := range tokenSeparators() {
 		code := sfmt(".%.", ts.Value.String())
 		cases = append(cases, TestCase{
 			name: ts.Type.String(),
 			code: code,
-			want: []lexer.Tokval{ illegalToken(code.String()) },			
+			want: []lexer.Tokval{illegalToken(code.String())},
 		})
 	}
-	
+
 	runTests(t, cases)
 }
 
@@ -865,7 +864,7 @@ func TestInvalidSemiColon(t *testing.T) {
 			want: []lexer.Tokval{leftParenToken(), illegalToken(";")},
 		},
 	}
-	
+
 	runTests(t, cases)
 }
 
@@ -1213,11 +1212,11 @@ func prependOnTestCases(tcase TestCase, tcases []TestCase) []TestCase {
 // All information regarding token positions is ignored.
 func intertwineOnTestCases(tok lexer.Tokval, tcases []TestCase) []TestCase {
 	newCases := make([]TestCase, len(tcases))
-	
+
 	for i, tcase := range tcases {
 		name := fmt.Sprintf("%s/IntertwinedWith%s", tcase.name, tok.Type)
 		want, hasEOF := removeEOF(tcase.want)
-	
+
 		if len(want) == 1 {
 			want = append(want, want[0])
 		}
@@ -1274,7 +1273,7 @@ func removeEOF(tokens []lexer.Tokval) ([]lexer.Tokval, bool) {
 	if lasttoken.Equal(EOF) {
 		// WHY: got nasty side effects bugs if dont copy tokens array here
 		// the provided slice underlying array is modified and all hell break loses =D
-		newtokens := make([]lexer.Tokval, len(tokens) - 1)
+		newtokens := make([]lexer.Tokval, len(tokens)-1)
 		copy(newtokens, tokens)
 		return newtokens, true
 	}
