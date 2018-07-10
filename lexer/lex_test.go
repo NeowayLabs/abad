@@ -32,157 +32,157 @@ func TestNumericLiterals(t *testing.T) {
 		{
 			name: "SingleZero",
 			code: Str("0"),
-			want: tokens(decimalToken("0")),
+			want: tokensOK(decimalToken("0")),
 		},
 		{
 			name: "BigDecimal",
 			code: Str("1236547987794465977"),
-			want: tokens(decimalToken("1236547987794465977")),
+			want: tokensOK(decimalToken("1236547987794465977")),
 		},
 		{
 			name: "RealDecimalStartingWithPoint",
 			code: Str(".1"),
-			want: tokens(decimalToken(".1")),
+			want: tokensOK(decimalToken(".1")),
 		},
 		{
 			name: "RealDecimalEndingWithPoint",
 			code: Str("1."),
-			want: tokens(decimalToken("1.")),
+			want: tokensOK(decimalToken("1.")),
 		},
 		{
 			name: "LargeRealDecimalStartingWithPoint",
 			code: Str(".123456789"),
-			want: tokens(decimalToken(".123456789")),
+			want: tokensOK(decimalToken(".123456789")),
 		},
 		{
 			name: "SmallRealDecimal",
 			code: Str("1.6"),
-			want: tokens(decimalToken("1.6")),
+			want: tokensOK(decimalToken("1.6")),
 		},
 		{
 			name: "BigRealDecimal",
 			code: Str("11223243554.63445465789"),
-			want: tokens(decimalToken("11223243554.63445465789")),
+			want: tokensOK(decimalToken("11223243554.63445465789")),
 		},
 		{
 			name: "SmallRealDecimalWithSmallExponent",
 			code: Str("1.0e1"),
-			want: tokens(decimalToken("1.0e1")),
+			want: tokensOK(decimalToken("1.0e1")),
 		},
 		{
 			name: "SmallDecimalWithSmallExponent",
 			code: Str("1e1"),
-			want: tokens(decimalToken("1e1")),
+			want: tokensOK(decimalToken("1e1")),
 		},
 		{
 			name: "SmallDecimalWithSmallExponentUpperExponent",
 			code: Str("1E1"),
-			want: tokens(decimalToken("1E1")),
+			want: tokensOK(decimalToken("1E1")),
 		},
 		{
 			name: "BigDecimalWithBigExponent",
 			code: Str("666666666666e668"),
-			want: tokens(decimalToken("666666666666e668")),
+			want: tokensOK(decimalToken("666666666666e668")),
 		},
 		{
 			name: "BigDecimalWithBigExponentUpperExponent",
 			code: Str("666666666666E668"),
-			want: tokens(decimalToken("666666666666E668")),
+			want: tokensOK(decimalToken("666666666666E668")),
 		},
 		{
 			name: "BigRealDecimalWithBigExponent",
 			code: Str("666666666666.0e66"),
-			want: tokens(decimalToken("666666666666.0e66")),
+			want: tokensOK(decimalToken("666666666666.0e66")),
 		},
 		{
 			name: "RealDecimalWithSmallNegativeExponent",
 			code: Str("1.0e-1"),
-			want: tokens(decimalToken("1.0e-1")),
+			want: tokensOK(decimalToken("1.0e-1")),
 		},
 		{
 			name: "RealDecimalWithBigNegativeExponent",
 			code: Str("1.0e-50"),
-			want: tokens(decimalToken("1.0e-50")),
+			want: tokensOK(decimalToken("1.0e-50")),
 		},
 		{
 			name: "SmallRealDecimalWithSmallUpperExponent",
 			code: Str("1.0E1"),
-			want: tokens(decimalToken("1.0E1")),
+			want: tokensOK(decimalToken("1.0E1")),
 		},
 		{
 			name: "BigRealDecimalWithBigUpperExponent",
 			code: Str("666666666666.0E66"),
-			want: tokens(decimalToken("666666666666.0E66")),
+			want: tokensOK(decimalToken("666666666666.0E66")),
 		},
 		{
 			name: "RealDecimalWithSmallNegativeUpperExponent",
 			code: Str("1.0E-1"),
-			want: tokens(decimalToken("1.0E-1")),
+			want: tokensOK(decimalToken("1.0E-1")),
 		},
 		{
 			name: "RealDecimalWithBigNegativeUpperExponent",
 			code: Str("1.0E-50"),
-			want: tokens(decimalToken("1.0E-50")),
+			want: tokensOK(decimalToken("1.0E-50")),
 		},
 		{
 			name: "StartWithDotUpperExponent",
 			code: Str(".0E-50"),
-			want: tokens(decimalToken(".0E-50")),
+			want: tokensOK(decimalToken(".0E-50")),
 		},
 		{
 			name: "StartWithDotExponent",
 			code: Str(".0e5"),
-			want: tokens(decimalToken(".0e5")),
+			want: tokensOK(decimalToken(".0e5")),
 		},
 		{
 			name: "ZeroHexadecimal",
 			code: Str("0x0"),
-			want: tokens(hexToken("0x0")),
+			want: tokensOK(hexToken("0x0")),
 		},
 		{
 			name: "BigHexadecimal",
 			code: Str("0x123456789abcdef"),
-			want: tokens(hexToken("0x123456789abcdef")),
+			want: tokensOK(hexToken("0x123456789abcdef")),
 		},
 		{
 			name: "BigHexadecimalUppercase",
 			code: Str("0x123456789ABCDEF"),
-			want: tokens(hexToken("0x123456789ABCDEF")),
+			want: tokensOK(hexToken("0x123456789ABCDEF")),
 		},
 		{
 			name: "LettersOnlyHexadecimal",
 			code: Str("0xabcdef"),
-			want: tokens(hexToken("0xabcdef")),
+			want: tokensOK(hexToken("0xabcdef")),
 		},
 		{
 			name: "LettersOnlyHexadecimalUppercase",
 			code: Str("0xABCDEF"),
-			want: tokens(hexToken("0xABCDEF")),
+			want: tokensOK(hexToken("0xABCDEF")),
 		},
 		{
 			name: "ZeroHexadecimalUpperX",
 			code: Str("0X0"),
-			want: tokens(hexToken("0X0")),
+			want: tokensOK(hexToken("0X0")),
 		},
 		{
 			name: "BigHexadecimalUpperX",
 			code: Str("0X123456789abcdef"),
-			want: tokens(hexToken("0X123456789abcdef")),
+			want: tokensOK(hexToken("0X123456789abcdef")),
 		},
 		{
 			name: "BigHexadecimalUppercaseUpperX",
 			code: Str("0X123456789ABCDEF"),
-			want: tokens(hexToken("0X123456789ABCDEF")),
+			want: tokensOK(hexToken("0X123456789ABCDEF")),
 		},
 		{
 			name: "LettersOnlyHexadecimalUpperX",
 			code: Str("0Xabcdef"),
-			want: tokens(hexToken("0Xabcdef")),
+			want: tokensOK(hexToken("0Xabcdef")),
 		},
 		{
 			name: "LettersOnlyHexadecimalUppercaseUpperX",
 			code: Str("0XABCDEF"),
-			want: tokens(hexToken("0XABCDEF")),
+			want: tokensOK(hexToken("0XABCDEF")),
 		},
 	}
 
@@ -237,27 +237,27 @@ func TestStrings(t *testing.T) {
 		{
 			name: "Empty",
 			code: Str(`""`),
-			want: tokens(stringToken("")),
+			want: tokensOK(stringToken("")),
 		},
 		{
 			name: "SpacesOnly",
 			code: Str(`"  "`),
-			want: tokens(stringToken("  ")),
+			want: tokensOK(stringToken("  ")),
 		},
 		{
 			name: "semicolon",
 			code: Str(`";"`),
-			want: tokens(stringToken(";")),
+			want: tokensOK(stringToken(";")),
 		},
 		{
 			name: "SingleChar",
 			code: Str(`"k"`),
-			want: tokens(stringToken("k")),
+			want: tokensOK(stringToken("k")),
 		},
 		{
 			name: "LotsOfCrap",
 			code: Str(`"1234567890-+=abcdefg${[]})(()%_ /|/ yay %xi4klindaum"`),
-			want: tokens(stringToken("1234567890-+=abcdefg${[]})(()%_ /|/ yay %xi4klindaum")),
+			want: tokensOK(stringToken("1234567890-+=abcdefg${[]})(()%_ /|/ yay %xi4klindaum")),
 		},
 	}
 
@@ -271,12 +271,12 @@ func TestSemiColon(t *testing.T) {
 		{
 			name: "SingleSemiColon",
 			code: Str(";"),
-			want: tokens(semiColonToken()),
+			want: tokensOK(semiColonToken()),
 		},
 		{
 			name: "MultipleSemiColon",
 			code: Str(";;;"),
-			want: tokens(semiColonToken(), semiColonToken(), semiColonToken()),
+			want: tokensOK(semiColonToken(), semiColonToken(), semiColonToken()),
 		},
 	})
 }
@@ -291,22 +291,22 @@ func TestLineTerminator(t *testing.T) {
 				{
 					name: fmt.Sprintf("Single%s", lt),
 					code: Str(lt),
-					want: tokens(lttok),
+					want: tokensOK(lttok),
 				},
 				{
 					name: "Strings",
 					code: sfmt(`"first"%s"second"`, lt),
-					want: tokens(stringToken("first"), lttok, stringToken("second")),
+					want: tokensOK(stringToken("first"), lttok, stringToken("second")),
 				},
 				{
 					name: "Decimals",
 					code: sfmt("1%s2", lt),
-					want: tokens(decimalToken("1"), lttok, decimalToken("2")),
+					want: tokensOK(decimalToken("1"), lttok, decimalToken("2")),
 				},
 				{
 					name: "ExponentDecimals",
 					code: sfmt("1e1%s1e+1%s1e-1%s1", lt, lt, lt),
-					want: tokens(
+					want: tokensOK(
 						decimalToken("1e1"),
 						lttok,
 						decimalToken("1e+1"),
@@ -319,22 +319,22 @@ func TestLineTerminator(t *testing.T) {
 				{
 					name: "RealDecimals",
 					code: sfmt(".1%s245.123", lt),
-					want: tokens(decimalToken(".1"), lttok, decimalToken("245.123")),
+					want: tokensOK(decimalToken(".1"), lttok, decimalToken("245.123")),
 				},
 				{
 					name: "Hexadecimals",
 					code: sfmt("0xFF%s0x11", lt),
-					want: tokens(hexToken("0xFF"), lttok, hexToken("0x11")),
+					want: tokensOK(hexToken("0xFF"), lttok, hexToken("0x11")),
 				},
 				{
 					name: "Identifiers",
 					code: sfmt("hi%shello", lt),
-					want: tokens(identToken("hi"), lttok, identToken("hello")),
+					want: tokensOK(identToken("hi"), lttok, identToken("hello")),
 				},
 				{
 					name: "TwoFuncalls",
 					code: sfmt("func1(a)%sfunc2(1)%s", lt, lt),
-					want: tokens(
+					want: tokensOK(
 						identToken("func1"),
 						leftParenToken(),
 						identToken("a"),
@@ -350,7 +350,7 @@ func TestLineTerminator(t *testing.T) {
 				{
 					name: "FuncallWithSemiColon",
 					code: sfmt("a();%sb()", lt),
-					want: tokens(
+					want: tokensOK(
 						identToken("a"),
 						leftParenToken(),
 						rightParenToken(),
@@ -372,37 +372,37 @@ func TestIdentifiers(t *testing.T) {
 		{
 			name: "Underscore",
 			code: Str("_"),
-			want: tokens(identToken("_")),
+			want: tokensOK(identToken("_")),
 		},
 		{
 			name: "SingleLetter",
 			code: Str("a"),
-			want: tokens(identToken("a")),
+			want: tokensOK(identToken("a")),
 		},
 		{
 			name: "Self",
 			code: Str("self"),
-			want: tokens(identToken("self")),
+			want: tokensOK(identToken("self")),
 		},
 		{
 			name: "Console",
 			code: Str("console"),
-			want: tokens(identToken("console")),
+			want: tokensOK(identToken("console")),
 		},
 		{
 			name: "LotsUnderscores",
 			code: Str("___hyped___"),
-			want: tokens(identToken("___hyped___")),
+			want: tokensOK(identToken("___hyped___")),
 		},
 		{
 			name: "DollarsIntertwined",
 			code: Str("a$b$c"),
-			want: tokens(identToken("a$b$c")),
+			want: tokensOK(identToken("a$b$c")),
 		},
 		{
 			name: "NumbersIntertwined",
 			code: Str("a1b2c"),
-			want: tokens(identToken("a1b2c")),
+			want: tokensOK(identToken("a1b2c")),
 		},
 	}
 
@@ -410,7 +410,7 @@ func TestIdentifiers(t *testing.T) {
 		{
 			name: "AccessingMember",
 			code: Str("console.log"),
-			want: tokens(
+			want: tokensOK(
 				identToken("console"),
 				dotToken(),
 				identToken("log"),
@@ -419,7 +419,7 @@ func TestIdentifiers(t *testing.T) {
 		{
 			name: "AccessingNoMember",
 			code: Str("console."),
-			want: tokens(
+			want: tokensOK(
 				identToken("console"),
 				dotToken(),
 			),
@@ -427,7 +427,7 @@ func TestIdentifiers(t *testing.T) {
 		{
 			name: "AccessingMemberOfMember",
 			code: Str("console.log.toString"),
-			want: tokens(
+			want: tokensOK(
 				identToken("console"),
 				dotToken(),
 				identToken("log"),
@@ -448,7 +448,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "OneLetterFunction",
 			code: Str("a()"),
-			want: tokens(
+			want: tokensOK(
 				identToken("a"),
 				leftParenToken(),
 				rightParenToken(),
@@ -457,7 +457,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "NestingWithSemiColonNewLine",
 			code: Str("a(b(),c(d(),e(),5));\n"),
-			want: tokens(
+			want: tokensOK(
 				identToken("a"),
 				leftParenToken(),
 				identToken("b"),
@@ -484,7 +484,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "SeparatedBySemiColon",
 			code: Str("a();b()"),
-			want: tokens(
+			want: tokensOK(
 				identToken("a"),
 				leftParenToken(),
 				rightParenToken(),
@@ -497,7 +497,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "BigFunctionName",
 			code: Str("veryBigFunctionNameThatWouldAnnoyNatel()"),
-			want: tokens(
+			want: tokensOK(
 				identToken("veryBigFunctionNameThatWouldAnnoyNatel"),
 				leftParenToken(),
 				rightParenToken(),
@@ -506,7 +506,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "MemberFunction",
 			code: Str("console.log()"),
-			want: tokens(
+			want: tokensOK(
 				identToken("console"),
 				dotToken(),
 				identToken("log"),
@@ -517,7 +517,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "WithThreeDigitsDecimalParameter",
 			code: Str("test(666)"),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				decimalToken("666"),
@@ -527,7 +527,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "WithTwoDigitsDecimalParameter",
 			code: Str("test(66)"),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				decimalToken("66"),
@@ -537,7 +537,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "WithOneDigitDecimalParameter",
 			code: Str("test(6)"),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				decimalToken("6"),
@@ -547,7 +547,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "DecimalWithExponentParameter",
 			code: Str("test(1e6)"),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				decimalToken("1e6"),
@@ -557,7 +557,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "DecimalWithUpperExponentParameter",
 			code: Str("test(1E6)"),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				decimalToken("1E6"),
@@ -567,7 +567,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "WithSmallestRealDecimalParameter",
 			code: Str("test(.1)"),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				decimalToken(".1"),
@@ -577,7 +577,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "RealDecimalWithExponentParameter",
 			code: Str("test(1.1e6)"),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				decimalToken("1.1e6"),
@@ -587,7 +587,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "RealDecimalWithUpperExponentParameter",
 			code: Str("test(1.1E6)"),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				decimalToken("1.1E6"),
@@ -597,7 +597,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "WithRealDecimalParameter",
 			code: Str("test(6.6)"),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				decimalToken("6.6"),
@@ -607,7 +607,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "WithOneDigitHexadecimalParameter",
 			code: Str("test(0x6)"),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				hexToken("0x6"),
@@ -617,7 +617,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "WithOneDigitUpperHexadecimalParameter",
 			code: Str("test(0X6)"),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				hexToken("0X6"),
@@ -627,7 +627,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "WithTwoDigitHexadecimalParameter",
 			code: Str("test(0x66)"),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				hexToken("0x66"),
@@ -637,7 +637,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "WithTwoDigitUpperHexadecimalParameter",
 			code: Str("test(0X66)"),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				hexToken("0X66"),
@@ -647,7 +647,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "CommaSeparatedNumbersParameters",
 			code: Str("test(0X6,0x7,0x78,0X69,8,69,669,6.9,.9,3e1,4E7,4e7)"),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				hexToken("0X6"),
@@ -679,7 +679,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "CommaSeparatedNumbersAndStringsParameters",
 			code: Str(`test("",5,"i",4,"k",6.6,0x5,"jssucks")`),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				stringToken(""),
@@ -703,7 +703,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "PassingIdentifierAsArg",
 			code: Str("test(arg)"),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				identToken("arg"),
@@ -713,7 +713,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "PassingIdentifiersAsArg",
 			code: Str("test(arg,arg2,i4k)"),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				identToken("arg"),
@@ -727,7 +727,7 @@ func TestFuncall(t *testing.T) {
 		{
 			name: "CommaSeparatedEverything",
 			code: Str(`test("",5,"i",4,"k",6.6,0x5,arg,"jssucks")`),
-			want: tokens(
+			want: tokensOK(
 				identToken("test"),
 				leftParenToken(),
 				stringToken(""),
@@ -759,19 +759,19 @@ func TestPosition(t *testing.T) {
 			name:          "MinusDecimal",
 			code:          Str("-1"),
 			checkPosition: true,
-			want:          tokens(minusTokenPos(1, 1), decimalTokenPos("1", 1, 2)),
+			want:          tokensOK(minusTokenPos(1, 1), decimalTokenPos("1", 1, 2)),
 		},
 		{
 			name:          "PlusDecimal",
 			code:          Str("+1"),
 			checkPosition: true,
-			want:          tokens(plusTokenPos(1, 1), decimalTokenPos("1", 1, 2)),
+			want:          tokensOK(plusTokenPos(1, 1), decimalTokenPos("1", 1, 2)),
 		},
 		{
 			name:          "PlusMinusDecimal",
 			code:          Str("+-666"),
 			checkPosition: true,
-			want:          tokens(plusTokenPos(1, 1), minusTokenPos(1, 2), decimalTokenPos("666", 1, 3)),
+			want:          tokensOK(plusTokenPos(1, 1), minusTokenPos(1, 2), decimalTokenPos("666", 1, 3)),
 		},
 	}
 
@@ -782,7 +782,7 @@ func TestPosition(t *testing.T) {
 			name:          "FuncallsSeparatedBy" + lineTerminator.name,
 			code:          code,
 			checkPosition: true,
-			want: tokens(
+			want: tokensOK(
 				identTokenPos("func", 1, 1),
 				leftParenTokenPos(1, 5),
 				identTokenPos("a", 1, 6),
@@ -883,12 +883,12 @@ func TestInvalidStrings(t *testing.T) {
 func TestInvalidSemiColon(t *testing.T) {
 
 	t.Skip("TODO")
-	
+
 	cases := []TestCase{
 		{
 			name: "AfterLeftParen",
 			code: Str("(;"),
-			want: []lexer.Tokval{leftParenToken(), illegalToken(";")},
+			want: tokensErr(t, leftParenToken(), ";"),
 		},
 		{
 			name: "InsideNestedExpressionAfterRightParen",
@@ -1521,6 +1521,14 @@ func commaToken() lexer.Tokval {
 	}
 }
 
-func tokens(t ...lexer.Tokval) []lexer.Tokval {
+func tokensOK(t ...lexer.Tokval) []lexer.Tokval {
 	return append(t, EOF)
+}
+
+// tokensErr takes a list of tokens and a last string argument and returns
+// a list of tokens with a last illegal token created with the last string
+// argument passed. It is not a very clear API but it makes repetitive tests
+// much easier to write (describe the scenario of a failure).
+func tokensErr(t *testing.T, args ...interface{}) []lexer.Tokval {
+	return nil
 }
