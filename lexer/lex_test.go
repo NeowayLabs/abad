@@ -347,6 +347,20 @@ func TestLineTerminator(t *testing.T) {
 						lttok,
 					),
 				},
+				{
+					name: "FuncallWithSemiColon",
+					code: sfmt("a();%sb()", lt),
+					want: tokens(
+						identToken("a"),
+						leftParenToken(),
+						rightParenToken(),
+						semiColonToken(),
+						lttok,
+						identToken("b"),
+						leftParenToken(),
+						rightParenToken(),
+					),
+				},
 			})
 		})
 	}
@@ -463,6 +477,19 @@ func TestFuncall(t *testing.T) {
 			code: Str("a()"),
 			want: tokens(
 				identToken("a"),
+				leftParenToken(),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "SeparatedBySemiColon",
+			code: Str("a();b()"),
+			want: tokens(
+				identToken("a"),
+				leftParenToken(),
+				rightParenToken(),
+				semiColonToken(),
+				identToken("b"),
 				leftParenToken(),
 				rightParenToken(),
 			),
@@ -781,6 +808,27 @@ func TestIllegalIdentifiers(t *testing.T) {
 	t.Skip("TODO")
 }
 
+func TestIllegalSingleDot(t *testing.T) {
+	cases := []TestCase{
+		{
+			name: "Nothing",
+			code: Str("."),
+			want: []lexer.Tokval{ illegalToken(".") },
+		},
+	}
+	
+	for _, ts := range tokenSeparators() {
+		code := sfmt(".%.", ts.Value.String())
+		cases = append(cases, TestCase{
+			name: ts.Type.String(),
+			code: code,
+			want: []lexer.Tokval{ illegalToken(code.String()) },			
+		})
+	}
+	
+	runTests(t, cases)
+}
+
 func TestIllegalMemberAccess(t *testing.T) {
 
 	runTests(t, []TestCase{
@@ -911,7 +959,7 @@ func TestIllegalNumericLiterals(t *testing.T) {
 			},
 		},
 		{
-			name: "BifRealWithTwoDots",
+			name: "BigRealWithTwoDots",
 			code: Str("1234.666.2342"),
 			want: []lexer.Tokval{
 				illegalToken("1234.666.2342"),

@@ -110,6 +110,9 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 
 	if l.isDot() {
 		l.fwd()
+		if l.isEOF() {
+			return l.illegalToken()
+		}
 		if l.isNewline() {
 			return l.illegalToken()
 		}
