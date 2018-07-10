@@ -881,14 +881,74 @@ func TestInvalidStrings(t *testing.T) {
 }
 
 func TestInvalidSemiColon(t *testing.T) {
-	// TODO: add error handling for cases like:
-	// - f("a";)
-	// Any value inside a pair of () cant have ;
+
+	t.Skip("TODO")
+	
 	cases := []TestCase{
 		{
 			name: "AfterLeftParen",
 			code: Str("(;"),
 			want: []lexer.Tokval{leftParenToken(), illegalToken(";")},
+		},
+		{
+			name: "InsideNestedExpressionAfterRightParen",
+			code: Str("(();)"),
+			want: []lexer.Tokval{
+				leftParenToken(),
+				leftParenToken(),
+				rightParenToken(),
+				illegalToken(";)"),
+			},
+		},
+		{
+			name: "AfterDecimalInsideExpression",
+			code: Str("(6;)"),
+			want: []lexer.Tokval{leftParenToken(), illegalToken("6;)")},
+		},
+		{
+			name: "AfterPlusInsideExpression",
+			code: Str("(1+;1)"),
+			want: []lexer.Tokval{leftParenToken(), decimalToken("1"), illegalToken("+;1)")},
+		},
+		{
+			name: "AfterMinusInsideExpression",
+			code: Str("(1-;1)"),
+			want: []lexer.Tokval{leftParenToken(), decimalToken("1"), illegalToken("-;1)")},
+		},
+		{
+			name: "AfterCommaInsideExpression",
+			code: Str("(1,;1)"),
+			want: []lexer.Tokval{leftParenToken(), decimalToken("1"), illegalToken(",;1)")},
+		},
+		{
+			name: "AfterBigDecimalInsideExpression",
+			code: Str("(666666;)"),
+			want: []lexer.Tokval{leftParenToken(), illegalToken("666666;)")},
+		},
+		{
+			name: "AfterRealInsideExpression",
+			code: Str("(.6;)"),
+			want: []lexer.Tokval{leftParenToken(), illegalToken("6;)")},
+		},
+		{
+			name: "AfterHexadecimalInsideExpression",
+			code: Str("(0x6;)"),
+			want: []lexer.Tokval{leftParenToken(), illegalToken("0x6;)")},
+		},
+		{
+			name: "AfterBigHexadecimalInsideExpression",
+			code: Str("(0x666666;)"),
+			want: []lexer.Tokval{leftParenToken(), illegalToken("0x666666;)")},
+		},
+		{
+			name: "AfterEmptyStringInsideExpression",
+			code: Str(`("";)`),
+			want: []lexer.Tokval{leftParenToken(), illegalToken(`"";)`)},
+		},
+		{
+			name: "AfteStringInsideExpression",
+			code: Str(`("hi";)`),
+			want: []lexer.Tokval{leftParenToken(), illegalToken(`"hi";)`)},
 		},
 	}
 
