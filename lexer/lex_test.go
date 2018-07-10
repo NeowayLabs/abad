@@ -220,11 +220,13 @@ func TestNumericLiterals(t *testing.T) {
 		},
 	}, cases)
 
+	cases = append(cases, plusSignedCases...)
+	cases = append(cases, minusSignedCases...)
+	cases = append(cases, plusMinusPlusMinusSignedCases...)
+	cases = append(cases, minusPlusMinusPlusSignedCases...)
+	
 	runTests(t, cases)
-	runTests(t, plusSignedCases)
-	runTests(t, minusSignedCases)
-	runTests(t, plusMinusPlusMinusSignedCases)
-	runTests(t, minusPlusMinusPlusSignedCases)
+	runTokenSepTests(t, cases)
 }
 
 func TestStrings(t *testing.T) {
@@ -378,7 +380,8 @@ func TestInvalidStrings(t *testing.T) {
 }
 
 func TestIdentifiers(t *testing.T) {
-	runTests(t, []TestCase{
+	
+	identCases := []TestCase{
 		{
 			name: "Underscore",
 			code: Str("_"),
@@ -405,15 +408,18 @@ func TestIdentifiers(t *testing.T) {
 			want: tokens(identToken("___hyped___")),
 		},
 		{
-			name: "DollarsInterwined",
+			name: "DollarsIntertwined",
 			code: Str("a$b$c"),
 			want: tokens(identToken("a$b$c")),
 		},
 		{
-			name: "NumbersInterwined",
+			name: "NumbersIntertwined",
 			code: Str("a1b2c"),
 			want: tokens(identToken("a1b2c")),
 		},
+	}
+	
+	accessModCases := []TestCase{
 		{
 			name: "AccessingMember",
 			code: Str("console.log"),
@@ -442,7 +448,12 @@ func TestIdentifiers(t *testing.T) {
 				identToken("toString"),
 			),
 		},
-	})
+	}
+
+	runTests(t, identCases)
+	runTests(t, accessModCases)
+	
+	runTokenSepTests(t, identCases)
 }
 
 func TestFuncall(t *testing.T) {

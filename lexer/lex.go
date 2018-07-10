@@ -369,7 +369,7 @@ func (l *lexer) isTokenEnd() bool {
 	if l.isEOF() {
 		return true
 	}
-	return l.isRightParen() || l.isComma() || l.isNewline()
+	return l.isRightParen() || l.isComma() || l.isNewline() || l.isSemiColon()
 }
 
 func (l *lexer) fwd() {
