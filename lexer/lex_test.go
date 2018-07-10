@@ -366,32 +366,6 @@ func TestLineTerminator(t *testing.T) {
 	}
 }
 
-func TestInvalidStrings(t *testing.T) {
-
-	cases := []TestCase{
-		{
-			name: "SingleDoubleQuote",
-			code: Str(`"`),
-			want: []lexer.Tokval{illegalToken(`"`)},
-		},
-		{
-			name: "NoEndingDoubleQuote",
-			code: Str(`"dsadasdsa123456`),
-			want: []lexer.Tokval{illegalToken(`"dsadasdsa123456`)},
-		},
-	}
-
-	for _, lineTerminator := range lineTerminators() {
-		code := fmt.Sprintf(`"head%stail"`, lineTerminator.val)
-		cases = append(cases, TestCase{
-			code: Str(code),
-			name: "NewlineTerminator" + lineTerminator.name,
-			want: []lexer.Tokval{illegalToken(code)},
-		})
-	}
-
-	runTests(t, cases)
-}
 
 func TestIdentifiers(t *testing.T) {
 	
@@ -851,6 +825,48 @@ func TestIllegalMemberAccess(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestInvalidStrings(t *testing.T) {
+
+	cases := []TestCase{
+		{
+			name: "SingleDoubleQuote",
+			code: Str(`"`),
+			want: []lexer.Tokval{illegalToken(`"`)},
+		},
+		{
+			name: "NoEndingDoubleQuote",
+			code: Str(`"dsadasdsa123456`),
+			want: []lexer.Tokval{illegalToken(`"dsadasdsa123456`)},
+		},
+	}
+
+	for _, lineTerminator := range lineTerminators() {
+		code := fmt.Sprintf(`"head%stail"`, lineTerminator.val)
+		cases = append(cases, TestCase{
+			code: Str(code),
+			name: "NewlineTerminator" + lineTerminator.name,
+			want: []lexer.Tokval{illegalToken(code)},
+		})
+	}
+
+	runTests(t, cases)
+}
+
+func TestInvalidSemiColon(t *testing.T) {
+	// TODO: add error handling for cases like:
+	// - f("a";)
+	// Any value inside a pair of () cant have ;
+	cases := []TestCase{
+		{
+			name: "AfterLeftParen",
+			code: Str("(;"),
+			want: []lexer.Tokval{leftParenToken(), illegalToken(";")},
+		},
+	}
+	
+	runTests(t, cases)
 }
 
 func TestIllegalNumericLiterals(t *testing.T) {
