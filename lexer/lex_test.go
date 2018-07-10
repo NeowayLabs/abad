@@ -17,6 +17,10 @@ type TestCase struct {
 	checkPosition bool
 }
 
+func (tc TestCase) String() string {
+	return fmt.Sprintf("name[%s] code[%s] want[%v] checkPosition[%t]",tc.name, tc.code, tc.want, tc.checkPosition)
+}
+
 var Str func(string) utf16.Str = utf16.S
 var EOF lexer.Tokval = lexer.EOF
 
@@ -256,22 +260,21 @@ func TestStrings(t *testing.T) {
 	}
 
 	runTests(t, cases)
-	runTests(t, intertwineOnTestCases(semicolonToken(), cases))
+	runTokenSepTests(t, cases)
 }
 
 func TestSemiColon(t *testing.T) {
 	// Almost all semicolon tests are made interwined on other tests
-
 	runTests(t, []TestCase{
 		{
 			name: "SingleSemiColon",
 			code: Str(";"),
-			want: tokens(semicolonToken()),
+			want: tokens(semiColonToken()),
 		},
 		{
 			name: "MultipleSemiColon",
 			code: Str(";;;"),
-			want: tokens(semicolonToken(), semicolonToken(), semicolonToken()),
+			want: tokens(semiColonToken(), semiColonToken(), semiColonToken()),
 		},
 	})
 }
@@ -1033,6 +1036,28 @@ func runTests(t *testing.T, testcases []TestCase) {
 	}
 }
 
+// runTokenSepTests will take an array of test cases and run the
+// tests with different token separators intertwined between
+// the wanted tokens of each test case, validating if the tokens
+// gets separated correctly.
+//
+// This functions is useful to reuse tokens test cases to validate
+// token separation/splitting (with newlines or semicolons for example).
+func runTokenSepTests(t *testing.T, testcases []TestCase) {
+	for _, ts := range tokenSeparators() {
+		runTests(t, intertwineOnTestCases(ts, testcases))
+	}
+}
+
+func tokenSeparators() []lexer.Tokval {
+	tokens := []lexer.Tokval{}
+	for _, lt := range lineTerminators() {
+		tokens = append(tokens, ltToken(lt.val))
+	}
+	tokens = append(tokens, semiColonToken())
+	return tokens
+}
+
 func illegalToken(val string) lexer.Tokval {
 	return lexer.Tokval{
 		Type:  token.Illegal,
@@ -1109,14 +1134,15 @@ func prependOnTestCases(tcase TestCase, tcases []TestCase) []TestCase {
 //
 // This functions is useful to test easily the handling of tokens that
 // acts as generic separators between other tokens, like semi colons/spaces/newlines.
+//
+// All information regarding token positions is ignored.
 func intertwineOnTestCases(tok lexer.Tokval, tcases []TestCase) []TestCase {
 	newCases := make([]TestCase, len(tcases))
-
+	
 	for i, tcase := range tcases {
 		name := fmt.Sprintf("%s/IntertwinedWith%s", tcase.name, tok.Type)
-		want := tcase.want
-
-		want, hasEOF := removeEOF(want)
+		want, hasEOF := removeEOF(tcase.want)
+	
 		if len(want) == 1 {
 			want = append(want, want[0])
 		}
@@ -1135,7 +1161,6 @@ func intertwineOnTestCases(tok lexer.Tokval, tcases []TestCase) []TestCase {
 
 		newCases[i] = newTestCase(name, newwant)
 	}
-
 	return newCases
 }
 
@@ -1172,8 +1197,11 @@ func removeEOF(tokens []lexer.Tokval) ([]lexer.Tokval, bool) {
 
 	lasttoken := tokens[len(tokens)-1]
 	if lasttoken.Equal(EOF) {
-		tokens = tokens[:len(tokens)-1]
-		return tokens, true
+		// WHY: got nasty side effects bugs if dont copy tokens array here
+		// the provided slice underlying array is modified and all hell break loses =D
+		newtokens := make([]lexer.Tokval, len(tokens) - 1)
+		copy(newtokens, tokens)
+		return newtokens, true
 	}
 
 	return tokens, false
@@ -1271,7 +1299,7 @@ func hexToken(hex string) lexer.Tokval {
 	}
 }
 
-func semicolonToken() lexer.Tokval {
+func semiColonToken() lexer.Tokval {
 	return semicolonTokenPos(0, 0)
 }
 
