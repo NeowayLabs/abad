@@ -818,7 +818,7 @@ func TestIllegalSingleDot(t *testing.T) {
 	}
 
 	for _, ts := range tokenSeparators() {
-		code := sfmt(".%.", ts.Value.String())
+		code := sfmt(".%s.", ts.Value.String())
 		cases = append(cases, TestCase{
 			name: ts.Type.String(),
 			code: code,

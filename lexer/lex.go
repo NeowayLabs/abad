@@ -117,10 +117,11 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 
 	if l.isDot() {
 		l.fwd()
+		// TODO: add enough tests to use isTokenEnd here
 		if l.isEOF() {
 			return l.illegalToken()
 		}
-		if l.isNewline() {
+		if l.isNewline() || l.isSemiColon() {
 			return l.illegalToken()
 		}
 		allowExponent := true
