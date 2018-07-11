@@ -444,6 +444,7 @@ func TestIdentifiers(t *testing.T) {
 }
 
 func TestFuncall(t *testing.T) {
+	// TODO: add anon funcall "(function (a) { console.log(a); })("hi")"
 	runTests(t, []TestCase{
 		{
 			name: "OneLetterFunction",
@@ -880,80 +881,6 @@ func TestInvalidStrings(t *testing.T) {
 	runTests(t, cases)
 }
 
-func TestInvalidSemiColon(t *testing.T) {
-
-	t.Skip("TODO")
-
-	cases := []TestCase{
-		{
-			name: "AfterLeftParen",
-			code: Str("(;"),
-			want: tokensErr(t, leftParenToken(), ";"),
-		},
-		{
-			name: "InsideNestedExpressionAfterRightParen",
-			code: Str("(();)"),
-			want: []lexer.Tokval{
-				leftParenToken(),
-				leftParenToken(),
-				rightParenToken(),
-				illegalToken(";)"),
-			},
-		},
-		{
-			name: "AfterDecimalInsideExpression",
-			code: Str("(6;)"),
-			want: []lexer.Tokval{leftParenToken(), illegalToken("6;)")},
-		},
-		{
-			name: "AfterPlusInsideExpression",
-			code: Str("(1+;1)"),
-			want: []lexer.Tokval{leftParenToken(), decimalToken("1"), illegalToken("+;1)")},
-		},
-		{
-			name: "AfterMinusInsideExpression",
-			code: Str("(1-;1)"),
-			want: []lexer.Tokval{leftParenToken(), decimalToken("1"), illegalToken("-;1)")},
-		},
-		{
-			name: "AfterCommaInsideExpression",
-			code: Str("(1,;1)"),
-			want: []lexer.Tokval{leftParenToken(), decimalToken("1"), illegalToken(",;1)")},
-		},
-		{
-			name: "AfterBigDecimalInsideExpression",
-			code: Str("(666666;)"),
-			want: []lexer.Tokval{leftParenToken(), illegalToken("666666;)")},
-		},
-		{
-			name: "AfterRealInsideExpression",
-			code: Str("(.6;)"),
-			want: []lexer.Tokval{leftParenToken(), illegalToken("6;)")},
-		},
-		{
-			name: "AfterHexadecimalInsideExpression",
-			code: Str("(0x6;)"),
-			want: []lexer.Tokval{leftParenToken(), illegalToken("0x6;)")},
-		},
-		{
-			name: "AfterBigHexadecimalInsideExpression",
-			code: Str("(0x666666;)"),
-			want: []lexer.Tokval{leftParenToken(), illegalToken("0x666666;)")},
-		},
-		{
-			name: "AfterEmptyStringInsideExpression",
-			code: Str(`("";)`),
-			want: []lexer.Tokval{leftParenToken(), illegalToken(`"";)`)},
-		},
-		{
-			name: "AfteStringInsideExpression",
-			code: Str(`("hi";)`),
-			want: []lexer.Tokval{leftParenToken(), illegalToken(`"hi";)`)},
-		},
-	}
-
-	runTests(t, cases)
-}
 
 func TestIllegalNumericLiterals(t *testing.T) {
 
@@ -1523,12 +1450,4 @@ func commaToken() lexer.Tokval {
 
 func tokens(t ...lexer.Tokval) []lexer.Tokval {
 	return append(t, EOF)
-}
-
-// tokensErr takes a list of tokens and a last string argument and returns
-// a list of tokens with a last illegal token created with the last string
-// argument passed. It is not a very clear API but it makes repetitive tests
-// much easier to write (describe the scenario of a failure).
-func tokensErr(t *testing.T, args ...interface{}) []lexer.Tokval {
-	return nil
 }
