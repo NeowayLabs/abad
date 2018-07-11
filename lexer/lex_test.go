@@ -17,6 +17,10 @@ type TestCase struct {
 	checkPosition bool
 }
 
+func (tc TestCase) String() string {
+	return fmt.Sprintf("name[%s] code[%s] want[%v] checkPosition[%t]", tc.name, tc.code, tc.want, tc.checkPosition)
+}
+
 var Str func(string) utf16.Str = utf16.S
 var EOF lexer.Tokval = lexer.EOF
 
@@ -216,17 +220,20 @@ func TestNumericLiterals(t *testing.T) {
 		},
 	}, cases)
 
+	cases = append(cases, plusSignedCases...)
+	cases = append(cases, minusSignedCases...)
+	cases = append(cases, plusMinusPlusMinusSignedCases...)
+	cases = append(cases, minusPlusMinusPlusSignedCases...)
+
 	runTests(t, cases)
-	runTests(t, plusSignedCases)
-	runTests(t, minusSignedCases)
-	runTests(t, plusMinusPlusMinusSignedCases)
-	runTests(t, minusPlusMinusPlusSignedCases)
+	runTokenSepTests(t, cases)
 }
 
 func TestStrings(t *testing.T) {
 	// TODO: multiline strings
 	// - escaped double quotes
-	runTests(t, []TestCase{
+
+	cases := []TestCase{
 		{
 			name: "Empty",
 			code: Str(`""`),
@@ -238,6 +245,11 @@ func TestStrings(t *testing.T) {
 			want: tokens(stringToken("  ")),
 		},
 		{
+			name: "semicolon",
+			code: Str(`";"`),
+			want: tokens(stringToken(";")),
+		},
+		{
 			name: "SingleChar",
 			code: Str(`"k"`),
 			want: tokens(stringToken("k")),
@@ -246,6 +258,25 @@ func TestStrings(t *testing.T) {
 			name: "LotsOfCrap",
 			code: Str(`"1234567890-+=abcdefg${[]})(()%_ /|/ yay %xi4klindaum"`),
 			want: tokens(stringToken("1234567890-+=abcdefg${[]})(()%_ /|/ yay %xi4klindaum")),
+		},
+	}
+
+	runTests(t, cases)
+	runTokenSepTests(t, cases)
+}
+
+func TestSemiColon(t *testing.T) {
+	// Almost all semicolon tests are made interwined on other tests
+	runTests(t, []TestCase{
+		{
+			name: "SingleSemiColon",
+			code: Str(";"),
+			want: tokens(semiColonToken()),
+		},
+		{
+			name: "MultipleSemiColon",
+			code: Str(";;;"),
+			want: tokens(semiColonToken(), semiColonToken(), semiColonToken()),
 		},
 	})
 }
@@ -257,6 +288,11 @@ func TestLineTerminator(t *testing.T) {
 			lt := lineTerminator.val
 			lttok := ltToken(lt)
 			runTests(t, []TestCase{
+				{
+					name: fmt.Sprintf("Single%s", lt),
+					code: Str(lt),
+					want: tokens(lttok),
+				},
 				{
 					name: "Strings",
 					code: sfmt(`"first"%s"second"`, lt),
@@ -311,40 +347,28 @@ func TestLineTerminator(t *testing.T) {
 						lttok,
 					),
 				},
+				{
+					name: "FuncallWithSemiColon",
+					code: sfmt("a();%sb()", lt),
+					want: tokens(
+						identToken("a"),
+						leftParenToken(),
+						rightParenToken(),
+						semiColonToken(),
+						lttok,
+						identToken("b"),
+						leftParenToken(),
+						rightParenToken(),
+					),
+				},
 			})
 		})
 	}
 }
 
-func TestInvalidStrings(t *testing.T) {
-
-	cases := []TestCase{
-		{
-			name: "SingleDoubleQuote",
-			code: Str(`"`),
-			want: []lexer.Tokval{illegalToken(`"`)},
-		},
-		{
-			name: "NoEndingDoubleQuote",
-			code: Str(`"dsadasdsa123456`),
-			want: []lexer.Tokval{illegalToken(`"dsadasdsa123456`)},
-		},
-	}
-
-	for _, lineTerminator := range lineTerminators() {
-		code := fmt.Sprintf(`"head%stail"`, lineTerminator.val)
-		cases = append(cases, TestCase{
-			code: Str(code),
-			name: "NewlineTerminator" + lineTerminator.name,
-			want: []lexer.Tokval{illegalToken(code)},
-		})
-	}
-
-	runTests(t, cases)
-}
-
 func TestIdentifiers(t *testing.T) {
-	runTests(t, []TestCase{
+
+	identCases := []TestCase{
 		{
 			name: "Underscore",
 			code: Str("_"),
@@ -371,15 +395,18 @@ func TestIdentifiers(t *testing.T) {
 			want: tokens(identToken("___hyped___")),
 		},
 		{
-			name: "DollarsInterwined",
+			name: "DollarsIntertwined",
 			code: Str("a$b$c"),
 			want: tokens(identToken("a$b$c")),
 		},
 		{
-			name: "NumbersInterwined",
+			name: "NumbersIntertwined",
 			code: Str("a1b2c"),
 			want: tokens(identToken("a1b2c")),
 		},
+	}
+
+	accessModCases := []TestCase{
 		{
 			name: "AccessingMember",
 			code: Str("console.log"),
@@ -408,16 +435,62 @@ func TestIdentifiers(t *testing.T) {
 				identToken("toString"),
 			),
 		},
-	})
+	}
+
+	runTests(t, identCases)
+	runTests(t, accessModCases)
+
+	runTokenSepTests(t, identCases)
 }
 
 func TestFuncall(t *testing.T) {
+	// TODO: add anon funcall "(function (a) { console.log(a); })("hi")"
 	runTests(t, []TestCase{
 		{
 			name: "OneLetterFunction",
 			code: Str("a()"),
 			want: tokens(
 				identToken("a"),
+				leftParenToken(),
+				rightParenToken(),
+			),
+		},
+		{
+			name: "NestingWithSemiColonNewLine",
+			code: Str("a(b(),c(d(),e(),5));\n"),
+			want: tokens(
+				identToken("a"),
+				leftParenToken(),
+				identToken("b"),
+				leftParenToken(),
+				rightParenToken(),
+				commaToken(),
+				identToken("c"),
+				leftParenToken(),
+				identToken("d"),
+				leftParenToken(),
+				rightParenToken(),
+				commaToken(),
+				identToken("e"),
+				leftParenToken(),
+				rightParenToken(),
+				commaToken(),
+				decimalToken("5"),
+				rightParenToken(),
+				rightParenToken(),
+				semiColonToken(),
+				ltToken("\n"),
+			),
+		},
+		{
+			name: "SeparatedBySemiColon",
+			code: Str("a();b()"),
+			want: tokens(
+				identToken("a"),
+				leftParenToken(),
+				rightParenToken(),
+				semiColonToken(),
+				identToken("b"),
 				leftParenToken(),
 				rightParenToken(),
 			),
@@ -736,6 +809,27 @@ func TestIllegalIdentifiers(t *testing.T) {
 	t.Skip("TODO")
 }
 
+func TestIllegalSingleDot(t *testing.T) {
+	cases := []TestCase{
+		{
+			name: "Nothing",
+			code: Str("."),
+			want: []lexer.Tokval{illegalToken(".")},
+		},
+	}
+
+	for _, ts := range tokenSeparators() {
+		code := sfmt(".%s.", ts.Value.String())
+		cases = append(cases, TestCase{
+			name: ts.Type.String(),
+			code: code,
+			want: []lexer.Tokval{illegalToken(code.String())},
+		})
+	}
+
+	runTests(t, cases)
+}
+
 func TestIllegalMemberAccess(t *testing.T) {
 
 	runTests(t, []TestCase{
@@ -759,6 +853,34 @@ func TestIllegalMemberAccess(t *testing.T) {
 		},
 	})
 }
+
+func TestInvalidStrings(t *testing.T) {
+
+	cases := []TestCase{
+		{
+			name: "SingleDoubleQuote",
+			code: Str(`"`),
+			want: []lexer.Tokval{illegalToken(`"`)},
+		},
+		{
+			name: "NoEndingDoubleQuote",
+			code: Str(`"dsadasdsa123456`),
+			want: []lexer.Tokval{illegalToken(`"dsadasdsa123456`)},
+		},
+	}
+
+	for _, lineTerminator := range lineTerminators() {
+		code := fmt.Sprintf(`"head%stail"`, lineTerminator.val)
+		cases = append(cases, TestCase{
+			code: Str(code),
+			name: "NewlineTerminator" + lineTerminator.name,
+			want: []lexer.Tokval{illegalToken(code)},
+		})
+	}
+
+	runTests(t, cases)
+}
+
 
 func TestIllegalNumericLiterals(t *testing.T) {
 
@@ -866,7 +988,7 @@ func TestIllegalNumericLiterals(t *testing.T) {
 			},
 		},
 		{
-			name: "BifRealWithTwoDots",
+			name: "BigRealWithTwoDots",
 			code: Str("1234.666.2342"),
 			want: []lexer.Tokval{
 				illegalToken("1234.666.2342"),
@@ -1002,6 +1124,30 @@ func runTests(t *testing.T, testcases []TestCase) {
 	}
 }
 
+// runTokenSepTests will take an array of test cases and run the
+// tests with different token separators intertwined between
+// the wanted tokens of each test case, validating if the tokens
+// gets separated correctly.
+//
+// This functions is useful to reuse tokens test cases to validate
+// token separation/splitting (with newlines or semicolons for example).
+func runTokenSepTests(t *testing.T, testcases []TestCase) {
+	for _, ts := range tokenSeparators() {
+		runTests(t, intertwineOnTestCases(ts, testcases))
+	}
+}
+
+func tokenSeparators() []lexer.Tokval {
+	tokens := []lexer.Tokval{}
+	for _, lt := range lineTerminators() {
+		tokens = append(tokens, ltToken(lt.val))
+	}
+	tokens = append(tokens, semiColonToken())
+	tokens = append(tokens, rightParenToken())
+	tokens = append(tokens, commaToken())
+	return tokens
+}
+
 func illegalToken(val string) lexer.Tokval {
 	return lexer.Tokval{
 		Type:  token.Illegal,
@@ -1049,7 +1195,8 @@ func messStr(s utf16.Str, pos uint) utf16.Str {
 // The array of TestCases is generated by prepending code and the
 // wanted tokens from the given tcase on each test case on tcases.
 // EOF should not be provided on the
-// given tcase since it will be prepended on each test case inside given tcases.
+// given tcase since it will be prepended on each test case inside given tcases
+// and the provided tcases will already have their own EOF.
 func prependOnTestCases(tcase TestCase, tcases []TestCase) []TestCase {
 	newcases := make([]TestCase, len(tcases))
 
@@ -1066,6 +1213,88 @@ func prependOnTestCases(tcase TestCase, tcases []TestCase) []TestCase {
 	}
 
 	return newcases
+}
+
+// intertwineOnTestCases will intertwine the given token on each test case
+// provided by tcases. For each test case it will take all the wanted tokens
+// and interwine the provided token between them. The resulting test case
+// will have the token that has been interwined on the expectation also.
+// If the test case has only one expected token on its wanted list the token
+// will be duplicated so it can be intertwined.
+//
+// This functions is useful to test easily the handling of tokens that
+// acts as generic separators between other tokens, like semi colons/spaces/newlines.
+//
+// All information regarding token positions is ignored.
+func intertwineOnTestCases(tok lexer.Tokval, tcases []TestCase) []TestCase {
+	newCases := make([]TestCase, len(tcases))
+
+	for i, tcase := range tcases {
+		name := fmt.Sprintf("%s/IntertwinedWith%s", tcase.name, tok.Type)
+		want, hasEOF := removeEOF(tcase.want)
+
+		if len(want) == 1 {
+			want = append(want, want[0])
+		}
+
+		newwant := []lexer.Tokval{}
+
+		for i := 0; i < len(want)-1; i++ {
+			newwant = append(newwant, want[i])
+			newwant = append(newwant, tok)
+		}
+
+		newwant = append(newwant, want[len(want)-1])
+		if hasEOF {
+			newwant = append(newwant, EOF)
+		}
+
+		newCases[i] = newTestCase(name, newwant)
+	}
+	return newCases
+}
+
+func newTestCase(name string, tokens []lexer.Tokval) TestCase {
+	tcase := TestCase{
+		name: name,
+		want: tokens,
+	}
+
+	par := Str(`"`)
+
+	for _, tok := range tokens {
+		if tok.Equal(EOF) {
+			continue
+		}
+
+		if tok.Type != token.String {
+			tcase.code = tcase.code.Append(tok.Value)
+		} else {
+			// WHY: on strings the parenthesis is removed when the token is produced
+			tcase.code = tcase.code.Append(par)
+			tcase.code = tcase.code.Append(tok.Value)
+			tcase.code = tcase.code.Append(par)
+		}
+	}
+
+	return tcase
+}
+
+func removeEOF(tokens []lexer.Tokval) ([]lexer.Tokval, bool) {
+	if len(tokens) == 0 {
+		return tokens, false
+	}
+
+	lasttoken := tokens[len(tokens)-1]
+	if lasttoken.Equal(EOF) {
+		// WHY: got nasty side effects bugs if dont copy tokens array here
+		// the provided slice underlying array is modified and all hell break loses =D
+		newtokens := make([]lexer.Tokval, len(tokens)-1)
+		copy(newtokens, tokens)
+		return newtokens, true
+	}
+
+	return tokens, false
 }
 
 func sfmt(format string, a ...interface{}) utf16.Str {
@@ -1157,6 +1386,19 @@ func hexToken(hex string) lexer.Tokval {
 	return lexer.Tokval{
 		Type:  token.Hexadecimal,
 		Value: Str(hex),
+	}
+}
+
+func semiColonToken() lexer.Tokval {
+	return semicolonTokenPos(0, 0)
+}
+
+func semicolonTokenPos(line uint, column uint) lexer.Tokval {
+	return lexer.Tokval{
+		Type:   token.SemiColon,
+		Value:  Str(";"),
+		Line:   line,
+		Column: column,
 	}
 }
 

@@ -53,5 +53,8 @@ publish-devimage: devimage
 dev-shell:
 	$(runabad) -ti $(devimg)
 	
+dev-d8:
+	$(runabad) $(devimg) d8 $(abadgopath)/$(code)
+	
 dev-test-e2e:
 	$(runabad) $(devimg) make install test-e2e
