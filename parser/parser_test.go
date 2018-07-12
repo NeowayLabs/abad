@@ -261,7 +261,7 @@ func TestParserFuncall(t *testing.T) {
 
 	runTests(t, []TestCase{
 		{
-			name: "OneParameter",
+			name: "NoParameter",
 			code: "a()",
 			want: ast.NewCallExpr(
 				ast.NewIdent(utf16.S("a")),
