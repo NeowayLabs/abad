@@ -176,32 +176,32 @@ func TestIdentifier(t *testing.T) {
 		{
 			name: "Underscore",
 			code: "_",
-			want: ast.NewIdent(utf16.S("_")),
+			want: identifier("_"),
 		},
 		{
 			name: "Dolar",
 			code: "$",
-			want: ast.NewIdent(utf16.S("$")),
+			want: identifier("$"),
 		},
 		{
 			name: "Console",
 			code: "console",
-			want: ast.NewIdent(utf16.S("console")),
+			want: identifier("console"),
 		},
 		{
 			name: "AngularSux",
 			code: "angular",
-			want: ast.NewIdent(utf16.S("angular")),
+			want: identifier("angular"),
 		},
 		{
 			name: "HyperdUnderscores",
 			code: "___hyped___",
-			want: ast.NewIdent(utf16.S("___hyped___")),
+			want: identifier("___hyped___"),
 		},
 		{
 			name: "LettersAndDolars",
 			code: "a$b$c",
-			want: ast.NewIdent(utf16.S("a$b$c")),
+			want: identifier("a$b$c"),
 		},
 	})
 }
@@ -211,10 +211,7 @@ func TestMemberExpr(t *testing.T) {
 		{
 			name: "AccessingLogOnConsole",
 			code: "console.log",
-			want: ast.NewMemberExpr(
-				ast.NewIdent(utf16.S("console")),
-				ast.NewIdent(utf16.S("log")),
-			),
+			want: memberExpr(identifier("console"), "log"),
 		},
 		{
 			name:    "ErrorAccessingEmptyMember",
@@ -224,34 +221,31 @@ func TestMemberExpr(t *testing.T) {
 		{
 			name: "AccessMemberOfSelf",
 			code: "self.a",
-			want: ast.NewMemberExpr(
-				ast.NewIdent(utf16.S("self")),
-				ast.NewIdent(utf16.S("a")),
-			),
+			want: memberExpr(identifier("self"), "a"),
 		},
 		{
 			name: "OneLevelOfNesting",
 			code: "self.self.self", // same as: (self.self).self
-			want: ast.NewMemberExpr(
-				ast.NewMemberExpr(ast.NewIdent(utf16.S("self")), ast.NewIdent(utf16.S("self"))),
-				ast.NewIdent(utf16.S("self")),
+			want: memberExpr(
+				memberExpr(identifier("self"), "self"),
+				"self",
 			),
 		},
 		{
 			name: "MultipleLevelsOfNesting",
 			code: "a.b.c.d.e.f", // same as: ((((a.b).c).d).e).f)
-			want: ast.NewMemberExpr(
-				ast.NewMemberExpr(
-					ast.NewMemberExpr(
-						ast.NewMemberExpr(
-							ast.NewMemberExpr(ast.NewIdent(utf16.S("a")), ast.NewIdent(utf16.S("b"))),
-							ast.NewIdent(utf16.S("c")),
+			want: memberExpr(
+				memberExpr(
+					memberExpr(
+						memberExpr(
+							memberExpr(identifier("a"), "b"),
+							"c",
 						),
-						ast.NewIdent(utf16.S("d")),
+						"d",
 					),
-					ast.NewIdent(utf16.S("e")),
+					"e",
 				),
-				ast.NewIdent(utf16.S("f")),
+				"f",
 			),
 		},
 	})
@@ -263,19 +257,13 @@ func TestParserFuncall(t *testing.T) {
 		{
 			name: "NoParameter",
 			code: "a()",
-			want: ast.NewCallExpr(
-				ast.NewIdent(utf16.S("a")),
-				[]ast.Node{},
-			),
+			want: callExpr(identifier("a"),[]ast.Node{}),
 		},
 		{
 			name: "MemberAccessWithoutParams",
 			code: "console.log()",
-			want: ast.NewCallExpr(
-				ast.NewMemberExpr(
-					ast.NewIdent(utf16.S("console")),
-					ast.NewIdent(utf16.S("log")),
-				),
+			want: callExpr(
+				memberExpr(identifier("console"), "log"),
 				[]ast.Node{},
 			),
 		},
@@ -296,24 +284,21 @@ func TestParserFuncall(t *testing.T) {
 		{
 			name: "MemberAccessWithDecimalParam",
 			code: "console.log(2.0)",
-			want: ast.NewCallExpr(
-				ast.NewMemberExpr(
-					ast.NewIdent(utf16.S("console")),
-					ast.NewIdent(utf16.S("log")),
-				),
+			want: callExpr(
+				memberExpr(identifier("console"), "log"),
 				[]ast.Node{ast.NewNumber(2.0)},
 			),
 		},
 		{
 			name: "NestedMemberAccessWithDecimalParam",
 			code: "self.console.log(2.0)",
-			want: ast.NewCallExpr(
-				ast.NewMemberExpr(
-					ast.NewMemberExpr(
-						ast.NewIdent(utf16.S("self")),
-						ast.NewIdent(utf16.S("console")),
+			want: callExpr(
+				memberExpr(
+					memberExpr(
+						identifier("self"),
+						"console",
 					),
-					ast.NewIdent(utf16.S("log")),
+					"log",
 				),
 				[]ast.Node{ast.NewNumber(2.0)},
 			),
@@ -370,4 +355,16 @@ func assertEqualNodes(t *testing.T, want []ast.Node, got []ast.Node) {
 			t.Errorf("wanted node[%d][%v] != got node[%d][%v]", i, w, i, g)
 		}
 	}
+}
+
+func identifier(val string) ast.Ident {
+	return ast.NewIdent(utf16.S(val))
+}
+
+func memberExpr(obj ast.Node, memberName string) *ast.MemberExpr {
+	return ast.NewMemberExpr(obj, identifier(memberName))
+}
+
+func callExpr(callee ast.Node, args []ast.Node) *ast.CallExpr {
+	return ast.NewCallExpr(callee, args)
 }
