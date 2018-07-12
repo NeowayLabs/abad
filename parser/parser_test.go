@@ -291,11 +291,73 @@ func TestParserFuncall(t *testing.T) {
 			},
 		},
 		{
-			name: "MultipleCallsSplitBySemiColonNoParams",
+			name: "MultipleCallsSplitByLotsOfSemiColonsNewlines",
+			code: "a();\n\n;\n;;;b();\n;",
+			wants: []ast.Node{
+				callExpr(identifier("a"), []ast.Node{}),
+				callExpr(identifier("b"), []ast.Node{}),
+			},
+		},
+		{
+			name: "MultipleCallsSplitBySemiColon",
 			code: "a();b();",
 			wants: []ast.Node{
 				callExpr(identifier("a"), []ast.Node{}),
 				callExpr(identifier("b"), []ast.Node{}),
+			},
+		},
+		{
+			name: "MultipleCallsSplitBySemiColonNewline",
+			code: "a();\nb();",
+			wants: []ast.Node{
+				callExpr(identifier("a"), []ast.Node{}),
+				callExpr(identifier("b"), []ast.Node{}),
+			},
+		},
+		{
+			name: "MultipleCallsSplitBySemiColonWithParams",
+			code: "a(1.1);b(0xFF);c(666);",
+			wants: []ast.Node{
+				callExpr(identifier("a"), []ast.Node{ number(1.1)} ),
+				callExpr(identifier("b"), []ast.Node{ intNumber(255) }),
+				callExpr(identifier("c"), []ast.Node{ intNumber(666) }),
+			},
+		},
+		{
+			name: "MultipleCallsSplitBySemiColonNewlinesWithParams",
+			code: "a(1.1);\nb(0xFF);\nc(666);",
+			wants: []ast.Node{
+				callExpr(identifier("a"), []ast.Node{ number(1.1)} ),
+				callExpr(identifier("b"), []ast.Node{ intNumber(255) }),
+				callExpr(identifier("c"), []ast.Node{ intNumber(666) }),
+			},
+		},
+		{
+			name: "MultipleMemberAccessSplitBySemicolon",
+			code: "console.log(2.0);console.log(666);",
+			wants: []ast.Node {
+				callExpr(
+					memberExpr(identifier("console"), "log"),
+					[]ast.Node{ number(2.0) },
+				),
+				callExpr(
+					memberExpr(identifier("console"), "log"),
+					[]ast.Node{ intNumber(666) },
+				),
+			},
+		},
+		{
+			name: "MultipleMemberAccessSplitBySemicolonNewline",
+			code: "console.log(2.0);\nconsole.log(666);",
+			wants: []ast.Node {
+				callExpr(
+					memberExpr(identifier("console"), "log"),
+					[]ast.Node{ number(2.0) },
+				),
+				callExpr(
+					memberExpr(identifier("console"), "log"),
+					[]ast.Node{ intNumber(666) },
+				),
 			},
 		},
 		{

@@ -75,8 +75,8 @@ func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 	p.scry(1)
 	tok := p.lookahead[0]
 	
-	// FIXME: This will probably not be enough to handle semicolon on the future
-	for tok.Type == token.SemiColon {
+	// FIXME: This will probably not be enough to handle semicolon/newline on the future
+	for tok.Type == token.SemiColon || tok.Type == token.Newline {
 		p.forget(1)
 		p.scry(1)
 		tok = p.lookahead[0]
