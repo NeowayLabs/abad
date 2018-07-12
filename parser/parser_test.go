@@ -261,6 +261,14 @@ func TestParserFuncall(t *testing.T) {
 
 	runTests(t, []TestCase{
 		{
+			name: "OneParameter",
+			code: "a()",
+			want: ast.NewCallExpr(
+				ast.NewIdent(utf16.S("a")),
+				[]ast.Node{},
+			),
+		},
+		{
 			name: "MemberAccessWithoutParams",
 			code: "console.log()",
 			want: ast.NewCallExpr(
@@ -271,6 +279,20 @@ func TestParserFuncall(t *testing.T) {
 				[]ast.Node{},
 			),
 		},
+		//{
+		//	name: "MultipleCallsNoParams",
+		//	code: "a();\nb();",
+		//	wants: []ast.Node{
+		//		ast.NewCallExpr(
+		//			ast.NewIdent(utf16.S("a")),
+		//			[]ast.Node{},
+		//		),
+		//		ast.NewCallExpr(
+		//			ast.NewIdent(utf16.S("b")),
+		//			[]ast.Node{},
+		//		),
+		//	},
+		//},
 		{
 			name: "MemberAccessWithDecimalParam",
 			code: "console.log(2.0)",
@@ -299,6 +321,11 @@ func TestParserFuncall(t *testing.T) {
 	})
 }
 
+// TestCase is the description of an parser related test.
+// The fields want and wants are mutually exclusive, you should
+// never provide both. If "wants" is provided the "want" field will be ignored.
+//
+// This is supposed to make it easier to test single nodes and multiple nodes.
 type TestCase struct {
 	name    string
 	code    string
