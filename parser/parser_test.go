@@ -257,22 +257,22 @@ func TestParserFuncall(t *testing.T) {
 		{
 			name: "NoParameter",
 			code: "a()",
-			want: callExpr(identifier("a"),[]ast.Node{}),
+			want: callExpr(identifier("a"), []ast.Node{}),
 		},
 		{
 			name: "IntParameter",
 			code: "b(1)",
-			want: callExpr(identifier("b"),[]ast.Node{ intNumber(1) }),
+			want: callExpr(identifier("b"), []ast.Node{intNumber(1)}),
 		},
 		{
 			name: "HexParameter",
 			code: "d(0xFF)",
-			want: callExpr(identifier("d"),[]ast.Node{ intNumber(255) }),
+			want: callExpr(identifier("d"), []ast.Node{intNumber(255)}),
 		},
 		{
 			name: "NumberParameter",
 			code: "c(6.66)",
-			want: callExpr(identifier("c"),[]ast.Node{ number(6.66) }),
+			want: callExpr(identifier("c"), []ast.Node{number(6.66)}),
 		},
 		{
 			name: "MemberAccessWithoutParams",
@@ -318,45 +318,45 @@ func TestParserFuncall(t *testing.T) {
 			name: "MultipleCallsSplitBySemiColonWithParams",
 			code: "a(1.1);b(0xFF);c(666);",
 			wants: []ast.Node{
-				callExpr(identifier("a"), []ast.Node{ number(1.1)} ),
-				callExpr(identifier("b"), []ast.Node{ intNumber(255) }),
-				callExpr(identifier("c"), []ast.Node{ intNumber(666) }),
+				callExpr(identifier("a"), []ast.Node{number(1.1)}),
+				callExpr(identifier("b"), []ast.Node{intNumber(255)}),
+				callExpr(identifier("c"), []ast.Node{intNumber(666)}),
 			},
 		},
 		{
 			name: "MultipleCallsSplitBySemiColonNewlinesWithParams",
 			code: "a(1.1);\nb(0xFF);\nc(666);",
 			wants: []ast.Node{
-				callExpr(identifier("a"), []ast.Node{ number(1.1)} ),
-				callExpr(identifier("b"), []ast.Node{ intNumber(255) }),
-				callExpr(identifier("c"), []ast.Node{ intNumber(666) }),
+				callExpr(identifier("a"), []ast.Node{number(1.1)}),
+				callExpr(identifier("b"), []ast.Node{intNumber(255)}),
+				callExpr(identifier("c"), []ast.Node{intNumber(666)}),
 			},
 		},
 		{
 			name: "MultipleMemberAccessSplitBySemicolon",
 			code: "console.log(2.0);console.log(666);",
-			wants: []ast.Node {
+			wants: []ast.Node{
 				callExpr(
 					memberExpr(identifier("console"), "log"),
-					[]ast.Node{ number(2.0) },
+					[]ast.Node{number(2.0)},
 				),
 				callExpr(
 					memberExpr(identifier("console"), "log"),
-					[]ast.Node{ intNumber(666) },
+					[]ast.Node{intNumber(666)},
 				),
 			},
 		},
 		{
 			name: "MultipleMemberAccessSplitBySemicolonNewline",
 			code: "console.log(2.0);\nconsole.log(666);",
-			wants: []ast.Node {
+			wants: []ast.Node{
 				callExpr(
 					memberExpr(identifier("console"), "log"),
-					[]ast.Node{ number(2.0) },
+					[]ast.Node{number(2.0)},
 				),
 				callExpr(
 					memberExpr(identifier("console"), "log"),
-					[]ast.Node{ intNumber(666) },
+					[]ast.Node{intNumber(666)},
 				),
 			},
 		},

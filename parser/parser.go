@@ -74,14 +74,14 @@ func (p *Parser) parse() (*ast.Program, error) {
 func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 	p.scry(1)
 	tok := p.lookahead[0]
-	
+
 	// FIXME: This will probably not be enough to handle semicolon/newline on the future
 	for tok.Type == token.SemiColon || tok.Type == token.Newline {
 		p.forget(1)
 		p.scry(1)
 		tok = p.lookahead[0]
 	}
-	
+
 	if tok.Type == token.EOF {
 		return nil, true, nil
 	}
@@ -90,7 +90,6 @@ func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 		_, err := parseIllegal(p)
 		return nil, false, err
 	}
-	
 
 	getParser := func() (parserfn, bool) {
 		for _, parsers := range []map[token.Type]parserfn{
