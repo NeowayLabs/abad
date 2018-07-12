@@ -11,7 +11,6 @@ import (
 	"github.com/madlambda/spells/assert"
 )
 
-
 var E = fmt.Errorf
 
 func TestParserNumbers(t *testing.T) {
@@ -19,82 +18,82 @@ func TestParserNumbers(t *testing.T) {
 	runTests(t, []TestCase{
 		{
 			name: "SmallDecimal",
-			code:    "1",
+			code: "1",
 			want: ast.NewIntNumber(1),
 		},
 		{
 			name: "BigDecimal",
-			code:    "1234567890",
+			code: "1234567890",
 			want: ast.NewIntNumber(1234567890),
 		},
 		{
-			name: "InvalidDecimal",
-			code:       "1a",
+			name:    "InvalidDecimal",
+			code:    "1a",
 			wantErr: E("tests.js:1:0: invalid token: 1a"),
 		},
 		{
 			name: "SmallHexadecimal",
-			code:    "0x0",
+			code: "0x0",
 			want: ast.NewIntNumber(0),
 		},
 		{
 			name: "BigHexaDecimal",
-			code:    "0x1234567890abcdef",
+			code: "0x1234567890abcdef",
 			want: ast.NewIntNumber(0x1234567890abcdef),
 		},
 		{
 			name: "HexadecimalFF",
-			code:    "0xff",
+			code: "0xff",
 			want: ast.NewIntNumber(0xff),
 		},
 		{
 			name: "SmallRealNumber",
-			code:    ".1",
+			code: ".1",
 			want: ast.NewNumber(0.1),
 		},
 		{
 			name: "ZeroRealNumer",
-			code:    ".0000",
+			code: ".0000",
 			want: ast.NewNumber(0.0),
 		},
 		{
 			name: "SomeDecimal",
-			code:    "1234",
+			code: "1234",
 			want: ast.NewIntNumber(1234),
 		},
 		{
 			name: "SmallRealNumberWithMultipleDigits",
-			code:    "0.12345",
+			code: "0.12345",
 			want: ast.NewNumber(0.12345),
 		},
 		{
-			name: "InvalidRealNumberWithLetter",
-			code:       "0.a",
+			name:    "InvalidRealNumberWithLetter",
+			code:    "0.a",
 			wantErr: E("tests.js:1:0: invalid token: 0.a"),
 		},
 		{
-			name: "InvalidRealNumberWithTwoDots",
-			code:       "12.13.",
+			name:    "InvalidRealNumberWithTwoDots",
+			code:    "12.13.",
 			wantErr: E("tests.js:1:0: invalid token: 12.13."),
 		},
 		{
 			name: "RealNumberWithExponent",
-			code:    "1.0e10",
+			code: "1.0e10",
 			want: ast.NewNumber(1.0e10),
 		},
 		{
 			name: "DecimalWithExponent",
-			code:    "1e10",
+			code: "1e10",
 			want: ast.NewNumber(1e10),
 		},
 		{
 			name: "SmallRealNumberWithExponent",
-			code:    ".1e10",
+			code: ".1e10",
 			want: ast.NewNumber(.1e10),
 		},
 		{
 			name: "DecimalWithNegativeExponent",
-			code:    "1e-10",
+			code: "1e-10",
 			want: ast.NewNumber(1e-10),
 		},
 		{
@@ -140,8 +139,8 @@ func TestParserNumbers(t *testing.T) {
 			),
 		},
 		{
-			name: "InvalidNegativeRealNumber",
-			code:       "-12.13.",
+			name:    "InvalidNegativeRealNumber",
+			code:    "-12.13.",
 			wantErr: E("tests.js:1:0: invalid token: 12.13."),
 		},
 		{
@@ -181,12 +180,12 @@ func TestIdentifier(t *testing.T) {
 		},
 		{
 			name: "Dolar",
-			code:    "$",
+			code: "$",
 			want: ast.NewIdent(utf16.S("$")),
 		},
 		{
 			name: "Console",
-			code:    "console",
+			code: "console",
 			want: ast.NewIdent(utf16.S("console")),
 		},
 		{
@@ -196,7 +195,7 @@ func TestIdentifier(t *testing.T) {
 		},
 		{
 			name: "HyperdUnderscores",
-			code:    "___hyped___",
+			code: "___hyped___",
 			want: ast.NewIdent(utf16.S("___hyped___")),
 		},
 		{
@@ -218,8 +217,8 @@ func TestMemberExpr(t *testing.T) {
 			),
 		},
 		{
-			name: "ErrorAccessingEmptyMember",
-			code: "console.",
+			name:    "ErrorAccessingEmptyMember",
+			code:    "console.",
 			wantErr: E("tests.js:1:0: unexpected EOF"),
 		},
 		{
@@ -321,8 +320,8 @@ func (tc *TestCase) run(t *testing.T) {
 			assertEqualNodes(t, []ast.Node{tc.want}, tree.Nodes)
 			return
 		}
-		
-		assertEqualNodes(t, tc.wants, tree.Nodes) 
+
+		assertEqualNodes(t, tc.wants, tree.Nodes)
 	})
 }
 
@@ -337,11 +336,11 @@ func assertEqualNodes(t *testing.T, want []ast.Node, got []ast.Node) {
 		t.Errorf("want[%d] nodes but got[%d] nodes", len(want), len(got))
 		t.Fatalf("want[%v] != got[%v]", want, got)
 	}
-	
+
 	for i, w := range want {
 		g := got[i]
 		if !w.Equal(g) {
 			t.Errorf("wanted node[%d][%v] != got node[%d][%v]", i, w, i, g)
 		}
-	} 
+	}
 }
