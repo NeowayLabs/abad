@@ -260,6 +260,21 @@ func TestParserFuncall(t *testing.T) {
 			want: callExpr(identifier("a"),[]ast.Node{}),
 		},
 		{
+			name: "IntParameter",
+			code: "b(1)",
+			want: callExpr(identifier("b"),[]ast.Node{ intNumber(1) }),
+		},
+		{
+			name: "HexParameter",
+			code: "d(0xFF)",
+			want: callExpr(identifier("d"),[]ast.Node{ intNumber(255) }),
+		},
+		{
+			name: "NumberParameter",
+			code: "c(6.66)",
+			want: callExpr(identifier("c"),[]ast.Node{ number(6.66) }),
+		},
+		{
 			name: "MemberAccessWithoutParams",
 			code: "console.log()",
 			want: callExpr(
@@ -267,20 +282,22 @@ func TestParserFuncall(t *testing.T) {
 				[]ast.Node{},
 			),
 		},
-		//{
-		//	name: "MultipleCallsNoParams",
-		//	code: "a();\nb();",
-		//	wants: []ast.Node{
-		//		ast.NewCallExpr(
-		//			ast.NewIdent(utf16.S("a")),
-		//			[]ast.Node{},
-		//		),
-		//		ast.NewCallExpr(
-		//			ast.NewIdent(utf16.S("b")),
-		//			[]ast.Node{},
-		//		),
-		//	},
-		//},
+		{
+			name: "MultipleCallsSplitByLotsOfSemiColons",
+			code: "a();;;;;b();;",
+			wants: []ast.Node{
+				callExpr(identifier("a"), []ast.Node{}),
+				callExpr(identifier("b"), []ast.Node{}),
+			},
+		},
+		{
+			name: "MultipleCallsSplitBySemiColonNoParams",
+			code: "a();b();",
+			wants: []ast.Node{
+				callExpr(identifier("a"), []ast.Node{}),
+				callExpr(identifier("b"), []ast.Node{}),
+			},
+		},
 		{
 			name: "MemberAccessWithDecimalParam",
 			code: "console.log(2.0)",
@@ -355,6 +372,14 @@ func assertEqualNodes(t *testing.T, want []ast.Node, got []ast.Node) {
 			t.Errorf("wanted node[%d][%v] != got node[%d][%v]", i, w, i, g)
 		}
 	}
+}
+
+func number(n float64) ast.Number {
+	return ast.NewNumber(n)
+}
+
+func intNumber(n int64) ast.Number {
+	return ast.NewIntNumber(n)
 }
 
 func identifier(val string) ast.Ident {

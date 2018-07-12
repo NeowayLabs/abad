@@ -73,8 +73,15 @@ func (p *Parser) parse() (*ast.Program, error) {
 
 func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 	p.scry(1)
-
 	tok := p.lookahead[0]
+	
+	// FIXME: This will probably not be enough to handle semicolon on the future
+	for tok.Type == token.SemiColon {
+		p.forget(1)
+		p.scry(1)
+		tok = p.lookahead[0]
+	}
+	
 	if tok.Type == token.EOF {
 		return nil, true, nil
 	}
@@ -83,6 +90,7 @@ func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 		_, err := parseIllegal(p)
 		return nil, false, err
 	}
+	
 
 	getParser := func() (parserfn, bool) {
 		for _, parsers := range []map[token.Type]parserfn{
@@ -134,7 +142,7 @@ func (p *Parser) next() lexer.Tokval {
 
 // scry foretell the future using a crystal ball. Amount is how much
 // of the future you want to foresee.
-func (p *Parser) scry(amount int) []lexer.Tokval {
+func (p *Parser) scry(amount int) {
 	if len(p.lookahead)+amount > 2 {
 		panic("lookahead > 2")
 	}
@@ -146,8 +154,6 @@ func (p *Parser) scry(amount int) []lexer.Tokval {
 			break
 		}
 	}
-
-	return p.lookahead
 }
 
 // forget what you had foresee
