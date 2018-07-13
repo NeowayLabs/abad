@@ -881,7 +881,6 @@ func TestInvalidStrings(t *testing.T) {
 	runTests(t, cases)
 }
 
-
 func TestIllegalNumericLiterals(t *testing.T) {
 
 	corruptedHex := messStr(Str("0x01234"), 4)

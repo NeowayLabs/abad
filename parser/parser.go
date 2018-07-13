@@ -73,8 +73,15 @@ func (p *Parser) parse() (*ast.Program, error) {
 
 func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 	p.scry(1)
-
 	tok := p.lookahead[0]
+
+	// FIXME: This will probably not be enough to handle semicolon/newline on the future
+	for tok.Type == token.SemiColon || tok.Type == token.Newline {
+		p.forget(1)
+		p.scry(1)
+		tok = p.lookahead[0]
+	}
+
 	if tok.Type == token.EOF {
 		return nil, true, nil
 	}
@@ -84,24 +91,26 @@ func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 		return nil, false, err
 	}
 
-	var parser parserfn
-	var hasparser bool
-
-	for _, parsers := range []map[token.Type]parserfn{
-		keywordParsers,
-		literalParsers,
-		unaryParsers,
-		{
-			token.Ident: parseIdentExpr,
-		},
-	} {
-		parser, hasparser = parsers[tok.Type]
-		if hasparser {
-			break
+	getParser := func() (parserfn, bool) {
+		for _, parsers := range []map[token.Type]parserfn{
+			keywordParsers,
+			literalParsers,
+			unaryParsers,
+			{
+				token.Ident: parseIdentExpr,
+			},
+		} {
+			parser, ok := parsers[tok.Type]
+			if ok {
+				return parser, true
+			}
 		}
+		return nil, false
 	}
 
-	if !hasparser {
+	parser, ok := getParser()
+
+	if !ok {
 		return nil, false, p.errorf(tok, "invalid token: %s", tok)
 	}
 
@@ -114,7 +123,8 @@ func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 	// in the lookahead buffer.
 	if len(p.lookahead) != 0 {
 		panic(fmt.Sprintf(
-			"parsers not handling lookahead correctly: %v",
+			"parser for token[%v] not handled lookahead correctly, lookahead has[%v] but should be empty",
+			tok,
 			p.lookahead))
 	}
 	return node, false, nil
@@ -131,7 +141,7 @@ func (p *Parser) next() lexer.Tokval {
 
 // scry foretell the future using a crystal ball. Amount is how much
 // of the future you want to foresee.
-func (p *Parser) scry(amount int) []lexer.Tokval {
+func (p *Parser) scry(amount int) {
 	if len(p.lookahead)+amount > 2 {
 		panic("lookahead > 2")
 	}
@@ -143,8 +153,6 @@ func (p *Parser) scry(amount int) []lexer.Tokval {
 			break
 		}
 	}
-
-	return p.lookahead
 }
 
 // forget what you had foresee
@@ -333,11 +341,16 @@ func parseFuncallArgs(p *Parser) ([]ast.Node, error) {
 // lookahead[0] = token.Ident
 // lookahead[1] = token.LParen
 func parseCallExpr(p *Parser) (ast.Node, error) {
-	return nil, nil
+	ident := p.lookahead[0]
+	p.forget(2) // drops <ident>(
+	args, err := parseFuncallArgs(p)
+	if err != nil {
+		return nil, err
+	}
+	return ast.NewCallExpr(ast.NewIdent(ident.Value), args), nil
 }
 
 // TODO(i4k): implement line and column of error
-func (p *Parser) errorf(_ lexer.Tokval, f string, a ...interface{},
-) error {
+func (p *Parser) errorf(_ lexer.Tokval, f string, a ...interface{}) error {
 	return fmt.Errorf("%s:1:0: %s", p.filename, fmt.Sprintf(f, a...))
 }
