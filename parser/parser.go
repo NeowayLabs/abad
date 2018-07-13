@@ -29,6 +29,7 @@ var (
 	literalParsers = map[token.Type]parserfn{
 		token.Decimal:     parseDecimal,
 		token.Hexadecimal: parseHex,
+		token.String: parseString,
 	}
 	unaryParsers map[token.Type]parserfn
 )
@@ -164,6 +165,13 @@ func parseIllegal(p *Parser) (ast.Node, error) {
 	tok := p.lookahead[0]
 	return nil, p.errorf(tok, "invalid token: %s",
 		tok.Value)
+}
+
+func parseString(p *Parser) (ast.Node, error) {
+	tok := p.lookahead[0]
+	defer p.forget(1)
+
+	return ast.NewString(tok.Value), nil
 }
 
 func parseDecimal(p *Parser) (ast.Node, error) {

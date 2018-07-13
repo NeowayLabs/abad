@@ -206,6 +206,31 @@ func TestIdentifier(t *testing.T) {
 	})
 }
 
+func TestString(t *testing.T) {
+	runTests(t, []TestCase{
+		{
+			name: "Empty",
+			code: `""`,
+			want: str(""),
+		},
+		{
+			name: "JustSpace",
+			code: `" "`,
+			want: str(" "),
+		},
+		{
+			name: "CommonName",
+			code: `"inferno"`,
+			want: str("inferno"),
+		},
+		{
+			name: "LotsOfChars",
+			code: `"!@#$%&*()]}[{/?^~ç"`,
+			want: str("!@#$%&*()]}[{/?^~ç"),
+		},
+	})
+}
+
 func TestMemberExpr(t *testing.T) {
 	runTests(t, []TestCase{
 		{
@@ -446,6 +471,10 @@ func intNumber(n int64) ast.Number {
 
 func identifier(val string) ast.Ident {
 	return ast.NewIdent(utf16.S(val))
+}
+
+func str(val string) ast.String {
+	return ast.NewString(utf16.S(val))
 }
 
 func memberExpr(obj ast.Node, memberName string) *ast.MemberExpr {
