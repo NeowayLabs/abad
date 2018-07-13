@@ -14,8 +14,6 @@ import (
 type (
 	// Abad interpreter, a very bad one.
 	Abad struct {
-		filename string
-
 		global *types.DataObject
 	}
 )
@@ -25,41 +23,22 @@ var (
 )
 
 // NewAbad creates a new ecma script evaluator.
-func NewAbad(filename string) (*Abad, error) {
-	a := &Abad{
-		filename: filename,
-	}
-
-	err := a.setup()
-	if err != nil {
-		return nil, err
-	}
-	return a, nil
+func NewAbad() (*Abad, error) {
+	a := &Abad{}
+	return a, a.setup()
 }
 
-func (a *Abad) setup() error {
-	console, err := builtins.NewConsole()
-	if err != nil {
-		return err
-	}
-
-	global := types.NewBaseDataObject()
-	err = global.Put(consoleAttr, console, true)
-	if err != nil {
-		return err
-	}
-
-	a.global = global
-	return nil
-}
-
-// Eval the code.
+// Eval the code when no filename is involved (interactive/repl mode).
 func (a *Abad) Eval(code string) (types.Value, error) {
-	program, err := parser.Parse(a.filename, code)
+	return a.EvalFile("<interactive>", code)
+}
+
+// EvalFile the code that was obtained from filename.
+func (a *Abad) EvalFile(filename string, code string) (types.Value, error) {
+	program, err := parser.Parse(filename, code)
 	if err != nil {
 		return nil, err
 	}
-
 	return a.eval(program)
 }
 
@@ -79,6 +58,22 @@ func (a *Abad) eval(n ast.Node) (types.Value, error) {
 	}
 
 	return ret, err
+}
+
+func (a *Abad) setup() error {
+	console, err := builtins.NewConsole()
+	if err != nil {
+		return err
+	}
+
+	global := types.NewBaseDataObject()
+	err = global.Put(consoleAttr, console, true)
+	if err != nil {
+		return err
+	}
+
+	a.global = global
+	return nil
 }
 
 func (a *Abad) evalProgram(stmts *ast.Program) (types.Value, error) {

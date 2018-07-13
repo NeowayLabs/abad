@@ -54,9 +54,9 @@ func TestNumberEval(t *testing.T) {
 			err:  E("<anonymous>:1:0: invalid token: 0.1."),
 		},
 	} {
-		js, err := abad.NewAbad("<anonymous>")
+		js, err := abad.NewAbad()
 		assert.NoError(t, err, "failed to start ecma")
-		obj, err := js.Eval(tc.code)
+		obj, err := js.EvalFile("<anonymous>", tc.code)
 		assert.EqualErrs(t, tc.err, err, "errors differ")
 
 		if err != nil {
@@ -89,7 +89,7 @@ func TestIdentExprEval(t *testing.T) {
 			err:  E("[angular] is not defined"),
 		},
 	} {
-		js, err := abad.NewAbad("<anonymous>")
+		js, err := abad.NewAbad()
 		assert.NoError(t, err, "failed to start interpreter")
 		val, err := js.Eval(tc.code)
 		assert.EqualErrs(t, tc.err, err, "errors differ")

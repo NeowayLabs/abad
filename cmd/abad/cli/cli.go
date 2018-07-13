@@ -17,8 +17,8 @@ type (
 	}
 )
 
-func NewCli(fname string, in io.Reader, out io.Writer) (*Cli, error) {
-	ecma, err := abad.NewAbad(fname)
+func NewCli(in io.Reader, out io.Writer) (*Cli, error) {
+	ecma, err := abad.NewAbad()
 	if err != nil {
 		return nil, err
 	}

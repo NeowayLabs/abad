@@ -39,7 +39,7 @@ func TestCli(t *testing.T) {
 	} {
 		var inb bytes.Buffer
 		var outb bytes.Buffer
-		cli, err := cli.NewCli("test.js", &inb, &outb)
+		cli, err := cli.NewCli(&inb, &outb)
 		assert.NoError(t, err, "failed to start the cli")
 
 		_, err = inb.WriteString(tc.in + "\n")
