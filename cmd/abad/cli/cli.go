@@ -51,7 +51,10 @@ func (c *Cli) ReadEval() {
 		return
 	}
 
-	fmt.Fprintf(c.out, "< %s\n", obj.ToString().String())
+	if obj != nil {
+		fmt.Fprintf(c.out, "< %s\n", obj.ToString().String())
+	}
+
 }
 
 func (c *Cli) Repl() {
