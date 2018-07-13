@@ -65,7 +65,7 @@ func RunWithInterpreters(
 			return nil
 		}
 
-		testname := strings.TrimPrefix(path, samplesdir)
+		testname := strings.TrimPrefix(path, samplesdir)[1:]
 		t.Run(testname, func(t *testing.T) {
 			err, want := reference(path)
 			assert.NoError(t, err, "running reference interpreter")
