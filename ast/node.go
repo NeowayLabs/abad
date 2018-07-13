@@ -32,6 +32,8 @@ type (
 	}
 
 	Number float64
+	
+	String utf16.Str
 
 	// UnaryExpr is a unary expression (-a, +a, ~a, and so on)
 	UnaryExpr struct {
@@ -61,38 +63,37 @@ const (
 	exprBegin
 
 	NodeNumber
+	NodeString
 	NodeUnaryExpr
 	NodeMemberExpr
 	NodeCallExpr
 	NodeIdent
 
 	exprEnd
+	
+	endNodeTypes
 )
+
+var nodeTypesNames [endNodeTypes]string = [...]string{
+	NodeProgram: "PROGRAM",
+	NodeFnBody: "FNBODY",
+	NodeNumber: "NUMBER",
+	NodeUnaryExpr: "UNARYEXPR",
+	NodeMemberExpr: "MEMBEREXPR",
+	NodeCallExpr: "CALLEXPR",
+	NodeIdent: "IDENT",
+	exprEnd: "",
+}
 
 // console.log(Number.EPSILON);
 // 2.220446049250313e-16
 var ε = math.Pow(2, -52)
 
 func (t NodeType) String() string {
-	switch t {
-	case NodeProgram:
-		return "PROGRAM"
-	case NodeFnBody:
-		return "FNBODY"
-	case NodeNumber:
-		return "NUMBER"
-	case NodeUnaryExpr:
-		return "UNARYEXPR"
-	case NodeMemberExpr:
-		return "MEMBEREXPR"
-	case NodeCallExpr:
-		return "CALLEXPR"
-	case NodeIdent:
-		return "IDENT"
+	if t >= endNodeTypes {
+		panic(fmt.Sprintf("unexpected node type: %d", t))
 	}
-
-	panic(fmt.Sprintf("unexpected node type: %d", t))
-	return ""
+	return nodeTypesNames[t]
 }
 
 func IsExpr(node Node) bool {
@@ -138,6 +139,27 @@ func (f *FnBody) String() string {
 		stmts = append(stmts, stmt.String())
 	}
 	return strings.Join(stmts, "\n")
+}
+
+func NewString(a utf16.Str) String {
+	return String(a)
+}
+
+func (String) Type() NodeType {
+	return NodeString
+}
+
+func (s String) Equal(other Node) bool {
+	otherStr, ok := other.(String)
+	if !ok {
+		return false
+	}
+	// Not efficient...but lazy
+	return s.String() == otherStr.String()
+}
+
+func (s String) String() string {
+	return utf16.Str(s).String()
 }
 
 func NewNumber(a float64) Number {
