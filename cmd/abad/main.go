@@ -11,11 +11,10 @@ import (
 	"github.com/NeowayLabs/abad/cmd/abad/cli"
 )
 
-const defaultFilename = "<anonymous>"
 
 func repl() error {
 
-	cli, err := cli.NewCli(defaultFilename, os.Stdin, os.Stdout)
+	cli, err := cli.NewCli(os.Stdin, os.Stdout)
 	if err != nil {
 		return err
 	}
@@ -29,15 +28,11 @@ func eval(codepath string) error {
 	if err != nil {
 		return err
 	}
-	return evalCode(filepath.Base(codepath), string(code))
-}
-
-func evalCode(filename string, code string) error {
-	abadjs, err := abad.NewAbad(filename)
+	abadjs, err := abad.NewAbad()
 	if err != nil {
 		return err
 	}
-	_, err = abadjs.Eval(code)
+	_, err = abadjs.EvalFile(filepath.Base(codepath), string(code))
 	return err
 }
 
@@ -56,7 +51,10 @@ func main() {
 	}
 
 	if execute != "" {
-		abortonerr(evalCode(defaultFilename, execute))
+		abadjs, err := abad.NewAbad()
+		abortonerr(err)
+		_, err = abadjs.Eval(execute)
+		abortonerr(err)
 		return
 	}
 
