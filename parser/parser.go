@@ -29,7 +29,7 @@ var (
 	literalParsers = map[token.Type]parserfn{
 		token.Decimal:     parseDecimal,
 		token.Hexadecimal: parseHex,
-		token.String: parseString,
+		token.String:      parseString,
 	}
 	unaryParsers map[token.Type]parserfn
 )

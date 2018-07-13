@@ -11,7 +11,6 @@ import (
 	"github.com/NeowayLabs/abad/cmd/abad/cli"
 )
 
-
 func repl() error {
 
 	cli, err := cli.NewCli(os.Stdin, os.Stdout)
