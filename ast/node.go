@@ -74,7 +74,7 @@ const (
 	endNodeTypes
 )
 
-var nodeTypesNames [endNodeTypes]string = [...]string{
+var nodeTypesNames = [...]string{
 	NodeProgram:    "PROGRAM",
 	NodeFnBody:     "FNBODY",
 	NodeNumber:     "NUMBER",
