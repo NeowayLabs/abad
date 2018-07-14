@@ -317,7 +317,7 @@ func parseFuncallArgs(p *Parser) ([]ast.Node, error) {
 	var tok lexer.Tokval
 
 	for tok = p.lookahead[0]; hasMoreArgs(tok.Type); {
-	
+
 		parser, hasParser := literalParsers[tok.Type]
 		if hasParser {
 			parsed, err := parser(p)
@@ -325,7 +325,7 @@ func parseFuncallArgs(p *Parser) ([]ast.Node, error) {
 				return nil, err
 			}
 			args = append(args, parsed)
-		} else {		
+		} else {
 			return nil, p.errorf(tok, "error parsing funcall args: unexpected token %s", tok.Value)
 		}
 

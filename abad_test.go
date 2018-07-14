@@ -110,17 +110,17 @@ func TestStringEval(t *testing.T) {
 	for _, tc := range []struct {
 		name string
 		code string
-		want  string
+		want string
 	}{
 		{
 			name: "Empty",
 			code: `""`,
-			want:  "",
+			want: "",
 		},
 		{
 			name: "Gibberish",
 			code: `"!@#$$%&*()_+={}^/;~]/.,"`,
-			want:  "!@#$$%&*()_+={}^/;~]/.,",
+			want: "!@#$$%&*()_+={}^/;~]/.,",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

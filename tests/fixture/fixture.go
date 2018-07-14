@@ -85,11 +85,11 @@ func RunWithInterpreters(
 
 func assertSuccessRun(t *testing.T, r Result, err error) {
 	t.Helper()
-	
+
 	if err == nil {
 		return
 	}
-	
+
 	t.Fatalf("\nfatal error:[%s]\n\nstdout:[%s]\n\nstderr:[%s]\n\n", err, r.Stdout, r.Stderr)
 }
 
