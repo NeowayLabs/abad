@@ -51,7 +51,7 @@ func TestNumberEval(t *testing.T) {
 		},
 		{
 			code: "0.1.",
-			err:  E("<anonymous>:1:0: invalid token: 0.1."),
+			err:  E("parser error: <anonymous>:1:0: invalid token: 0.1."),
 		},
 	} {
 		js, err := abad.NewAbad()

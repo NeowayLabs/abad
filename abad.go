@@ -37,7 +37,7 @@ func (a *Abad) Eval(code string) (types.Value, error) {
 func (a *Abad) EvalFile(filename string, code string) (types.Value, error) {
 	program, err := parser.Parse(filename, code)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parser error: %s", err)
 	}
 	return a.eval(program)
 }
