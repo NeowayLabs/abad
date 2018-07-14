@@ -105,3 +105,35 @@ func TestIdentExprEval(t *testing.T) {
 		assert.EqualStrings(t, tc.ret, gotstr, "strings don't match")
 	}
 }
+
+func TestStringEval(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		code string
+		want  string
+	}{
+		{
+			name: "Empty",
+			code: `""`,
+			want:  "",
+		},
+		{
+			name: "Gibberish",
+			code: `"!@#$$%&*()_+={}^/;~]/.,"`,
+			want:  "!@#$$%&*()_+={}^/;~]/.,",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			js, err := abad.NewAbad()
+			assert.NoError(t, err, "failed to start interpreter")
+			val, err := js.Eval(tc.code)
+
+			assert.NoError(t, err, "unexpected error evaluating code")
+			str := val.(types.String)
+
+			got := str.String()
+
+			assert.EqualStrings(t, tc.want, got, "output does not match expectation")
+		})
+	}
+}

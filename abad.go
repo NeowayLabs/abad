@@ -135,6 +135,9 @@ func (a *Abad) evalExpr(n ast.Node) (types.Value, error) {
 	case ast.NodeNumber:
 		val := n.(ast.Number)
 		ret, err = types.Number(val.Value()), nil
+	case ast.NodeString:	
+		val := n.(ast.String)
+		ret, err = types.String(val), nil
 	case ast.NodeIdent:
 		val := n.(ast.Ident)
 		ret, err = a.evalIdentExpr(val)
