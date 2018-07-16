@@ -26,7 +26,7 @@ const (
 	SemiColon
 
 	Ident
-	
+
 	Null
 	Undefined
 
@@ -54,7 +54,6 @@ var names = map[Type]string{
 	Undefined:   "Undefined",
 	Newline:     "LineTerminator",
 	EOF:         "EOF",
-
 }
 
 func (t Type) String() string {

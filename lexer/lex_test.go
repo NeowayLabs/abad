@@ -266,7 +266,7 @@ func TestStrings(t *testing.T) {
 }
 
 func TestKeywords(t *testing.T) {
-	cases := []TestCase {
+	cases := []TestCase{
 		{
 			name: "Null",
 			code: Str("null"),
@@ -288,7 +288,7 @@ func TestKeywords(t *testing.T) {
 			want: tokens(boolToken("true")),
 		},
 	}
-	
+
 	runTests(t, cases)
 	runTokenSepTests(t, cases)
 }
@@ -1334,9 +1334,9 @@ func sfmt(format string, a ...interface{}) utf16.Str {
 
 func tokvalPos(t token.Type, val string, line uint, column uint) lexer.Tokval {
 	return lexer.Tokval{
-		Type: t,
-		Value: Str(val),
-		Line: line,
+		Type:   t,
+		Value:  Str(val),
+		Line:   line,
 		Column: column,
 	}
 }

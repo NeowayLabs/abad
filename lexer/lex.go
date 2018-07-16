@@ -399,7 +399,7 @@ func (l *lexer) curValue() []rune {
 	if l.isEOF() {
 		return l.code
 	}
-	return l.code[:l.position + 1]
+	return l.code[:l.position+1]
 }
 
 // token will generate a token consuming all the code
@@ -407,15 +407,15 @@ func (l *lexer) curValue() []rune {
 // the token will not be available anymore (it has been consumed)
 // on the code and the position will be reset to zero.
 func (l *lexer) token(t token.Type) Tokval {
-	
+
 	val := l.curValue()
 
 	if l.isEOF() {
 		l.code = nil
 	} else {
-		l.code = l.code[l.position + 1:]
+		l.code = l.code[l.position+1:]
 	}
-	
+
 	column := l.updatePos()
 	return Tokval{Type: t, Value: newStr(val), Line: l.line, Column: column}
 }
@@ -480,10 +480,10 @@ func init() {
 	hexStart = []rune("xX")
 	exponentPartStart = []rune("eE")
 	keywords = map[string]token.Type{
-		"null": token.Null,
+		"null":      token.Null,
 		"undefined": token.Undefined,
-		"false": token.Bool,
-		"true": token.Bool,
+		"false":     token.Bool,
+		"true":      token.Bool,
 	}
 }
 
