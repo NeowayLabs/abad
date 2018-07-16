@@ -272,6 +272,21 @@ func TestKeywords(t *testing.T) {
 			code: Str("null"),
 			want: tokens(nullToken()),
 		},
+		{
+			name: "Undefined",
+			code: Str("undefined"),
+			want: tokens(undefinedToken()),
+		},
+		{
+			name: "False",
+			code: Str("false"),
+			want: tokens(boolToken("false")),
+		},
+		{
+			name: "True",
+			code: Str("true"),
+			want: tokens(boolToken("true")),
+		},
 	}
 	
 	runTests(t, cases)
@@ -1324,6 +1339,14 @@ func tokvalPos(t token.Type, val string, line uint, column uint) lexer.Tokval {
 
 func tokval(t token.Type, val string) lexer.Tokval {
 	return tokvalPos(t, val, 0, 0)
+}
+
+func undefinedToken() lexer.Tokval {
+	return tokval(token.Undefined, "undefined")
+}
+
+func boolToken(s string) lexer.Tokval {
+	return tokval(token.Bool, s)
 }
 
 func nullToken() lexer.Tokval {

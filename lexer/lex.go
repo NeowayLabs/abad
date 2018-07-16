@@ -481,6 +481,9 @@ func init() {
 	exponentPartStart = []rune("eE")
 	keywords = map[string]token.Type{
 		"null": token.Null,
+		"undefined": token.Undefined,
+		"false": token.Bool,
+		"true": token.Bool,
 	}
 }
 
