@@ -265,6 +265,19 @@ func TestStrings(t *testing.T) {
 	runTokenSepTests(t, cases)
 }
 
+func TestKeywords(t *testing.T) {
+	cases := []TestCase {
+		{
+			name: "Null",
+			code: Str("null"),
+			want: tokens(nullToken()),
+		},
+	}
+	
+	runTests(t, cases)
+	runTokenSepTests(t, cases)
+}
+
 func TestSemiColon(t *testing.T) {
 	// Almost all semicolon tests are made interwined on other tests
 	runTests(t, []TestCase{
@@ -1298,6 +1311,19 @@ func removeEOF(tokens []lexer.Tokval) ([]lexer.Tokval, bool) {
 
 func sfmt(format string, a ...interface{}) utf16.Str {
 	return Str(fmt.Sprintf(format, a...))
+}
+
+func tokval(t token.Type, val string, line uint, column uint) lexer.Tokval {
+	return lexer.Tokval{
+		Type: t,
+		Value: Str(val),
+		Line: line,
+		Column: column,
+	}
+}
+
+func nullToken() lexer.Tokval {
+	return tokval(token.Null, "null", 0, 0)
 }
 
 func minusToken() lexer.Tokval {

@@ -195,6 +195,8 @@ func (l *lexer) illegalToken() (Tokval, lexerState) {
 
 func (l *lexer) identifierState() (Tokval, lexerState) {
 
+	// TODO: handle keywords followed by dot and ( ? like null() ? or leave the parser to handle it ?
+
 	for !l.isEOF() {
 
 		if l.isDot() {
@@ -204,13 +206,22 @@ func (l *lexer) identifierState() (Tokval, lexerState) {
 
 		if l.isLeftParen() || l.isTokenEnd() {
 			l.bwd()
-			return l.token(token.Ident), l.initialState
+			return l.identOrKeywordToken(), l.initialState
 		}
 
 		l.fwd()
 	}
 
-	return l.token(token.Ident), l.initialState
+	return l.identOrKeywordToken(), l.initialState
+}
+
+func (l *lexer) identOrKeywordToken() Tokval {
+	val := l.curValue()
+	keywordType, isKeyword := keywords[string(val)]
+	if isKeyword {
+		return l.token(keywordType)
+	}
+	return l.token(token.Ident)
 }
 
 func (l *lexer) startIdentifierState() (Tokval, lexerState) {
@@ -380,6 +391,19 @@ func (l *lexer) bwd() {
 	l.position -= 1
 }
 
+// curValue returns all the runes that compose the current token
+// being analised instead of just the current rune.
+// It has no side effects.
+func (l *lexer) curValue() []rune {
+
+	if l.isEOF() {
+		return l.code
+	}
+	
+	pos := l.position + 1
+	return l.code[:pos]
+}
+
 // token will generate a token consuming all the code
 // until the current position. After calling this method
 // the token will not be available anymore (it has been consumed)
@@ -440,6 +464,7 @@ var comma rune
 var doubleQuote rune
 var hexStart []rune
 var exponentPartStart []rune
+var keywords map[string]token.Type
 
 func init() {
 	numbers = []rune("0123456789")
@@ -459,6 +484,9 @@ func init() {
 	semiColon = rune(';')
 	hexStart = []rune("xX")
 	exponentPartStart = []rune("eE")
+	keywords = map[string]token.Type{
+		"null": token.Null,
+	}
 }
 
 func containsRune(runes []rune, r rune) bool {
