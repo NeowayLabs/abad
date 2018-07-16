@@ -1313,7 +1313,7 @@ func sfmt(format string, a ...interface{}) utf16.Str {
 	return Str(fmt.Sprintf(format, a...))
 }
 
-func tokval(t token.Type, val string, line uint, column uint) lexer.Tokval {
+func tokvalPos(t token.Type, val string, line uint, column uint) lexer.Tokval {
 	return lexer.Tokval{
 		Type: t,
 		Value: Str(val),
@@ -1322,22 +1322,20 @@ func tokval(t token.Type, val string, line uint, column uint) lexer.Tokval {
 	}
 }
 
+func tokval(t token.Type, val string) lexer.Tokval {
+	return tokvalPos(t, val, 0, 0)
+}
+
 func nullToken() lexer.Tokval {
-	return tokval(token.Null, "null", 0, 0)
+	return tokval(token.Null, "null")
 }
 
 func minusToken() lexer.Tokval {
-	return lexer.Tokval{
-		Type:  token.Minus,
-		Value: Str("-"),
-	}
+	return tokval(token.Minus, "-")
 }
 
 func plusToken() lexer.Tokval {
-	return lexer.Tokval{
-		Type:  token.Plus,
-		Value: Str("+"),
-	}
+	return tokval(token.Plus, "+")
 }
 
 func leftParenToken() lexer.Tokval {
@@ -1345,12 +1343,7 @@ func leftParenToken() lexer.Tokval {
 }
 
 func leftParenTokenPos(line uint, column uint) lexer.Tokval {
-	return lexer.Tokval{
-		Type:   token.LParen,
-		Value:  Str("("),
-		Line:   line,
-		Column: column,
-	}
+	return tokvalPos(token.LParen, "(", line, column)
 }
 
 func rightParenToken() lexer.Tokval {
@@ -1358,60 +1351,31 @@ func rightParenToken() lexer.Tokval {
 }
 
 func rightParenTokenPos(line uint, column uint) lexer.Tokval {
-	return lexer.Tokval{
-		Type:   token.RParen,
-		Value:  Str(")"),
-		Line:   line,
-		Column: column,
-	}
+	return tokvalPos(token.RParen, ")", line, column)
 }
 
 func minusTokenPos(line uint, column uint) lexer.Tokval {
-	return lexer.Tokval{
-		Type:   token.Minus,
-		Value:  Str("-"),
-		Line:   line,
-		Column: column,
-	}
+	return tokvalPos(token.Minus, "-", line, column)
 }
 
 func plusTokenPos(line uint, column uint) lexer.Tokval {
-	return lexer.Tokval{
-		Type:   token.Plus,
-		Value:  Str("+"),
-		Line:   line,
-		Column: column,
-	}
+	return tokvalPos(token.Plus, "+", line, column)
 }
 
 func decimalTokenPos(dec string, line uint, column uint) lexer.Tokval {
-	return lexer.Tokval{
-		Type:   token.Decimal,
-		Value:  Str(dec),
-		Line:   line,
-		Column: column,
-	}
+	return tokvalPos(token.Decimal, dec, line, column)
 }
 
 func decimalToken(dec string) lexer.Tokval {
-	return lexer.Tokval{
-		Type:  token.Decimal,
-		Value: Str(dec),
-	}
+	return decimalTokenPos(dec, 0, 0)
 }
 
 func dotToken() lexer.Tokval {
-	return lexer.Tokval{
-		Type:  token.Dot,
-		Value: Str("."),
-	}
+	return tokval(token.Dot, ".")
 }
 
 func hexToken(hex string) lexer.Tokval {
-	return lexer.Tokval{
-		Type:  token.Hexadecimal,
-		Value: Str(hex),
-	}
+	return tokval(token.Hexadecimal, hex)
 }
 
 func semiColonToken() lexer.Tokval {
@@ -1419,12 +1383,7 @@ func semiColonToken() lexer.Tokval {
 }
 
 func semicolonTokenPos(line uint, column uint) lexer.Tokval {
-	return lexer.Tokval{
-		Type:   token.SemiColon,
-		Value:  Str(";"),
-		Line:   line,
-		Column: column,
-	}
+	return tokvalPos(token.SemiColon, ";", line, column)
 }
 
 func stringToken(s string) lexer.Tokval {
@@ -1432,12 +1391,7 @@ func stringToken(s string) lexer.Tokval {
 }
 
 func stringTokenPos(s string, line uint, column uint) lexer.Tokval {
-	return lexer.Tokval{
-		Type:   token.String,
-		Value:  Str(s),
-		Line:   line,
-		Column: column,
-	}
+	return tokvalPos(token.String, s, line, column)
 }
 
 func identToken(s string) lexer.Tokval {
@@ -1458,19 +1412,11 @@ func ltToken(s string) lexer.Tokval {
 }
 
 func ltTokenPos(s string, line uint, column uint) lexer.Tokval {
-	return lexer.Tokval{
-		Type:   token.Newline,
-		Value:  Str(s),
-		Line:   line,
-		Column: column,
-	}
+	return tokvalPos(token.Newline, s, line, column)
 }
 
 func commaToken() lexer.Tokval {
-	return lexer.Tokval{
-		Type:  token.Comma,
-		Value: Str(","),
-	}
+	return tokval(token.Comma, ",")
 }
 
 func tokens(t ...lexer.Tokval) []lexer.Tokval {
