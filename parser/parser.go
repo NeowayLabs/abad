@@ -30,6 +30,9 @@ var (
 		token.Decimal:     parseDecimal,
 		token.Hexadecimal: parseHex,
 		token.String:      parseString,
+		token.Bool:        parseBool,
+		token.Undefined:   parseUndefined,
+		token.Null:        parseNull,
 	}
 	unaryParsers map[token.Type]parserfn
 )
@@ -172,6 +175,25 @@ func parseString(p *Parser) (ast.Node, error) {
 	defer p.forget(1)
 
 	return ast.NewString(tok.Value), nil
+}
+
+func parseBool(p *Parser) (ast.Node, error) {
+	tok := p.lookahead[0]
+	defer p.forget(1)
+	
+	// TODO: handle malformed booleans ? It is not possible on the lexer
+	b, _ := strconv.ParseBool(tok.Value.String())
+	return ast.NewBool(b), nil
+}
+
+func parseUndefined(p *Parser) (ast.Node, error) {
+	p.forget(1)
+	return ast.NewUndefined(), nil
+}
+
+func parseNull(p *Parser) (ast.Node, error) {
+	p.forget(1)
+	return ast.NewNull(), nil
 }
 
 func parseDecimal(p *Parser) (ast.Node, error) {

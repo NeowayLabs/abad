@@ -231,6 +231,31 @@ func TestString(t *testing.T) {
 	})
 }
 
+func TestKeywords(t *testing.T) {
+	runTests(t, []TestCase{
+		{
+			name: "Null",
+			code: "null",
+			want: null(),
+		},
+		{
+			name: "Undefined",
+			code: "undefined",
+			want: undefined(),
+		},
+		{
+			name: "FalseBool",
+			code: "false",
+			want: boolean(false),
+		},
+		{
+			name: "TrueBool",
+			code: "true",
+			want: boolean(true),
+		},
+	})
+}
+
 func TestMemberExpr(t *testing.T) {
 	runTests(t, []TestCase{
 		{
@@ -480,6 +505,18 @@ func identifier(val string) ast.Ident {
 
 func str(val string) ast.String {
 	return ast.NewString(utf16.S(val))
+}
+
+func null() ast.Null {
+	return ast.NewNull()
+}
+
+func undefined() ast.Undefined {
+	return ast.NewUndefined()
+}
+
+func boolean(b bool) ast.Bool {
+	return ast.NewBool(b)
 }
 
 func memberExpr(obj ast.Node, memberName string) *ast.MemberExpr {
