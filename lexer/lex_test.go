@@ -21,8 +21,8 @@ func (tc TestCase) String() string {
 	return fmt.Sprintf("name[%s] code[%s] want[%v] checkPosition[%t]", tc.name, tc.code, tc.want, tc.checkPosition)
 }
 
-var Str func(string) utf16.Str = utf16.S
-var EOF lexer.Tokval = lexer.EOF
+var Str = utf16.S
+var EOF = lexer.EOF
 
 func TestNumericLiterals(t *testing.T) {
 
@@ -261,6 +261,34 @@ func TestStrings(t *testing.T) {
 		},
 	}
 
+	runTests(t, cases)
+	runTokenSepTests(t, cases)
+}
+
+func TestKeywords(t *testing.T) {
+	cases := []TestCase {
+		{
+			name: "Null",
+			code: Str("null"),
+			want: tokens(nullToken()),
+		},
+		{
+			name: "Undefined",
+			code: Str("undefined"),
+			want: tokens(undefinedToken()),
+		},
+		{
+			name: "False",
+			code: Str("false"),
+			want: tokens(boolToken("false")),
+		},
+		{
+			name: "True",
+			code: Str("true"),
+			want: tokens(boolToken("true")),
+		},
+	}
+	
 	runTests(t, cases)
 	runTokenSepTests(t, cases)
 }
@@ -727,7 +755,7 @@ func TestFuncall(t *testing.T) {
 		},
 		{
 			name: "CommaSeparatedEverything",
-			code: Str(`test("",5,"i",4,"k",6.6,0x5,arg,"jssucks")`),
+			code: Str(`test("",5,"i",4,"k",6.6,0x5,arg,"jssucks",false,true,undefined,null)`),
 			want: tokens(
 				identToken("test"),
 				leftParenToken(),
@@ -748,6 +776,14 @@ func TestFuncall(t *testing.T) {
 				identToken("arg"),
 				commaToken(),
 				stringToken("jssucks"),
+				commaToken(),
+				boolToken("false"),
+				commaToken(),
+				boolToken("true"),
+				commaToken(),
+				undefinedToken(),
+				commaToken(),
+				nullToken(),
 				rightParenToken(),
 			),
 		},
@@ -803,10 +839,6 @@ func TestPosition(t *testing.T) {
 	}
 
 	runTests(t, cases)
-}
-
-func TestIllegalIdentifiers(t *testing.T) {
-	t.Skip("TODO")
 }
 
 func TestIllegalSingleDot(t *testing.T) {
@@ -1300,18 +1332,37 @@ func sfmt(format string, a ...interface{}) utf16.Str {
 	return Str(fmt.Sprintf(format, a...))
 }
 
-func minusToken() lexer.Tokval {
+func tokvalPos(t token.Type, val string, line uint, column uint) lexer.Tokval {
 	return lexer.Tokval{
-		Type:  token.Minus,
-		Value: Str("-"),
+		Type: t,
+		Value: Str(val),
+		Line: line,
+		Column: column,
 	}
 }
 
+func tokval(t token.Type, val string) lexer.Tokval {
+	return tokvalPos(t, val, 0, 0)
+}
+
+func undefinedToken() lexer.Tokval {
+	return tokval(token.Undefined, "undefined")
+}
+
+func boolToken(s string) lexer.Tokval {
+	return tokval(token.Bool, s)
+}
+
+func nullToken() lexer.Tokval {
+	return tokval(token.Null, "null")
+}
+
+func minusToken() lexer.Tokval {
+	return tokval(token.Minus, "-")
+}
+
 func plusToken() lexer.Tokval {
-	return lexer.Tokval{
-		Type:  token.Plus,
-		Value: Str("+"),
-	}
+	return tokval(token.Plus, "+")
 }
 
 func leftParenToken() lexer.Tokval {
@@ -1319,12 +1370,7 @@ func leftParenToken() lexer.Tokval {
 }
 
 func leftParenTokenPos(line uint, column uint) lexer.Tokval {
-	return lexer.Tokval{
-		Type:   token.LParen,
-		Value:  Str("("),
-		Line:   line,
-		Column: column,
-	}
+	return tokvalPos(token.LParen, "(", line, column)
 }
 
 func rightParenToken() lexer.Tokval {
@@ -1332,60 +1378,31 @@ func rightParenToken() lexer.Tokval {
 }
 
 func rightParenTokenPos(line uint, column uint) lexer.Tokval {
-	return lexer.Tokval{
-		Type:   token.RParen,
-		Value:  Str(")"),
-		Line:   line,
-		Column: column,
-	}
+	return tokvalPos(token.RParen, ")", line, column)
 }
 
 func minusTokenPos(line uint, column uint) lexer.Tokval {
-	return lexer.Tokval{
-		Type:   token.Minus,
-		Value:  Str("-"),
-		Line:   line,
-		Column: column,
-	}
+	return tokvalPos(token.Minus, "-", line, column)
 }
 
 func plusTokenPos(line uint, column uint) lexer.Tokval {
-	return lexer.Tokval{
-		Type:   token.Plus,
-		Value:  Str("+"),
-		Line:   line,
-		Column: column,
-	}
+	return tokvalPos(token.Plus, "+", line, column)
 }
 
 func decimalTokenPos(dec string, line uint, column uint) lexer.Tokval {
-	return lexer.Tokval{
-		Type:   token.Decimal,
-		Value:  Str(dec),
-		Line:   line,
-		Column: column,
-	}
+	return tokvalPos(token.Decimal, dec, line, column)
 }
 
 func decimalToken(dec string) lexer.Tokval {
-	return lexer.Tokval{
-		Type:  token.Decimal,
-		Value: Str(dec),
-	}
+	return decimalTokenPos(dec, 0, 0)
 }
 
 func dotToken() lexer.Tokval {
-	return lexer.Tokval{
-		Type:  token.Dot,
-		Value: Str("."),
-	}
+	return tokval(token.Dot, ".")
 }
 
 func hexToken(hex string) lexer.Tokval {
-	return lexer.Tokval{
-		Type:  token.Hexadecimal,
-		Value: Str(hex),
-	}
+	return tokval(token.Hexadecimal, hex)
 }
 
 func semiColonToken() lexer.Tokval {
@@ -1393,12 +1410,7 @@ func semiColonToken() lexer.Tokval {
 }
 
 func semicolonTokenPos(line uint, column uint) lexer.Tokval {
-	return lexer.Tokval{
-		Type:   token.SemiColon,
-		Value:  Str(";"),
-		Line:   line,
-		Column: column,
-	}
+	return tokvalPos(token.SemiColon, ";", line, column)
 }
 
 func stringToken(s string) lexer.Tokval {
@@ -1406,12 +1418,7 @@ func stringToken(s string) lexer.Tokval {
 }
 
 func stringTokenPos(s string, line uint, column uint) lexer.Tokval {
-	return lexer.Tokval{
-		Type:   token.String,
-		Value:  Str(s),
-		Line:   line,
-		Column: column,
-	}
+	return tokvalPos(token.String, s, line, column)
 }
 
 func identToken(s string) lexer.Tokval {
@@ -1432,19 +1439,11 @@ func ltToken(s string) lexer.Tokval {
 }
 
 func ltTokenPos(s string, line uint, column uint) lexer.Tokval {
-	return lexer.Tokval{
-		Type:   token.Newline,
-		Value:  Str(s),
-		Line:   line,
-		Column: column,
-	}
+	return tokvalPos(token.Newline, s, line, column)
 }
 
 func commaToken() lexer.Tokval {
-	return lexer.Tokval{
-		Type:  token.Comma,
-		Value: Str(","),
-	}
+	return tokval(token.Comma, ",")
 }
 
 func tokens(t ...lexer.Tokval) []lexer.Tokval {

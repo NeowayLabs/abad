@@ -195,6 +195,8 @@ func (l *lexer) illegalToken() (Tokval, lexerState) {
 
 func (l *lexer) identifierState() (Tokval, lexerState) {
 
+	// TODO: handle keywords followed by dot and ( ? like null() ? or leave the parser to handle it ?
+
 	for !l.isEOF() {
 
 		if l.isDot() {
@@ -204,13 +206,22 @@ func (l *lexer) identifierState() (Tokval, lexerState) {
 
 		if l.isLeftParen() || l.isTokenEnd() {
 			l.bwd()
-			return l.token(token.Ident), l.initialState
+			return l.identOrKeywordToken(), l.initialState
 		}
 
 		l.fwd()
 	}
 
-	return l.token(token.Ident), l.initialState
+	return l.identOrKeywordToken(), l.initialState
+}
+
+func (l *lexer) identOrKeywordToken() Tokval {
+	val := l.curValue()
+	keywordType, isKeyword := keywords[string(val)]
+	if isKeyword {
+		return l.token(keywordType)
+	}
+	return l.token(token.Ident)
 }
 
 func (l *lexer) startIdentifierState() (Tokval, lexerState) {
@@ -380,29 +391,40 @@ func (l *lexer) bwd() {
 	l.position -= 1
 }
 
+// curValue returns all the runes that compose the current token
+// being analised instead of just the current rune.
+// It has no side effects.
+func (l *lexer) curValue() []rune {
+
+	if l.isEOF() {
+		return l.code
+	}
+	return l.code[:l.position + 1]
+}
+
 // token will generate a token consuming all the code
 // until the current position. After calling this method
 // the token will not be available anymore (it has been consumed)
 // on the code and the position will be reset to zero.
 func (l *lexer) token(t token.Type) Tokval {
-	var val []rune
-
-	pos := l.position + 1
+	
+	val := l.curValue()
 
 	if l.isEOF() {
-		val = l.code
 		l.code = nil
 	} else {
-		val = l.code[:pos]
-		l.code = l.code[pos:]
+		l.code = l.code[l.position + 1:]
 	}
-
-	// FIXME: duplicated at stringToken()
-	column := l.column
-	l.column += pos
-	l.position = 0
-
+	
+	column := l.updatePos()
 	return Tokval{Type: t, Value: newStr(val), Line: l.line, Column: column}
+}
+
+func (l *lexer) updatePos() uint {
+	column := l.column
+	l.column += l.position + 1
+	l.position = 0
+	return column
 }
 
 func (l *lexer) stringToken() Tokval {
@@ -412,10 +434,7 @@ func (l *lexer) stringToken() Tokval {
 	val := l.code[1:l.position]
 	l.code = l.code[l.position+1:]
 
-	// FIXME: duplicated at token()
-	column := l.column
-	l.column += l.position + 1
-	l.position = 0
+	column := l.updatePos()
 
 	return Tokval{
 		Type:   token.String,
@@ -440,6 +459,7 @@ var comma rune
 var doubleQuote rune
 var hexStart []rune
 var exponentPartStart []rune
+var keywords map[string]token.Type
 
 func init() {
 	numbers = []rune("0123456789")
@@ -459,6 +479,12 @@ func init() {
 	semiColon = rune(';')
 	hexStart = []rune("xX")
 	exponentPartStart = []rune("eE")
+	keywords = map[string]token.Type{
+		"null": token.Null,
+		"undefined": token.Undefined,
+		"false": token.Bool,
+		"true": token.Bool,
+	}
 }
 
 func containsRune(runes []rune, r rune) bool {

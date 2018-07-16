@@ -10,6 +10,7 @@ type (
 
 const (
 	Illegal Type = iota
+	Bool
 	Decimal
 	Hexadecimal
 	Octal
@@ -25,6 +26,9 @@ const (
 	SemiColon
 
 	Ident
+	
+	Null
+	Undefined
 
 	Newline
 
@@ -37,6 +41,7 @@ var names = map[Type]string{
 	Hexadecimal: "Hexadecimal",
 	Octal:       "Octal",
 	String:      "String",
+	Bool:        "Bool",
 	Minus:       "-",
 	Plus:        "+",
 	Dot:         ".",
@@ -45,8 +50,11 @@ var names = map[Type]string{
 	Comma:       ",",
 	Ident:       "Ident",
 	SemiColon:   "SemiColon",
+	Null:        "Null",
+	Undefined:   "Undefined",
 	Newline:     "LineTerminator",
 	EOF:         "EOF",
+
 }
 
 func (t Type) String() string {
