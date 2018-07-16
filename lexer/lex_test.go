@@ -21,8 +21,8 @@ func (tc TestCase) String() string {
 	return fmt.Sprintf("name[%s] code[%s] want[%v] checkPosition[%t]", tc.name, tc.code, tc.want, tc.checkPosition)
 }
 
-var Str func(string) utf16.Str = utf16.S
-var EOF lexer.Tokval = lexer.EOF
+var Str = utf16.S
+var EOF = lexer.EOF
 
 func TestNumericLiterals(t *testing.T) {
 
@@ -755,7 +755,7 @@ func TestFuncall(t *testing.T) {
 		},
 		{
 			name: "CommaSeparatedEverything",
-			code: Str(`test("",5,"i",4,"k",6.6,0x5,arg,"jssucks")`),
+			code: Str(`test("",5,"i",4,"k",6.6,0x5,arg,"jssucks",false,true,undefined,null)`),
 			want: tokens(
 				identToken("test"),
 				leftParenToken(),
@@ -776,6 +776,14 @@ func TestFuncall(t *testing.T) {
 				identToken("arg"),
 				commaToken(),
 				stringToken("jssucks"),
+				commaToken(),
+				boolToken("false"),
+				commaToken(),
+				boolToken("true"),
+				commaToken(),
+				undefinedToken(),
+				commaToken(),
+				nullToken(),
 				rightParenToken(),
 			),
 		},
@@ -831,10 +839,6 @@ func TestPosition(t *testing.T) {
 	}
 
 	runTests(t, cases)
-}
-
-func TestIllegalIdentifiers(t *testing.T) {
-	t.Skip("TODO")
 }
 
 func TestIllegalSingleDot(t *testing.T) {
