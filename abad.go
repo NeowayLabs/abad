@@ -37,7 +37,7 @@ func (a *Abad) Eval(code string) (types.Value, error) {
 func (a *Abad) EvalFile(filename string, code string) (types.Value, error) {
 	program, err := parser.Parse(filename, code)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parser error: %s", err)
 	}
 	return a.eval(program)
 }
@@ -135,6 +135,9 @@ func (a *Abad) evalExpr(n ast.Node) (types.Value, error) {
 	case ast.NodeNumber:
 		val := n.(ast.Number)
 		ret, err = types.Number(val.Value()), nil
+	case ast.NodeString:
+		val := n.(ast.String)
+		ret, err = types.String(val), nil
 	case ast.NodeIdent:
 		val := n.(ast.Ident)
 		ret, err = a.evalIdentExpr(val)

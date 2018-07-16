@@ -29,7 +29,7 @@ var (
 	literalParsers = map[token.Type]parserfn{
 		token.Decimal:     parseDecimal,
 		token.Hexadecimal: parseHex,
-		token.String: parseString,
+		token.String:      parseString,
 	}
 	unaryParsers map[token.Type]parserfn
 )
@@ -317,16 +317,16 @@ func parseFuncallArgs(p *Parser) ([]ast.Node, error) {
 	var tok lexer.Tokval
 
 	for tok = p.lookahead[0]; hasMoreArgs(tok.Type); {
-		switch tok.Type {
-		case token.Decimal, token.Hexadecimal:
-			parser := literalParsers[tok.Type]
-			num, err := parser(p)
+
+		parser, hasParser := literalParsers[tok.Type]
+		if hasParser {
+			parsed, err := parser(p)
 			if err != nil {
 				return nil, err
 			}
-			args = append(args, num)
-		default:
-			return nil, p.errorf(tok, "unexpected %s", tok.Value)
+			args = append(args, parsed)
+		} else {
+			return nil, p.errorf(tok, "error parsing funcall args: unexpected token %s", tok.Value)
 		}
 
 		p.scry(1)

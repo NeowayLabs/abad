@@ -300,6 +300,11 @@ func TestParserFuncall(t *testing.T) {
 			want: callExpr(identifier("c"), []ast.Node{number(6.66)}),
 		},
 		{
+			name: "StringParameter",
+			code: `c("hi")`,
+			want: callExpr(identifier("c"), []ast.Node{str("hi")}),
+		},
+		{
 			name: "MemberAccessWithoutParams",
 			code: "console.log()",
 			want: callExpr(

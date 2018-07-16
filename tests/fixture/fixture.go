@@ -65,13 +65,13 @@ func RunWithInterpreters(
 			return nil
 		}
 
-		testname := strings.TrimPrefix(path, samplesdir)
+		testname := strings.TrimPrefix(path, samplesdir)[1:]
 		t.Run(testname, func(t *testing.T) {
 			err, want := reference(path)
-			assert.NoError(t, err, "running reference interpreter")
+			assertSuccessRun(t, want, err)
 
 			err, got := undertest(path)
-			assert.NoError(t, err, "running under test interperter")
+			assertSuccessRun(t, got, err)
 
 			assertEqualOutput(t, "stdout", want.Stdout, got.Stdout)
 			assertEqualOutput(t, "stderr", want.Stderr, got.Stderr)
@@ -81,6 +81,16 @@ func RunWithInterpreters(
 	})
 
 	assert.NoError(t, err)
+}
+
+func assertSuccessRun(t *testing.T, r Result, err error) {
+	t.Helper()
+
+	if err == nil {
+		return
+	}
+
+	t.Fatalf("\nfatal error:[%s]\n\nstdout:[%s]\n\nstderr:[%s]\n\n", err, r.Stdout, r.Stderr)
 }
 
 func assertEqualOutput(t *testing.T, outputname string, want string, got string) {

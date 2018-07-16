@@ -32,7 +32,7 @@ type (
 	}
 
 	Number float64
-	
+
 	String utf16.Str
 
 	// UnaryExpr is a unary expression (-a, +a, ~a, and so on)
@@ -70,19 +70,19 @@ const (
 	NodeIdent
 
 	exprEnd
-	
+
 	endNodeTypes
 )
 
-var nodeTypesNames [endNodeTypes]string = [...]string{
-	NodeProgram: "PROGRAM",
-	NodeFnBody: "FNBODY",
-	NodeNumber: "NUMBER",
-	NodeUnaryExpr: "UNARYEXPR",
+var nodeTypesNames = [...]string{
+	NodeProgram:    "PROGRAM",
+	NodeFnBody:     "FNBODY",
+	NodeNumber:     "NUMBER",
+	NodeUnaryExpr:  "UNARYEXPR",
 	NodeMemberExpr: "MEMBEREXPR",
-	NodeCallExpr: "CALLEXPR",
-	NodeIdent: "IDENT",
-	exprEnd: "",
+	NodeCallExpr:   "CALLEXPR",
+	NodeIdent:      "IDENT",
+	exprEnd:        "",
 }
 
 // console.log(Number.EPSILON);
