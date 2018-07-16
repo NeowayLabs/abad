@@ -399,9 +399,7 @@ func (l *lexer) curValue() []rune {
 	if l.isEOF() {
 		return l.code
 	}
-	
-	pos := l.position + 1
-	return l.code[:pos]
+	return l.code[:l.position + 1]
 }
 
 // token will generate a token consuming all the code
@@ -409,24 +407,24 @@ func (l *lexer) curValue() []rune {
 // the token will not be available anymore (it has been consumed)
 // on the code and the position will be reset to zero.
 func (l *lexer) token(t token.Type) Tokval {
-	var val []rune
-
-	pos := l.position + 1
+	
+	val := l.curValue()
 
 	if l.isEOF() {
-		val = l.code
 		l.code = nil
 	} else {
-		val = l.code[:pos]
-		l.code = l.code[pos:]
+		l.code = l.code[l.position + 1:]
 	}
-
-	// FIXME: duplicated at stringToken()
-	column := l.column
-	l.column += pos
-	l.position = 0
-
+	
+	column := l.updatePos()
 	return Tokval{Type: t, Value: newStr(val), Line: l.line, Column: column}
+}
+
+func (l *lexer) updatePos() uint {
+	column := l.column
+	l.column += l.position + 1
+	l.position = 0
+	return column
 }
 
 func (l *lexer) stringToken() Tokval {
@@ -436,10 +434,7 @@ func (l *lexer) stringToken() Tokval {
 	val := l.code[1:l.position]
 	l.code = l.code[l.position+1:]
 
-	// FIXME: duplicated at token()
-	column := l.column
-	l.column += l.position + 1
-	l.position = 0
+	column := l.updatePos()
 
 	return Tokval{
 		Type:   token.String,
