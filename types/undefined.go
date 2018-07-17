@@ -8,7 +8,7 @@ import (
 
 type undefined utf16.Str // yeah, science!
 
-var Undefined = undefined(utf16.S("undefined"))
+var Undefined = undefined(utf16.S("undefined")) // undefined undefinedness undefining undefined =P
 
 func (u undefined) IsTrue() bool {
 	return false
