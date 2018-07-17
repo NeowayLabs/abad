@@ -310,6 +310,26 @@ func TestParserFuncall(t *testing.T) {
 			want: callExpr(identifier("a"), []ast.Node{}),
 		},
 		{
+			name: "UndefinedParameter",
+			code: "b(undefined)",
+			want: callExpr(identifier("b"), []ast.Node{undefined()}),
+		},
+		{
+			name: "NullParameter",
+			code: "b(null)",
+			want: callExpr(identifier("b"), []ast.Node{null()}),
+		},
+		{
+			name: "TrueBoolParameter",
+			code: "b(true)",
+			want: callExpr(identifier("b"), []ast.Node{boolean(true)}),
+		},
+			{
+			name: "FalseBoolParameter",
+			code: "b(false)",
+			want: callExpr(identifier("b"), []ast.Node{boolean(false)}),
+		},
+		{
 			name: "IntParameter",
 			code: "b(1)",
 			want: callExpr(identifier("b"), []ast.Node{intNumber(1)}),
@@ -437,6 +457,20 @@ func TestParserFuncall(t *testing.T) {
 				[]ast.Node{ast.NewNumber(2.0)},
 			),
 		},
+		// TODO: add support to comma
+		//{
+		//	name: "AllTypesTogether",
+		//	code: `all("hi",true,false,null,undefined,666,0xFF)`,
+		//	want: callExpr(identifier("all"), []ast.Node{
+		//		str("hi"),
+		//		boolean(true),
+		//		boolean(false),
+		//		null(),
+		//		undefined(),
+		//		intNumber(666),
+		//		intNumber(255),
+		//	}),
+		//},
 	})
 }
 

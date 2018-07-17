@@ -181,9 +181,8 @@ func parseBool(p *Parser) (ast.Node, error) {
 	tok := p.lookahead[0]
 	defer p.forget(1)
 	
-	// TODO: handle malformed booleans ? It is not possible on the lexer
-	b, _ := strconv.ParseBool(tok.Value.String())
-	return ast.NewBool(b), nil
+	b, err := strconv.ParseBool(tok.Value.String())
+	return ast.NewBool(b), err
 }
 
 func parseUndefined(p *Parser) (ast.Node, error) {
@@ -263,7 +262,7 @@ func parseIdentExpr(p *Parser) (ast.Node, error) {
 	}
 
 	if next.Type != token.EOF {
-		return nil, p.errorf(next, "unexpected token '%s'", next)
+		return nil, p.errorf(next, "unexpected token [%s]", next)
 	}
 
 	p.forget(2)
@@ -348,7 +347,7 @@ func parseFuncallArgs(p *Parser) ([]ast.Node, error) {
 			}
 			args = append(args, parsed)
 		} else {
-			return nil, p.errorf(tok, "error parsing funcall args: unexpected token %s", tok.Value)
+			return nil, p.errorf(tok, "error parsing funcall args: unexpected token [%s]", tok.Value)
 		}
 
 		p.scry(1)
