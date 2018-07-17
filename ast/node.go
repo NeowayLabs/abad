@@ -34,6 +34,12 @@ type (
 	Number float64
 
 	String utf16.Str
+	
+	Bool bool
+	
+	Undefined struct{}
+	
+	Null struct{}
 
 	// UnaryExpr is a unary expression (-a, +a, ~a, and so on)
 	UnaryExpr struct {
@@ -64,6 +70,9 @@ const (
 
 	NodeNumber
 	NodeString
+	NodeNull
+	NodeUndefined
+	NodeBool
 	NodeUnaryExpr
 	NodeMemberExpr
 	NodeCallExpr
@@ -78,6 +87,10 @@ var nodeTypesNames = [...]string{
 	NodeProgram:    "PROGRAM",
 	NodeFnBody:     "FNBODY",
 	NodeNumber:     "NUMBER",
+	NodeString:     "STRING",
+	NodeBool:       "BOOLEAN",
+	NodeUndefined:  "UNDEFINED",
+	NodeNull:       "NULL",
 	NodeUnaryExpr:  "UNARYEXPR",
 	NodeMemberExpr: "MEMBEREXPR",
 	NodeCallExpr:   "CALLEXPR",
@@ -160,6 +173,60 @@ func (s String) Equal(other Node) bool {
 
 func (s String) String() string {
 	return utf16.Str(s).String()
+}
+
+func NewBool(a bool) Bool {
+	return Bool(a)
+}
+
+func (a Bool) Equal(other Node) bool {
+	otherb, ok := other.(Bool)
+	if !ok {
+		return false
+	}
+	return a == otherb
+}
+
+func (a Bool) String() string {
+	return fmt.Sprintf("%t", a)
+}
+
+func (Bool) Type() NodeType {
+	return NodeBool
+}
+
+func NewUndefined() Undefined {
+	return Undefined{}
+}
+
+func (Undefined) Type() NodeType {
+	return NodeUndefined
+}
+
+func (Undefined) Equal(other Node) bool {
+	_, ok := other.(Undefined)
+	return ok
+}
+
+func (Undefined) String() string {
+	return "undefined"
+}
+
+func NewNull() Null {
+	return Null{}
+}
+
+func (Null) Equal(other Node) bool {
+	_, ok := other.(Null)
+	return ok
+}
+
+func (Null) Type() NodeType {
+	return NodeNull
+}
+
+func (Null) String() string {
+	return "null"
 }
 
 func NewNumber(a float64) Number {

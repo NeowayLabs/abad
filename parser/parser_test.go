@@ -231,6 +231,31 @@ func TestString(t *testing.T) {
 	})
 }
 
+func TestKeywords(t *testing.T) {
+	runTests(t, []TestCase{
+		{
+			name: "Null",
+			code: "null",
+			want: null(),
+		},
+		{
+			name: "Undefined",
+			code: "undefined",
+			want: undefined(),
+		},
+		{
+			name: "FalseBool",
+			code: "false",
+			want: boolean(false),
+		},
+		{
+			name: "TrueBool",
+			code: "true",
+			want: boolean(true),
+		},
+	})
+}
+
 func TestMemberExpr(t *testing.T) {
 	runTests(t, []TestCase{
 		{
@@ -283,6 +308,26 @@ func TestParserFuncall(t *testing.T) {
 			name: "NoParameter",
 			code: "a()",
 			want: callExpr(identifier("a"), []ast.Node{}),
+		},
+		{
+			name: "UndefinedParameter",
+			code: "b(undefined)",
+			want: callExpr(identifier("b"), []ast.Node{undefined()}),
+		},
+		{
+			name: "NullParameter",
+			code: "b(null)",
+			want: callExpr(identifier("b"), []ast.Node{null()}),
+		},
+		{
+			name: "TrueBoolParameter",
+			code: "b(true)",
+			want: callExpr(identifier("b"), []ast.Node{boolean(true)}),
+		},
+			{
+			name: "FalseBoolParameter",
+			code: "b(false)",
+			want: callExpr(identifier("b"), []ast.Node{boolean(false)}),
 		},
 		{
 			name: "IntParameter",
@@ -412,6 +457,20 @@ func TestParserFuncall(t *testing.T) {
 				[]ast.Node{ast.NewNumber(2.0)},
 			),
 		},
+		// TODO: add support to comma
+		//{
+		//	name: "AllTypesTogether",
+		//	code: `all("hi",true,false,null,undefined,666,0xFF)`,
+		//	want: callExpr(identifier("all"), []ast.Node{
+		//		str("hi"),
+		//		boolean(true),
+		//		boolean(false),
+		//		null(),
+		//		undefined(),
+		//		intNumber(666),
+		//		intNumber(255),
+		//	}),
+		//},
 	})
 }
 
@@ -480,6 +539,18 @@ func identifier(val string) ast.Ident {
 
 func str(val string) ast.String {
 	return ast.NewString(utf16.S(val))
+}
+
+func null() ast.Null {
+	return ast.NewNull()
+}
+
+func undefined() ast.Undefined {
+	return ast.NewUndefined()
+}
+
+func boolean(b bool) ast.Bool {
+	return ast.NewBool(b)
 }
 
 func memberExpr(obj ast.Node, memberName string) *ast.MemberExpr {

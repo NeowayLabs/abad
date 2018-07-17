@@ -30,6 +30,9 @@ var (
 		token.Decimal:     parseDecimal,
 		token.Hexadecimal: parseHex,
 		token.String:      parseString,
+		token.Bool:        parseBool,
+		token.Undefined:   parseUndefined,
+		token.Null:        parseNull,
 	}
 	unaryParsers map[token.Type]parserfn
 )
@@ -174,6 +177,24 @@ func parseString(p *Parser) (ast.Node, error) {
 	return ast.NewString(tok.Value), nil
 }
 
+func parseBool(p *Parser) (ast.Node, error) {
+	tok := p.lookahead[0]
+	defer p.forget(1)
+	
+	b, err := strconv.ParseBool(tok.Value.String())
+	return ast.NewBool(b), err
+}
+
+func parseUndefined(p *Parser) (ast.Node, error) {
+	p.forget(1)
+	return ast.NewUndefined(), nil
+}
+
+func parseNull(p *Parser) (ast.Node, error) {
+	p.forget(1)
+	return ast.NewNull(), nil
+}
+
 func parseDecimal(p *Parser) (ast.Node, error) {
 	tok := p.lookahead[0]
 	defer p.forget(1)
@@ -241,7 +262,7 @@ func parseIdentExpr(p *Parser) (ast.Node, error) {
 	}
 
 	if next.Type != token.EOF {
-		return nil, p.errorf(next, "unexpected token '%s'", next)
+		return nil, p.errorf(next, "unexpected token [%s]", next)
 	}
 
 	p.forget(2)
@@ -326,7 +347,7 @@ func parseFuncallArgs(p *Parser) ([]ast.Node, error) {
 			}
 			args = append(args, parsed)
 		} else {
-			return nil, p.errorf(tok, "error parsing funcall args: unexpected token %s", tok.Value)
+			return nil, p.errorf(tok, "error parsing funcall args: unexpected token [%s]", tok.Value)
 		}
 
 		p.scry(1)
