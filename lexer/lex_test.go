@@ -265,6 +265,7 @@ func TestStrings(t *testing.T) {
 
 	runTests(t, cases)
 	runTokenSepTests(t, cases)
+	runWhiteSpaceTests(t, cases)
 }
 
 func TestKeywords(t *testing.T) {
@@ -293,6 +294,7 @@ func TestKeywords(t *testing.T) {
 
 	runTests(t, cases)
 	runTokenSepTests(t, cases)
+	runWhiteSpaceTests(t, cases)
 }
 
 func TestSemiColon(t *testing.T) {
@@ -463,6 +465,7 @@ func TestIdentifiers(t *testing.T) {
 	runTests(t, accessModCases)
 
 	runTokenSepTests(t, identCases)
+	runWhiteSpaceTests(t, identCases)
 }
 
 func TestFuncall(t *testing.T) {
@@ -1196,7 +1199,12 @@ func intertwineWithWhiteSpace(tc TestCase, name string, val string) TestCase {
 	}
 	
 	for _, tok := range tokens {
-		code = append(code, tok.Value.String())
+		val := tok.Value.String()
+		if tok.Type == token.String {
+			code = append(code, fmt.Sprintf(`"%s"`, val))
+		} else {
+			code = append(code, val)
+		}
 		newwant = append(newwant, tok) 
 	}
 	
