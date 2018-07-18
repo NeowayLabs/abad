@@ -324,7 +324,7 @@ func TestParserFuncall(t *testing.T) {
 			code: "b(true)",
 			want: callExpr(identifier("b"), []ast.Node{boolean(true)}),
 		},
-			{
+		{
 			name: "FalseBoolParameter",
 			code: "b(false)",
 			want: callExpr(identifier("b"), []ast.Node{boolean(false)}),

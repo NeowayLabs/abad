@@ -180,7 +180,7 @@ func parseString(p *Parser) (ast.Node, error) {
 func parseBool(p *Parser) (ast.Node, error) {
 	tok := p.lookahead[0]
 	defer p.forget(1)
-	
+
 	b, err := strconv.ParseBool(tok.Value.String())
 	return ast.NewBool(b), err
 }
