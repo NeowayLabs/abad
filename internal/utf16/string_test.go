@@ -116,3 +116,25 @@ func TestAppendStrings(t *testing.T) {
 		}
 	}
 }
+
+func TestPrependStrings(t *testing.T) {
+	type tcase struct {
+		s1   utf16.Str
+		s2   utf16.Str
+		want utf16.Str
+	}
+
+	cases := []tcase{
+		{s1: S("bad"), s2: S("a"), want: S("abad")},
+		{s1: S(""), s2: S("abad"), want: S("abad")},
+		{s1: S("abad"), s2: S(""), want: S("abad")},
+		{s1: S(""), s2: S(""), want: S("")},
+	}
+
+	for _, c := range cases {
+		got := c.s1.Prepend(c.s2)
+		if !c.want.Equal(got) {
+			t.Fatalf("got[%s] !=  want[%s]", got, c.want)
+		}
+	}
+}

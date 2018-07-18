@@ -2,6 +2,7 @@ package lexer_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"unicode"
 
@@ -227,6 +228,7 @@ func TestNumericLiterals(t *testing.T) {
 
 	runTests(t, cases)
 	runTokenSepTests(t, cases)
+	runWhiteSpaceTests(t, cases)
 }
 
 func TestStrings(t *testing.T) {
@@ -1116,16 +1118,23 @@ func TestCorruptedInput(t *testing.T) {
 
 func lineTerminators() map[string]string {
 	return map[string]string{
-		"LineFeed" : "\u000A",
-		"CarriageReturn": "\u000D",
-		"LineSeparator": "\u2028",
+		"LineFeed":           "\u000A",
+		"CarriageReturn":     "\u000D",
+		"LineSeparator":      "\u2028",
 		"ParagraphSeparator": "\u2029",
 	}
 }
 
-//func whiteSpaces() map[string]string {
-//	return lineTerminators()
-//}
+func whiteSpaces() map[string]string {
+	ws := lineTerminators()
+	//ws["Tab"] = "\u0009"
+	//ws["VerticalTab"] = "\u000B"
+	//ws["FormFeed"] = "\u000C"
+	//ws["Space"] = "\u0020"
+	//ws["NoBreakSpace"] = "\u00A0"
+	//ws["ByteOrderMark"] = "\uFEFF"
+	return ws
+}
 
 func runTests(t *testing.T, testcases []TestCase) {
 
@@ -1152,8 +1161,55 @@ func runTests(t *testing.T, testcases []TestCase) {
 // token separation/splitting when the token that
 // causes the split is not a valid token, just formatting like
 // newlines and whitespaces.
-//func runWhiteSpaceTests(t *testing.T, testcases []TestCase) {
-//}
+func runWhiteSpaceTests(t *testing.T, testcases []TestCase) {
+	for name, val := range whiteSpaces() {
+		for _, tcase := range testcases {
+			runWhiteSpaceTest(t, tcase, name, val)
+		}
+	}
+}
+
+func runWhiteSpaceTest(t *testing.T, tc TestCase, name string, val string) {
+	runTests(t, []TestCase{
+		intertwineWithWhiteSpace(tc, name, val),
+		{
+			name: fmt.Sprintf("%s/%sAtStart", tc.name, name),
+			code: tc.code.Prepend(Str(val)),
+			want: tc.want,
+		},
+		{
+			name: fmt.Sprintf("%s/%sAtEnd", tc.name, name),
+			code: tc.code.Append(Str(val)),
+			want: tc.want,
+		},
+	})
+}
+
+func intertwineWithWhiteSpace(tc TestCase, name string, val string) TestCase {
+	code := []string{}
+	
+	tokens, hasEOF := removeEOF(tc.want)
+	newwant := []lexer.Tokval{}
+	
+	if len(tokens) == 1 {
+		tokens = append(tokens, tokens[0])
+	}
+	
+	for _, tok := range tokens {
+		code = append(code, tok.Value.String())
+		newwant = append(newwant, tok) 
+	}
+	
+	if hasEOF {
+		newwant = append(newwant, EOF)
+	}
+	
+	return TestCase {
+		name: fmt.Sprintf("%s/InterwinedWith%s", tc.name, name),
+		code: Str(strings.Join(code, val)),
+		want: newwant,
+	}
+}
 
 // runTokenSepTests will take an array of test cases and run the
 // tests with different token separators intertwined between
@@ -1189,6 +1245,7 @@ func assertWantedTokens(t *testing.T, tc TestCase, got []lexer.Tokval) {
 	t.Helper()
 
 	if len(tc.want) != len(got) {
+		t.Errorf("error parsing code[%s]", tc.code)
 		t.Errorf("wanted [%d] tokens, got [%d] tokens", len(tc.want), len(got))
 		t.Fatalf("\nwant=%v\ngot= %v\nare not equal.", tc.want, got)
 	}
