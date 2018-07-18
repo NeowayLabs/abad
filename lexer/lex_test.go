@@ -1123,9 +1123,9 @@ func lineTerminators() map[string]string {
 	}
 }
 
-func whiteSpaces() map[string]string {
-	return lineTerminators()
-}
+//func whiteSpaces() map[string]string {
+//	return lineTerminators()
+//}
 
 func runTests(t *testing.T, testcases []TestCase) {
 
@@ -1152,8 +1152,8 @@ func runTests(t *testing.T, testcases []TestCase) {
 // token separation/splitting when the token that
 // causes the split is not a valid token, just formatting like
 // newlines and whitespaces.
-func runWhiteSpaceTests(t *testing.T, testcases []TestCase) {
-}
+//func runWhiteSpaceTests(t *testing.T, testcases []TestCase) {
+//}
 
 // runTokenSepTests will take an array of test cases and run the
 // tests with different token separators intertwined between
