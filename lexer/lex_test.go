@@ -314,65 +314,59 @@ func TestLineTerminator(t *testing.T) {
 	for _, lineTerminator := range lineTerminators() {
 		t.Run(lineTerminator.name, func(t *testing.T) {
 			lt := lineTerminator.val
-			lttok := ltToken(lt)
 			runTests(t, []TestCase{
 				{
 					name: fmt.Sprintf("Single%s", lt),
 					code: Str(lt),
-					want: tokens(lttok),
+					want: tokens(),
 				},
 				{
 					name: "Strings",
 					code: sfmt(`"first"%s"second"`, lt),
-					want: tokens(stringToken("first"), lttok, stringToken("second")),
+					want: tokens(stringToken("first"), stringToken("second")),
 				},
 				{
 					name: "Decimals",
 					code: sfmt("1%s2", lt),
-					want: tokens(decimalToken("1"), lttok, decimalToken("2")),
+					want: tokens(decimalToken("1"), decimalToken("2")),
 				},
 				{
 					name: "ExponentDecimals",
 					code: sfmt("1e1%s1e+1%s1e-1%s1", lt, lt, lt),
 					want: tokens(
 						decimalToken("1e1"),
-						lttok,
 						decimalToken("1e+1"),
-						lttok,
 						decimalToken("1e-1"),
-						lttok,
 						decimalToken("1"),
 					),
 				},
 				{
 					name: "RealDecimals",
 					code: sfmt(".1%s245.123", lt),
-					want: tokens(decimalToken(".1"), lttok, decimalToken("245.123")),
+					want: tokens(decimalToken(".1"), decimalToken("245.123")),
 				},
 				{
 					name: "Hexadecimals",
 					code: sfmt("0xFF%s0x11", lt),
-					want: tokens(hexToken("0xFF"), lttok, hexToken("0x11")),
+					want: tokens(hexToken("0xFF"), hexToken("0x11")),
 				},
 				{
 					name: "Identifiers",
 					code: sfmt("hi%shello", lt),
-					want: tokens(identToken("hi"), lttok, identToken("hello")),
+					want: tokens(identToken("hi"), identToken("hello")),
 				},
 				{
-					name: "TwoFuncalls",
+					name: "TwoFuncalls", //TODO: update with auto-semicolon insertion
 					code: sfmt("func1(a)%sfunc2(1)%s", lt, lt),
 					want: tokens(
 						identToken("func1"),
 						leftParenToken(),
 						identToken("a"),
 						rightParenToken(),
-						lttok,
 						identToken("func2"),
 						leftParenToken(),
 						decimalToken("1"),
 						rightParenToken(),
-						lttok,
 					),
 				},
 				{
@@ -383,7 +377,6 @@ func TestLineTerminator(t *testing.T) {
 						leftParenToken(),
 						rightParenToken(),
 						semiColonToken(),
-						lttok,
 						identToken("b"),
 						leftParenToken(),
 						rightParenToken(),
@@ -507,7 +500,6 @@ func TestFuncall(t *testing.T) {
 				rightParenToken(),
 				rightParenToken(),
 				semiColonToken(),
-				ltToken("\n"),
 			),
 		},
 		{
@@ -791,6 +783,7 @@ func TestFuncall(t *testing.T) {
 }
 
 func TestPosition(t *testing.T) {
+
 	cases := []TestCase{
 		{
 			name:          "MinusDecimal",
@@ -824,12 +817,10 @@ func TestPosition(t *testing.T) {
 				leftParenTokenPos(1, 5),
 				identTokenPos("a", 1, 6),
 				rightParenTokenPos(1, 7),
-				ltTokenPos(lt, 1, 8),
 				identTokenPos("funcb", 2, 1),
 				leftParenTokenPos(2, 6),
 				decimalTokenPos("1", 2, 7),
 				rightParenTokenPos(2, 8),
-				ltTokenPos(lt, 2, 9),
 				identTokenPos("funcc", 3, 1),
 				leftParenTokenPos(3, 6),
 				stringTokenPos("hi", 3, 7),
@@ -1161,7 +1152,9 @@ func runTests(t *testing.T, testcases []TestCase) {
 // gets separated correctly.
 //
 // This functions is useful to reuse tokens test cases to validate
-// token separation/splitting (with newlines or semicolons for example).
+// token separation/splitting (like semicolons) when the token that
+// causes the split is a valid token also, not just formatting like
+// newlines and whitespaces.
 func runTokenSepTests(t *testing.T, testcases []TestCase) {
 	for _, ts := range tokenSeparators() {
 		runTests(t, intertwineOnTestCases(ts, testcases))
@@ -1170,9 +1163,6 @@ func runTokenSepTests(t *testing.T, testcases []TestCase) {
 
 func tokenSeparators() []lexer.Tokval {
 	tokens := []lexer.Tokval{}
-	for _, lt := range lineTerminators() {
-		tokens = append(tokens, ltToken(lt.val))
-	}
 	tokens = append(tokens, semiColonToken())
 	tokens = append(tokens, rightParenToken())
 	tokens = append(tokens, commaToken())
@@ -1345,6 +1335,9 @@ func tokval(t token.Type, val string) lexer.Tokval {
 	return tokvalPos(t, val, 0, 0)
 }
 
+func whitespaceToken(spaceChar string) {
+}
+
 func undefinedToken() lexer.Tokval {
 	return tokval(token.Undefined, "undefined")
 }
@@ -1432,14 +1425,6 @@ func identTokenPos(s string, line uint, column uint) lexer.Tokval {
 		Line:   line,
 		Column: column,
 	}
-}
-
-func ltToken(s string) lexer.Tokval {
-	return ltTokenPos(s, 0, 0)
-}
-
-func ltTokenPos(s string, line uint, column uint) lexer.Tokval {
-	return tokvalPos(token.Newline, s, line, column)
 }
 
 func commaToken() lexer.Tokval {
