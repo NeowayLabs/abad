@@ -311,9 +311,8 @@ func TestSemiColon(t *testing.T) {
 
 func TestLineTerminator(t *testing.T) {
 
-	for _, lineTerminator := range lineTerminators() {
-		t.Run(lineTerminator.name, func(t *testing.T) {
-			lt := lineTerminator.val
+	for name, lt := range lineTerminators() {
+		t.Run(name, func(t *testing.T) {
 			runTests(t, []TestCase{
 				{
 					name: fmt.Sprintf("Single%s", lt),
@@ -805,11 +804,10 @@ func TestPosition(t *testing.T) {
 		},
 	}
 
-	for _, lineTerminator := range lineTerminators() {
-		lt := lineTerminator.val
+	for name, lt := range lineTerminators() {
 		code := sfmt(`func(a)%sfuncb(1)%sfuncc("hi")`, lt, lt)
 		cases = append(cases, TestCase{
-			name:          "FuncallsSeparatedBy" + lineTerminator.name,
+			name:          "FuncallsSeparatedBy" + name,
 			code:          code,
 			checkPosition: true,
 			want: tokens(
@@ -892,11 +890,11 @@ func TestInvalidStrings(t *testing.T) {
 		},
 	}
 
-	for _, lineTerminator := range lineTerminators() {
-		code := fmt.Sprintf(`"head%stail"`, lineTerminator.val)
+	for name, lt := range lineTerminators() {
+		code := fmt.Sprintf(`"head%stail"`, lt)
 		cases = append(cases, TestCase{
 			code: Str(code),
-			name: "NewlineTerminator" + lineTerminator.name,
+			name: "NewlineTerminator" + name,
 			want: []lexer.Tokval{illegalToken(code)},
 		})
 	}
@@ -1067,24 +1065,24 @@ func TestIllegalNumericLiterals(t *testing.T) {
 		},
 	}
 
-	for _, lineTerminator := range lineTerminators() {
-		invalidReal := sfmt(".%s5", lineTerminator.val)
-		invalidHexa := sfmt("0x%sFF", lineTerminator.val)
-		invalidExp := sfmt("1e%s1", lineTerminator.val)
+	for name, lt := range lineTerminators() {
+		invalidReal := sfmt(".%s5", lt)
+		invalidHexa := sfmt("0x%sFF", lt)
+		invalidExp := sfmt("1e%s1", lt)
 
 		newcases := []TestCase{
 			{
-				name: fmt.Sprintf("Invalid%sOnRealDecimal", lineTerminator.name),
+				name: fmt.Sprintf("Invalid%sOnRealDecimal", name),
 				code: invalidReal,
 				want: []lexer.Tokval{illegalToken(invalidReal.String())},
 			},
 			{
-				name: fmt.Sprintf("Invalid%sOnHexaDecimal", lineTerminator.name),
+				name: fmt.Sprintf("Invalid%sOnHexaDecimal", name),
 				code: invalidHexa,
 				want: []lexer.Tokval{illegalToken(invalidHexa.String())},
 			},
 			{
-				name: fmt.Sprintf("Invalid%sOnExpDecimal", lineTerminator.name),
+				name: fmt.Sprintf("Invalid%sOnExpDecimal", name),
 				code: invalidExp,
 				want: []lexer.Tokval{illegalToken(invalidExp.String())},
 			},
@@ -1116,18 +1114,17 @@ func TestCorruptedInput(t *testing.T) {
 	})
 }
 
-type LineTerminator struct {
-	name string
-	val  string
+func lineTerminators() map[string]string {
+	return map[string]string{
+		"LineFeed" : "\u000A",
+		"CarriageReturn": "\u000D",
+		"LineSeparator": "\u2028",
+		"ParagraphSeparator": "\u2029",
+	}
 }
 
-func lineTerminators() []LineTerminator {
-	return []LineTerminator{
-		{name: "LineFeed", val: "\u000A"},
-		{name: "CarriageReturn", val: "\u000D"},
-		{name: "LineSeparator", val: "\u2028"},
-		{name: "ParagraphSeparator", val: "\u2029"},
-	}
+func whiteSpaces() map[string]string {
+	return lineTerminators()
 }
 
 func runTests(t *testing.T, testcases []TestCase) {
@@ -1144,6 +1141,18 @@ func runTests(t *testing.T, testcases []TestCase) {
 			assertWantedTokens(t, tc, tokens)
 		})
 	}
+}
+
+// runWhiteSpaceTests will take an array of test cases and run the
+// tests with different white space at the start, end and intertwined
+// between the wanted tokens of each test case, validating if the tokens
+// gets separated correctly.
+//
+// This functions is useful to reuse tokens test cases to validate
+// token separation/splitting when the token that
+// causes the split is not a valid token, just formatting like
+// newlines and whitespaces.
+func runWhiteSpaceTests(t *testing.T, testcases []TestCase) {
 }
 
 // runTokenSepTests will take an array of test cases and run the
@@ -1333,9 +1342,6 @@ func tokvalPos(t token.Type, val string, line uint, column uint) lexer.Tokval {
 
 func tokval(t token.Type, val string) lexer.Tokval {
 	return tokvalPos(t, val, 0, 0)
-}
-
-func whitespaceToken(spaceChar string) {
 }
 
 func undefinedToken() lexer.Tokval {
