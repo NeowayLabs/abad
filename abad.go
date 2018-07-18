@@ -125,36 +125,38 @@ func (a *Abad) evalUnaryExpr(expr *ast.UnaryExpr) (types.Value, error) {
 
 func (a *Abad) evalExpr(n ast.Node) (types.Value, error) {
 	if !ast.IsExpr(n) {
-		panic("internal error: not an expression")
+		return nil, fmt.Errorf("internal error: node[%s] is not an expression", n)
 	}
-
-	var ret types.Value
-	var err error
 
 	switch n.Type() {
+	case ast.NodeUndefined:
+		return types.Undefined, nil
+	case ast.NodeNull:
+		return types.Null, nil
+	case ast.NodeBool:
+		val := n.(ast.Bool)
+		return types.Bool(val.Value()), nil
 	case ast.NodeNumber:
 		val := n.(ast.Number)
-		ret, err = types.Number(val.Value()), nil
+		return types.Number(val.Value()), nil
 	case ast.NodeString:
 		val := n.(ast.String)
-		ret, err = types.String(val), nil
+		return types.String(val), nil
 	case ast.NodeIdent:
 		val := n.(ast.Ident)
-		ret, err = a.evalIdentExpr(val)
+		return a.evalIdentExpr(val)
 	case ast.NodeMemberExpr:
 		val := n.(*ast.MemberExpr)
-		ret, err = a.evalMemberExpr(val)
+		return a.evalMemberExpr(val)
 	case ast.NodeCallExpr:
 		val := n.(*ast.CallExpr)
-		ret, err = a.evalCallExpr(val)
+		return a.evalCallExpr(val)
 	case ast.NodeUnaryExpr:
 		expr := n.(*ast.UnaryExpr)
-		ret, err = a.evalUnaryExpr(expr)
+		return a.evalUnaryExpr(expr)
 	default:
-		panic(fmt.Sprintf("unknown node type: %v", n))
+		return nil, fmt.Errorf("unknown node type: %v", n)
 	}
-
-	return ret, err
 }
 
 func (a *Abad) evalIdentExpr(ident ast.Ident) (types.Value, error) {

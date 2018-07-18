@@ -195,6 +195,10 @@ func (Bool) Type() NodeType {
 	return NodeBool
 }
 
+func (b Bool) Value() bool {
+	return bool(b)
+}
+
 func NewUndefined() Undefined {
 	return Undefined{}
 }

@@ -90,7 +90,7 @@ func assertSuccessRun(t *testing.T, r Result, err error) {
 		return
 	}
 
-	t.Fatalf("\nfatal error:[%s]\n\nstdout:[%s]\n\nstderr:[%s]\n\n", err, r.Stdout, r.Stderr)
+	t.Fatalf("\nfatal error:[%s]\n\nstdout:\n%s\nstderr:\n%s\n", err, r.Stdout, r.Stderr)
 }
 
 func assertEqualOutput(t *testing.T, outputname string, want string, got string) {
