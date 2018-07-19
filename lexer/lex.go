@@ -76,7 +76,11 @@ func newLexer(code []rune) *lexer {
 	return &lexer{code: code, line: 1, column: 1}
 }
 
+
 func (l *lexer) initialState() (Tokval, lexerState) {
+
+	l.skipSpaces()
+	
 	if l.isEOF() {
 		return EOF, nil
 	}
@@ -87,10 +91,6 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 
 	if l.isSemiColon() {
 		return l.semiColonToken(), l.initialState
-	}
-
-	if l.isNewline() {
-		return l.newlineToken(), l.initialState
 	}
 
 	if l.isPlusSign() {
@@ -142,11 +142,9 @@ func (l *lexer) semiColonToken() Tokval {
 	return l.token(token.SemiColon)
 }
 
-func (l *lexer) newlineToken() Tokval {
-	tok := l.token(token.Newline)
+func (l *lexer) updateLine() {
 	l.line += 1
 	l.column = 1
-	return tok
 }
 
 func (l *lexer) stringState() (Tokval, lexerState) {
@@ -311,6 +309,17 @@ func (l *lexer) exponentPartState() (Tokval, lexerState) {
 	return l.decimalState(allowExponent, allowDot)
 }
 
+func (l *lexer) skipSpaces() {
+	for l.isNewline() || l.isWhiteSpace() {
+		if l.isNewline() {
+			l.updateLine()
+		} else {
+			l.updateColumn()
+		}
+		l.consume()
+	}
+}
+
 func (l *lexer) cur() rune {
 	return l.code[l.position]
 }
@@ -352,7 +361,17 @@ func (l *lexer) isRightParen() bool {
 }
 
 func (l *lexer) isNewline() bool {
+	if l.isEOF() {
+		return false
+	}
 	return containsRune(lineTerminators, l.cur())
+}
+
+func (l *lexer) isWhiteSpace() bool {
+	if l.isEOF() {
+		return false
+	}
+	return containsRune(whiteSpaces, l.cur())
 }
 
 func (l *lexer) isHexadecimal() bool {
@@ -380,7 +399,7 @@ func (l *lexer) isTokenEnd() bool {
 	if l.isEOF() {
 		return true
 	}
-	return l.isRightParen() || l.isComma() || l.isNewline() || l.isSemiColon()
+	return l.isRightParen() || l.isComma() || l.isNewline() || l.isSemiColon() || l.isWhiteSpace()
 }
 
 func (l *lexer) fwd() {
@@ -402,6 +421,15 @@ func (l *lexer) curValue() []rune {
 	return l.code[:l.position+1]
 }
 
+func (l *lexer) consume() {
+	if l.isEOF() {
+		l.code = nil
+	} else {
+		l.code = l.code[l.position+1:]
+	}
+	l.position = 0
+}
+
 // token will generate a token consuming all the code
 // until the current position. After calling this method
 // the token will not be available anymore (it has been consumed)
@@ -409,32 +437,26 @@ func (l *lexer) curValue() []rune {
 func (l *lexer) token(t token.Type) Tokval {
 
 	val := l.curValue()
-
-	if l.isEOF() {
-		l.code = nil
-	} else {
-		l.code = l.code[l.position+1:]
-	}
-
-	column := l.updatePos()
+	column := l.updateColumn()
+	l.consume()
+	
 	return Tokval{Type: t, Value: newStr(val), Line: l.line, Column: column}
 }
 
-func (l *lexer) updatePos() uint {
+func (l *lexer) updateColumn() uint {
 	column := l.column
 	l.column += l.position + 1
-	l.position = 0
 	return column
 }
 
 func (l *lexer) stringToken() Tokval {
-	// WHY: strings cant finish on EOF and we need to remove the double quotes
+	// WHY: we need to remove the double quotes
 	// around the string.
 
 	val := l.code[1:l.position]
-	l.code = l.code[l.position+1:]
 
-	column := l.updatePos()
+	column := l.updateColumn()
+	l.consume()
 
 	return Tokval{
 		Type:   token.String,
@@ -447,6 +469,7 @@ func (l *lexer) stringToken() Tokval {
 var numbers []rune
 var hexnumbers []rune
 var lineTerminators []rune
+var whiteSpaces []rune
 var linefeed rune
 var carriageRet rune
 var semiColon rune
@@ -460,6 +483,7 @@ var doubleQuote rune
 var hexStart []rune
 var exponentPartStart []rune
 var keywords map[string]token.Type
+
 
 func init() {
 	numbers = []rune("0123456789")
@@ -485,6 +509,20 @@ func init() {
 		"false":     token.Bool,
 		"true":      token.Bool,
 	}
+	
+	whiteSpaces = newWhiteSpaces()
+}
+
+func newWhiteSpaces() []rune{
+
+	tab := rune('\u0009')
+	verticalTab := rune('\u000B')
+	formFeed := rune('\u000C')
+	space := rune('\u0020')
+	noBreakSpace := rune('\u00A0')
+	byteOrderMark := rune('\uFEFF')
+	
+	return []rune{tab, verticalTab, formFeed, space, noBreakSpace, byteOrderMark}
 }
 
 func containsRune(runes []rune, r rune) bool {

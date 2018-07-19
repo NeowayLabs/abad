@@ -106,3 +106,7 @@ func (s Str) Runes() []rune {
 func (s Str) Append(o Str) Str {
 	return Str(append(s, o...))
 }
+
+func (s Str) Prepend(o Str) Str {
+	return Str(append(o, s...))
+}

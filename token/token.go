@@ -30,8 +30,6 @@ const (
 	Null
 	Undefined
 
-	Newline
-
 	EOF
 )
 
@@ -52,7 +50,6 @@ var names = map[Type]string{
 	SemiColon:   "SemiColon",
 	Null:        "Null",
 	Undefined:   "Undefined",
-	Newline:     "LineTerminator",
 	EOF:         "EOF",
 }
 

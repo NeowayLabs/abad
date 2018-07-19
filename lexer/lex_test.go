@@ -2,6 +2,7 @@ package lexer_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"unicode"
 
@@ -227,6 +228,7 @@ func TestNumericLiterals(t *testing.T) {
 
 	runTests(t, cases)
 	runTokenSepTests(t, cases)
+	runWhiteSpaceTests(t, cases)
 }
 
 func TestStrings(t *testing.T) {
@@ -263,6 +265,7 @@ func TestStrings(t *testing.T) {
 
 	runTests(t, cases)
 	runTokenSepTests(t, cases)
+	runWhiteSpaceTests(t, cases)
 }
 
 func TestKeywords(t *testing.T) {
@@ -291,6 +294,7 @@ func TestKeywords(t *testing.T) {
 
 	runTests(t, cases)
 	runTokenSepTests(t, cases)
+	runWhiteSpaceTests(t, cases)
 }
 
 func TestSemiColon(t *testing.T) {
@@ -311,68 +315,61 @@ func TestSemiColon(t *testing.T) {
 
 func TestLineTerminator(t *testing.T) {
 
-	for _, lineTerminator := range lineTerminators() {
-		t.Run(lineTerminator.name, func(t *testing.T) {
-			lt := lineTerminator.val
-			lttok := ltToken(lt)
+	for name, lt := range lineTerminators() {
+		t.Run(name, func(t *testing.T) {
 			runTests(t, []TestCase{
 				{
 					name: fmt.Sprintf("Single%s", lt),
 					code: Str(lt),
-					want: tokens(lttok),
+					want: tokens(),
 				},
 				{
 					name: "Strings",
 					code: sfmt(`"first"%s"second"`, lt),
-					want: tokens(stringToken("first"), lttok, stringToken("second")),
+					want: tokens(stringToken("first"), stringToken("second")),
 				},
 				{
 					name: "Decimals",
 					code: sfmt("1%s2", lt),
-					want: tokens(decimalToken("1"), lttok, decimalToken("2")),
+					want: tokens(decimalToken("1"), decimalToken("2")),
 				},
 				{
 					name: "ExponentDecimals",
 					code: sfmt("1e1%s1e+1%s1e-1%s1", lt, lt, lt),
 					want: tokens(
 						decimalToken("1e1"),
-						lttok,
 						decimalToken("1e+1"),
-						lttok,
 						decimalToken("1e-1"),
-						lttok,
 						decimalToken("1"),
 					),
 				},
 				{
 					name: "RealDecimals",
 					code: sfmt(".1%s245.123", lt),
-					want: tokens(decimalToken(".1"), lttok, decimalToken("245.123")),
+					want: tokens(decimalToken(".1"), decimalToken("245.123")),
 				},
 				{
 					name: "Hexadecimals",
 					code: sfmt("0xFF%s0x11", lt),
-					want: tokens(hexToken("0xFF"), lttok, hexToken("0x11")),
+					want: tokens(hexToken("0xFF"), hexToken("0x11")),
 				},
 				{
 					name: "Identifiers",
 					code: sfmt("hi%shello", lt),
-					want: tokens(identToken("hi"), lttok, identToken("hello")),
+					want: tokens(identToken("hi"), identToken("hello")),
 				},
 				{
-					name: "TwoFuncalls",
+					name: "TwoFuncalls", //TODO: update with auto-semicolon insertion
 					code: sfmt("func1(a)%sfunc2(1)%s", lt, lt),
 					want: tokens(
 						identToken("func1"),
 						leftParenToken(),
 						identToken("a"),
 						rightParenToken(),
-						lttok,
 						identToken("func2"),
 						leftParenToken(),
 						decimalToken("1"),
 						rightParenToken(),
-						lttok,
 					),
 				},
 				{
@@ -383,7 +380,6 @@ func TestLineTerminator(t *testing.T) {
 						leftParenToken(),
 						rightParenToken(),
 						semiColonToken(),
-						lttok,
 						identToken("b"),
 						leftParenToken(),
 						rightParenToken(),
@@ -469,6 +465,7 @@ func TestIdentifiers(t *testing.T) {
 	runTests(t, accessModCases)
 
 	runTokenSepTests(t, identCases)
+	runWhiteSpaceTests(t, identCases)
 }
 
 func TestFuncall(t *testing.T) {
@@ -507,7 +504,6 @@ func TestFuncall(t *testing.T) {
 				rightParenToken(),
 				rightParenToken(),
 				semiColonToken(),
-				ltToken("\n"),
 			),
 		},
 		{
@@ -787,10 +783,45 @@ func TestFuncall(t *testing.T) {
 				rightParenToken(),
 			),
 		},
+		{
+			name: "CommaSeparatedEverythingWithSpaces",
+			code: Str(` test (  "" , 5 , "i" ,4 , "k", 6.6, 0x5, arg, "jssucks", false, true, undefined , null )  `),
+			want: tokens(
+				identToken("test"),
+				leftParenToken(),
+				stringToken(""),
+				commaToken(),
+				decimalToken("5"),
+				commaToken(),
+				stringToken("i"),
+				commaToken(),
+				decimalToken("4"),
+				commaToken(),
+				stringToken("k"),
+				commaToken(),
+				decimalToken("6.6"),
+				commaToken(),
+				hexToken("0x5"),
+				commaToken(),
+				identToken("arg"),
+				commaToken(),
+				stringToken("jssucks"),
+				commaToken(),
+				boolToken("false"),
+				commaToken(),
+				boolToken("true"),
+				commaToken(),
+				undefinedToken(),
+				commaToken(),
+				nullToken(),
+				rightParenToken(),
+			),
+		},
 	})
 }
 
 func TestPosition(t *testing.T) {
+
 	cases := []TestCase{
 		{
 			name:          "MinusDecimal",
@@ -812,11 +843,10 @@ func TestPosition(t *testing.T) {
 		},
 	}
 
-	for _, lineTerminator := range lineTerminators() {
-		lt := lineTerminator.val
+	for name, lt := range lineTerminators() {
 		code := sfmt(`func(a)%sfuncb(1)%sfuncc("hi")`, lt, lt)
 		cases = append(cases, TestCase{
-			name:          "FuncallsSeparatedBy" + lineTerminator.name,
+			name:          "FuncallsSeparatedBy" + name,
 			code:          code,
 			checkPosition: true,
 			want: tokens(
@@ -824,16 +854,33 @@ func TestPosition(t *testing.T) {
 				leftParenTokenPos(1, 5),
 				identTokenPos("a", 1, 6),
 				rightParenTokenPos(1, 7),
-				ltTokenPos(lt, 1, 8),
 				identTokenPos("funcb", 2, 1),
 				leftParenTokenPos(2, 6),
 				decimalTokenPos("1", 2, 7),
 				rightParenTokenPos(2, 8),
-				ltTokenPos(lt, 2, 9),
 				identTokenPos("funcc", 3, 1),
 				leftParenTokenPos(3, 6),
 				stringTokenPos("hi", 3, 7),
 				rightParenTokenPos(3, 11),
+			),
+		})
+	}
+	
+	for name, sp := range whiteSpaces() {
+		code := sfmt(`func(a)%sfuncb(1)`, sp)
+		cases = append(cases, TestCase{
+			name:          "FuncallsSeparatedBy" + name,
+			code:          code,
+			checkPosition: true,
+			want: tokens(
+				identTokenPos("func", 1, 1),
+				leftParenTokenPos(1, 5),
+				identTokenPos("a", 1, 6),
+				rightParenTokenPos(1, 7),
+				identTokenPos("funcb", 1, 9),
+				leftParenTokenPos(1, 14),
+				decimalTokenPos("1", 1, 15),
+				rightParenTokenPos(1, 16),
 			),
 		})
 	}
@@ -901,11 +948,11 @@ func TestInvalidStrings(t *testing.T) {
 		},
 	}
 
-	for _, lineTerminator := range lineTerminators() {
-		code := fmt.Sprintf(`"head%stail"`, lineTerminator.val)
+	for name, lt := range lineTerminators() {
+		code := fmt.Sprintf(`"head%stail"`, lt)
 		cases = append(cases, TestCase{
 			code: Str(code),
-			name: "NewlineTerminator" + lineTerminator.name,
+			name: "NewlineTerminator" + name,
 			want: []lexer.Tokval{illegalToken(code)},
 		})
 	}
@@ -1076,24 +1123,24 @@ func TestIllegalNumericLiterals(t *testing.T) {
 		},
 	}
 
-	for _, lineTerminator := range lineTerminators() {
-		invalidReal := sfmt(".%s5", lineTerminator.val)
-		invalidHexa := sfmt("0x%sFF", lineTerminator.val)
-		invalidExp := sfmt("1e%s1", lineTerminator.val)
+	for name, lt := range lineTerminators() {
+		invalidReal := sfmt(".%s5", lt)
+		invalidHexa := sfmt("0x%sFF", lt)
+		invalidExp := sfmt("1e%s1", lt)
 
 		newcases := []TestCase{
 			{
-				name: fmt.Sprintf("Invalid%sOnRealDecimal", lineTerminator.name),
+				name: fmt.Sprintf("Invalid%sOnRealDecimal", name),
 				code: invalidReal,
 				want: []lexer.Tokval{illegalToken(invalidReal.String())},
 			},
 			{
-				name: fmt.Sprintf("Invalid%sOnHexaDecimal", lineTerminator.name),
+				name: fmt.Sprintf("Invalid%sOnHexaDecimal", name),
 				code: invalidHexa,
 				want: []lexer.Tokval{illegalToken(invalidHexa.String())},
 			},
 			{
-				name: fmt.Sprintf("Invalid%sOnExpDecimal", lineTerminator.name),
+				name: fmt.Sprintf("Invalid%sOnExpDecimal", name),
 				code: invalidExp,
 				want: []lexer.Tokval{illegalToken(invalidExp.String())},
 			},
@@ -1125,18 +1172,35 @@ func TestCorruptedInput(t *testing.T) {
 	})
 }
 
-type LineTerminator struct {
-	name string
-	val  string
+func lineTerminators() map[string]string {
+	return map[string]string{
+		"LineFeed":           "\u000A",
+		"CarriageReturn":     "\u000D",
+		"LineSeparator":      "\u2028",
+		"ParagraphSeparator": "\u2029",
+	}
 }
 
-func lineTerminators() []LineTerminator {
-	return []LineTerminator{
-		{name: "LineFeed", val: "\u000A"},
-		{name: "CarriageReturn", val: "\u000D"},
-		{name: "LineSeparator", val: "\u2028"},
-		{name: "ParagraphSeparator", val: "\u2029"},
+func whiteSpaces() map[string]string {
+	return map[string]string{
+		"Tab": "\u0009",
+		"VerticalTab": "\u000B",
+		"FormFeed": "\u000C",
+		"Space": "\u0020",
+		"NoBreakSpace": "\u00A0",
+		"ByteOrderMark": "\uFEFF",
 	}
+}
+
+func allSpaces() map[string]string {
+	lts := lineTerminators()
+	ws := whiteSpaces()
+
+	for k, v := range lts {
+		ws[k] = v
+	}
+	
+	return ws
 }
 
 func runTests(t *testing.T, testcases []TestCase) {
@@ -1155,13 +1219,79 @@ func runTests(t *testing.T, testcases []TestCase) {
 	}
 }
 
+// runWhiteSpaceTests will take an array of test cases and run the
+// tests with different white space at the start, end and intertwined
+// between the wanted tokens of each test case, validating if the tokens
+// gets separated correctly.
+//
+// This functions is useful to reuse tokens test cases to validate
+// token separation/splitting when the token that
+// causes the split is not a valid token, just formatting like
+// newlines and whitespaces.
+func runWhiteSpaceTests(t *testing.T, testcases []TestCase) {
+	for name, val := range allSpaces() {
+		for _, tcase := range testcases {
+			runWhiteSpaceTest(t, tcase, name, val)
+		}
+	}
+}
+
+func runWhiteSpaceTest(t *testing.T, tc TestCase, name string, val string) {
+	runTests(t, []TestCase{
+		intertwineWithWhiteSpace(tc, name, val),
+		{
+			name: fmt.Sprintf("%s/%sAtStart", tc.name, name),
+			code: tc.code.Prepend(Str(val)),
+			want: tc.want,
+		},
+		{
+			name: fmt.Sprintf("%s/%sAtEnd", tc.name, name),
+			code: tc.code.Append(Str(val)),
+			want: tc.want,
+		},
+	})
+}
+
+func intertwineWithWhiteSpace(tc TestCase, name string, val string) TestCase {
+	code := []string{}
+
+	tokens, hasEOF := removeEOF(tc.want)
+	newwant := []lexer.Tokval{}
+
+	if len(tokens) == 1 {
+		tokens = append(tokens, tokens[0])
+	}
+
+	for _, tok := range tokens {
+		val := tok.Value.String()
+		if tok.Type == token.String {
+			code = append(code, fmt.Sprintf(`"%s"`, val))
+		} else {
+			code = append(code, val)
+		}
+		newwant = append(newwant, tok)
+	}
+
+	if hasEOF {
+		newwant = append(newwant, EOF)
+	}
+
+	return TestCase{
+		name: fmt.Sprintf("%s/InterwinedWith%s", tc.name, name),
+		code: Str(strings.Join(code, val)),
+		want: newwant,
+	}
+}
+
 // runTokenSepTests will take an array of test cases and run the
 // tests with different token separators intertwined between
 // the wanted tokens of each test case, validating if the tokens
 // gets separated correctly.
 //
 // This functions is useful to reuse tokens test cases to validate
-// token separation/splitting (with newlines or semicolons for example).
+// token separation/splitting (like semicolons) when the token that
+// causes the split is a valid token also, not just formatting like
+// newlines and whitespaces.
 func runTokenSepTests(t *testing.T, testcases []TestCase) {
 	for _, ts := range tokenSeparators() {
 		runTests(t, intertwineOnTestCases(ts, testcases))
@@ -1170,9 +1300,6 @@ func runTokenSepTests(t *testing.T, testcases []TestCase) {
 
 func tokenSeparators() []lexer.Tokval {
 	tokens := []lexer.Tokval{}
-	for _, lt := range lineTerminators() {
-		tokens = append(tokens, ltToken(lt.val))
-	}
 	tokens = append(tokens, semiColonToken())
 	tokens = append(tokens, rightParenToken())
 	tokens = append(tokens, commaToken())
@@ -1190,6 +1317,7 @@ func assertWantedTokens(t *testing.T, tc TestCase, got []lexer.Tokval) {
 	t.Helper()
 
 	if len(tc.want) != len(got) {
+		t.Errorf("error parsing code[%s]", tc.code)
 		t.Errorf("wanted [%d] tokens, got [%d] tokens", len(tc.want), len(got))
 		t.Fatalf("\nwant=%v\ngot= %v\nare not equal.", tc.want, got)
 	}
@@ -1432,14 +1560,6 @@ func identTokenPos(s string, line uint, column uint) lexer.Tokval {
 		Line:   line,
 		Column: column,
 	}
-}
-
-func ltToken(s string) lexer.Tokval {
-	return ltTokenPos(s, 0, 0)
-}
-
-func ltTokenPos(s string, line uint, column uint) lexer.Tokval {
-	return tokvalPos(token.Newline, s, line, column)
 }
 
 func commaToken() lexer.Tokval {
