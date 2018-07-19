@@ -1130,12 +1130,12 @@ func lineTerminators() map[string]string {
 
 func whiteSpaces() map[string]string {
 	ws := lineTerminators()
-	//ws["Tab"] = "\u0009"
-	//ws["VerticalTab"] = "\u000B"
-	//ws["FormFeed"] = "\u000C"
-	//ws["Space"] = "\u0020"
-	//ws["NoBreakSpace"] = "\u00A0"
-	//ws["ByteOrderMark"] = "\uFEFF"
+	ws["Tab"] = "\u0009"
+	ws["VerticalTab"] = "\u000B"
+	ws["FormFeed"] = "\u000C"
+	ws["Space"] = "\u0020"
+	ws["NoBreakSpace"] = "\u00A0"
+	ws["ByteOrderMark"] = "\uFEFF"
 	return ws
 }
 

@@ -79,7 +79,7 @@ func newLexer(code []rune) *lexer {
 
 func (l *lexer) initialState() (Tokval, lexerState) {
 
-	l.skipNewlines()
+	l.skipSpaces()
 	
 	if l.isEOF() {
 		return EOF, nil
@@ -309,9 +309,13 @@ func (l *lexer) exponentPartState() (Tokval, lexerState) {
 	return l.decimalState(allowExponent, allowDot)
 }
 
-func (l *lexer) skipNewlines() {
-	for l.isNewline() {
-		l.updateLine()
+func (l *lexer) skipSpaces() {
+	for l.isNewline() || l.isWhiteSpace() {
+		if l.isNewline() {
+			l.updateLine()
+		} else {
+			l.updateColumn()
+		}
 		l.consume()
 	}
 }
@@ -363,6 +367,13 @@ func (l *lexer) isNewline() bool {
 	return containsRune(lineTerminators, l.cur())
 }
 
+func (l *lexer) isWhiteSpace() bool {
+	if l.isEOF() {
+		return false
+	}
+	return containsRune(whiteSpaces, l.cur())
+}
+
 func (l *lexer) isHexadecimal() bool {
 	return containsRune(hexnumbers, l.cur())
 }
@@ -388,7 +399,7 @@ func (l *lexer) isTokenEnd() bool {
 	if l.isEOF() {
 		return true
 	}
-	return l.isRightParen() || l.isComma() || l.isNewline() || l.isSemiColon()
+	return l.isRightParen() || l.isComma() || l.isNewline() || l.isSemiColon() || l.isWhiteSpace()
 }
 
 func (l *lexer) fwd() {
@@ -426,13 +437,13 @@ func (l *lexer) consume() {
 func (l *lexer) token(t token.Type) Tokval {
 
 	val := l.curValue()
-	column := l.updatePos()
+	column := l.updateColumn()
 	l.consume()
 	
 	return Tokval{Type: t, Value: newStr(val), Line: l.line, Column: column}
 }
 
-func (l *lexer) updatePos() uint {
+func (l *lexer) updateColumn() uint {
 	column := l.column
 	l.column += l.position + 1
 	return column
@@ -444,7 +455,7 @@ func (l *lexer) stringToken() Tokval {
 
 	val := l.code[1:l.position]
 
-	column := l.updatePos()
+	column := l.updateColumn()
 	l.consume()
 
 	return Tokval{
@@ -458,6 +469,7 @@ func (l *lexer) stringToken() Tokval {
 var numbers []rune
 var hexnumbers []rune
 var lineTerminators []rune
+var whiteSpaces []rune
 var linefeed rune
 var carriageRet rune
 var semiColon rune
@@ -471,6 +483,7 @@ var doubleQuote rune
 var hexStart []rune
 var exponentPartStart []rune
 var keywords map[string]token.Type
+
 
 func init() {
 	numbers = []rune("0123456789")
@@ -496,6 +509,20 @@ func init() {
 		"false":     token.Bool,
 		"true":      token.Bool,
 	}
+	
+	whiteSpaces = newWhiteSpaces()
+}
+
+func newWhiteSpaces() []rune{
+
+	tab := rune('\u0009')
+	verticalTab := rune('\u000B')
+	formFeed := rune('\u000C')
+	space := rune('\u0020')
+	noBreakSpace := rune('\u00A0')
+	byteOrderMark := rune('\uFEFF')
+	
+	return []rune{tab, verticalTab, formFeed, space, noBreakSpace, byteOrderMark}
 }
 
 func containsRune(runes []rune, r rune) bool {
