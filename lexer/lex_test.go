@@ -831,6 +831,25 @@ func TestPosition(t *testing.T) {
 			),
 		})
 	}
+	
+	for name, sp := range whiteSpaces() {
+		code := sfmt(`func(a)%sfuncb(1)`, sp)
+		cases = append(cases, TestCase{
+			name:          "FuncallsSeparatedBy" + name,
+			code:          code,
+			checkPosition: true,
+			want: tokens(
+				identTokenPos("func", 1, 1),
+				leftParenTokenPos(1, 5),
+				identTokenPos("a", 1, 6),
+				rightParenTokenPos(1, 7),
+				identTokenPos("funcb", 1, 9),
+				leftParenTokenPos(1, 14),
+				decimalTokenPos("1", 1, 15),
+				rightParenTokenPos(1, 16),
+			),
+		})
+	}
 
 	runTests(t, cases)
 }
@@ -1129,13 +1148,24 @@ func lineTerminators() map[string]string {
 }
 
 func whiteSpaces() map[string]string {
-	ws := lineTerminators()
-	ws["Tab"] = "\u0009"
-	ws["VerticalTab"] = "\u000B"
-	ws["FormFeed"] = "\u000C"
-	ws["Space"] = "\u0020"
-	ws["NoBreakSpace"] = "\u00A0"
-	ws["ByteOrderMark"] = "\uFEFF"
+	return map[string]string{
+		"Tab": "\u0009",
+		"VerticalTab": "\u000B",
+		"FormFeed": "\u000C",
+		"Space": "\u0020",
+		"NoBreakSpace": "\u00A0",
+		"ByteOrderMark": "\uFEFF",
+	}
+}
+
+func allSpaces() map[string]string {
+	lts := lineTerminators()
+	ws := whiteSpaces()
+
+	for k, v := range lts {
+		ws[k] = v
+	}
+	
 	return ws
 }
 
@@ -1165,7 +1195,7 @@ func runTests(t *testing.T, testcases []TestCase) {
 // causes the split is not a valid token, just formatting like
 // newlines and whitespaces.
 func runWhiteSpaceTests(t *testing.T, testcases []TestCase) {
-	for name, val := range whiteSpaces() {
+	for name, val := range allSpaces() {
 		for _, tcase := range testcases {
 			runWhiteSpaceTest(t, tcase, name, val)
 		}
@@ -1190,14 +1220,14 @@ func runWhiteSpaceTest(t *testing.T, tc TestCase, name string, val string) {
 
 func intertwineWithWhiteSpace(tc TestCase, name string, val string) TestCase {
 	code := []string{}
-	
+
 	tokens, hasEOF := removeEOF(tc.want)
 	newwant := []lexer.Tokval{}
-	
+
 	if len(tokens) == 1 {
 		tokens = append(tokens, tokens[0])
 	}
-	
+
 	for _, tok := range tokens {
 		val := tok.Value.String()
 		if tok.Type == token.String {
@@ -1205,14 +1235,14 @@ func intertwineWithWhiteSpace(tc TestCase, name string, val string) TestCase {
 		} else {
 			code = append(code, val)
 		}
-		newwant = append(newwant, tok) 
+		newwant = append(newwant, tok)
 	}
-	
+
 	if hasEOF {
 		newwant = append(newwant, EOF)
 	}
-	
-	return TestCase {
+
+	return TestCase{
 		name: fmt.Sprintf("%s/InterwinedWith%s", tc.name, name),
 		code: Str(strings.Join(code, val)),
 		want: newwant,
