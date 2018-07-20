@@ -865,7 +865,7 @@ func TestPosition(t *testing.T) {
 			),
 		})
 	}
-	
+
 	for name, sp := range whiteSpaces() {
 		code := sfmt(`func(a)%sfuncb(1)`, sp)
 		cases = append(cases, TestCase{
@@ -1183,11 +1183,11 @@ func lineTerminators() map[string]string {
 
 func whiteSpaces() map[string]string {
 	return map[string]string{
-		"Tab": "\u0009",
-		"VerticalTab": "\u000B",
-		"FormFeed": "\u000C",
-		"Space": "\u0020",
-		"NoBreakSpace": "\u00A0",
+		"Tab":           "\u0009",
+		"VerticalTab":   "\u000B",
+		"FormFeed":      "\u000C",
+		"Space":         "\u0020",
+		"NoBreakSpace":  "\u00A0",
 		"ByteOrderMark": "\uFEFF",
 	}
 }
@@ -1199,7 +1199,7 @@ func allSpaces() map[string]string {
 	for k, v := range lts {
 		ws[k] = v
 	}
-	
+
 	return ws
 }
 

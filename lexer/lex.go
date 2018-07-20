@@ -76,11 +76,10 @@ func newLexer(code []rune) *lexer {
 	return &lexer{code: code, line: 1, column: 1}
 }
 
-
 func (l *lexer) initialState() (Tokval, lexerState) {
 
 	l.skipSpaces()
-	
+
 	if l.isEOF() {
 		return EOF, nil
 	}
@@ -439,7 +438,7 @@ func (l *lexer) token(t token.Type) Tokval {
 	val := l.curValue()
 	column := l.updateColumn()
 	l.consume()
-	
+
 	return Tokval{Type: t, Value: newStr(val), Line: l.line, Column: column}
 }
 
@@ -484,7 +483,6 @@ var hexStart []rune
 var exponentPartStart []rune
 var keywords map[string]token.Type
 
-
 func init() {
 	numbers = []rune("0123456789")
 	hexnumbers = append(numbers, []rune("abcdefABCDEF")...)
@@ -509,11 +507,11 @@ func init() {
 		"false":     token.Bool,
 		"true":      token.Bool,
 	}
-	
+
 	whiteSpaces = newWhiteSpaces()
 }
 
-func newWhiteSpaces() []rune{
+func newWhiteSpaces() []rune {
 
 	tab := rune('\u0009')
 	verticalTab := rune('\u000B')
@@ -521,7 +519,7 @@ func newWhiteSpaces() []rune{
 	space := rune('\u0020')
 	noBreakSpace := rune('\u00A0')
 	byteOrderMark := rune('\uFEFF')
-	
+
 	return []rune{tab, verticalTab, formFeed, space, noBreakSpace, byteOrderMark}
 }
 
