@@ -262,7 +262,7 @@ func parseIdentExpr(p *Parser) (ast.Node, error) {
 	}
 
 	if next.Type != token.EOF {
-		return nil, p.errorf(next, "unexpected token [%s]", next)
+		return nil, p.errorf(next, "parser:identifier:unexpected token [%s]", next)
 	}
 
 	p.forget(2)
@@ -324,21 +324,29 @@ func parseMemberFuncall(p *Parser, member *ast.MemberExpr) (ast.Node, error) {
 
 func parseFuncallArgs(p *Parser) ([]ast.Node, error) {
 	if len(p.lookahead) != 0 {
-		panic("wrong lookahead")
+		panic(fmt.Sprintf("parser: funcall args: unexpected non empty lookahead:%s", p.lookahead))
 	}
 
-	hasMoreArgs := func(t token.Type) bool {
-		return t != token.EOF &&
-			t != token.RParen
+	nextToken := func() lexer.Tokval {
+		p.scry(1)
+		return p.lookahead[0]
 	}
 
 	var args []ast.Node
 
-	p.scry(1)
-	var tok lexer.Tokval
-
-	for tok = p.lookahead[0]; hasMoreArgs(tok.Type); {
-
+	for {
+		tok := nextToken()
+		
+		if tok.Type == token.EOF || tok.Type == token.RParen {
+			p.forget(1)
+			break
+		}
+		
+		if tok.Type == token.Comma {
+			p.forget(1)
+			continue
+		}
+		
 		parser, hasParser := literalParsers[tok.Type]
 		if hasParser {
 			parsed, err := parser(p)
@@ -347,21 +355,9 @@ func parseFuncallArgs(p *Parser) ([]ast.Node, error) {
 			}
 			args = append(args, parsed)
 		} else {
-			return nil, p.errorf(tok, "error parsing funcall args: unexpected token [%s]", tok.Value)
-		}
-
-		p.scry(1)
-		if tok = p.lookahead[0]; tok.Type != token.Comma &&
-			tok.Type != token.RParen {
-			return nil, p.errorf(tok, "unexpected %s", tok.Value)
+			return nil, p.errorf(tok, "parser: funcall args: unexpected token [%s]", tok.Value)
 		}
 	}
-
-	if tok.Type != token.RParen {
-		return nil, p.errorf(tok, "unexpected %s", tok.Value)
-	}
-
-	p.forget(1)
 
 	return args, nil
 }
