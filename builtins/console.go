@@ -2,6 +2,7 @@ package builtins
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/NeowayLabs/abad/internal/utf16"
 	"github.com/NeowayLabs/abad/types"
@@ -52,9 +53,11 @@ func newlog() (*types.Builtinfn, error) {
 }
 
 func log(_ types.Object, args []types.Value) types.Value {
+	vals := []string{}
 	for _, v := range args {
-		fmt.Printf("%s\n", v.ToString())
+		vals = append(vals, v.ToString().String())
 	}
+	fmt.Println(strings.Join(vals, " "))
 	return types.Undefined
 }
 
