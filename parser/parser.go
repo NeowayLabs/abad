@@ -341,7 +341,7 @@ func parseFuncallArgs(p *Parser) ([]ast.Node, error) {
 			p.forget(1)
 			break
 		}
-		
+		// TODO: not handling errors like successive commas
 		if tok.Type == token.Comma {
 			p.forget(1)
 			continue

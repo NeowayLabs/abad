@@ -470,6 +470,19 @@ func TestParserFuncall(t *testing.T) {
 				intNumber(255),
 			}),
 		},
+		{
+			name: "AllTypesTogetherWithSpaces",
+			code: `all( "hi", true, false, null, undefined, 666, 0xFF )`,
+			want: callExpr(identifier("all"), []ast.Node{
+				str("hi"),
+				boolean(true),
+	    		boolean(false),
+				null(),
+				undefined(),
+				intNumber(666),
+				intNumber(255),
+			}),
+		},
 	})
 }
 
