@@ -101,7 +101,7 @@ func assertEqualOutput(t *testing.T, outputname string, want string, got string)
 
 	if len(wantedlines) != len(gotlines) {
 		t.Errorf(
-			"%s: wanted output has [%d] lines but got output has [%d]",
+			"%s: wanted output has [%d] lines but actual output has [%d]",
 			outputname,
 			len(wantedlines),
 			len(gotlines),

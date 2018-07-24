@@ -8,3 +8,4 @@ console.log(undefined);
 console.log(null);
 console.log(true);
 console.log(false);
+console.log("hi",true,false,null,undefined,666,0xFF);
