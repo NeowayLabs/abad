@@ -463,7 +463,7 @@ func TestParserFuncall(t *testing.T) {
 			want: callExpr(identifier("all"), []ast.Node{
 				str("hi"),
 				boolean(true),
-	    		boolean(false),
+				boolean(false),
 				null(),
 				undefined(),
 				intNumber(666),
@@ -476,7 +476,7 @@ func TestParserFuncall(t *testing.T) {
 			want: callExpr(identifier("all"), []ast.Node{
 				str("hi"),
 				boolean(true),
-	    		boolean(false),
+				boolean(false),
 				null(),
 				undefined(),
 				intNumber(666),

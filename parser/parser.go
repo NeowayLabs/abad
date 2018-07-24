@@ -336,7 +336,7 @@ func parseFuncallArgs(p *Parser) ([]ast.Node, error) {
 
 	for {
 		tok := nextToken()
-		
+
 		if tok.Type == token.EOF || tok.Type == token.RParen {
 			p.forget(1)
 			break
@@ -346,7 +346,7 @@ func parseFuncallArgs(p *Parser) ([]ast.Node, error) {
 			p.forget(1)
 			continue
 		}
-		
+
 		parser, hasParser := literalParsers[tok.Type]
 		if hasParser {
 			parsed, err := parser(p)
