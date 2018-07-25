@@ -1,3 +1,5 @@
+console.log();
+console.log("");
 console.log(666);
 console.log(.1);
 console.log(6.6);
