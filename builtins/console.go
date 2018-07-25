@@ -59,7 +59,7 @@ func log(_ types.Object, args []types.Value) types.Value {
 		fmt.Println("")
 		return types.Undefined
 	}
-	
+
 	vals := []string{}
 	for _, v := range args {
 		vals = append(vals, v.ToString().String())
@@ -80,16 +80,16 @@ func sprintf(vals []string) string {
 	replace := func(fmtReplacer string) {
 		msg = strings.Replace(msg, fmtReplacer, "%s", -1)
 	}
-	
-	for _, fmtReplacer := range []string{ "%d", "%i", "%f", "%o", "%O" } {
+
+	for _, fmtReplacer := range []string{"%d", "%i", "%f", "%o", "%O"} {
 		replace(fmtReplacer)
 	}
-	
+
 	args := make([]interface{}, len(vals))
 	for i, v := range vals {
 		args[i] = v
 	}
-	
+
 	return fmt.Sprintf(msg, args...)
 }
 
