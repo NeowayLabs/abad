@@ -6,6 +6,7 @@ package fixture
 
 import (
 	"bytes"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -18,6 +19,12 @@ import (
 type Result struct {
 	Stdout string
 	Stderr string
+}
+
+type TestCase struct {
+	Name string
+	Code string
+	Want Result
 }
 
 type JsInterpreter func(codepath string) (error, Result)
@@ -81,6 +88,36 @@ func RunWithInterpreters(
 	})
 
 	assert.NoError(t, err)
+}
+
+func RunCases(
+	t *testing.T,
+	js JsInterpreter,
+	tcases []TestCase,
+) {
+
+	for _, tcase := range tcases {
+		t.Run(tcase.Name, func(t *testing.T) {
+			tmpfile, err := ioutil.TempFile("", "abadfixture")
+			assert.NoError(t, err)
+
+			defer func() {
+				tmpfile.Close()
+				os.Remove(tmpfile.Name())
+			}()
+
+			codeb := []byte(tcase.Code)
+			n, err := tmpfile.Write(codeb)
+			assert.NoError(t, err)
+			assert.EqualInts(t, len(codeb), n, "writing code on temp file")
+
+			err, got := js(tmpfile.Name())
+			assertSuccessRun(t, got, err)
+
+			assertEqualOutput(t, "stdout", tcase.Want.Stdout, got.Stdout)
+			assertEqualOutput(t, "stderr", tcase.Want.Stderr, got.Stderr)
+		})
+	}
 }
 
 func assertSuccessRun(t *testing.T, r Result, err error) {
