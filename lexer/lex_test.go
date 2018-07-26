@@ -273,7 +273,7 @@ func TestKeywords(t *testing.T) {
 	keyword := func(t token.Type, s string) []lexer.Tokval {
 		return tokens(tokval(t, s))
 	}
-	
+
 	cases := []TestCase{
 		{
 			name: "Null",
