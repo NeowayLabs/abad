@@ -269,6 +269,11 @@ func TestStrings(t *testing.T) {
 }
 
 func TestKeywords(t *testing.T) {
+
+	keyword := func(t token.Type, s string) []lexer.Tokval {
+		return tokens(tokval(t, s))
+	}
+
 	cases := []TestCase{
 		{
 			name: "Null",
@@ -289,6 +294,131 @@ func TestKeywords(t *testing.T) {
 			name: "True",
 			code: Str("true"),
 			want: tokens(boolToken("true")),
+		},
+		{
+			name: "Break",
+			code: Str("break"),
+			want: keyword(token.Break, "break"),
+		},
+		{
+			name: "Case",
+			code: Str("case"),
+			want: keyword(token.Case, "case"),
+		},
+		{
+			name: "Continue",
+			code: Str("continue"),
+			want: keyword(token.Continue, "continue"),
+		},
+		{
+			name: "Debugger",
+			code: Str("debugger"),
+			want: keyword(token.Debugger, "debugger"),
+		},
+		{
+			name: "Default",
+			code: Str("default"),
+			want: keyword(token.Default, "default"),
+		},
+		{
+			name: "Delete",
+			code: Str("delete"),
+			want: keyword(token.Delete, "delete"),
+		},
+		{
+			name: "Do",
+			code: Str("do"),
+			want: keyword(token.Do, "do"),
+		},
+		{
+			name: "Else",
+			code: Str("else"),
+			want: keyword(token.Else, "else"),
+		},
+		{
+			name: "Finally",
+			code: Str("finally"),
+			want: keyword(token.Finally, "finally"),
+		},
+		{
+			name: "For",
+			code: Str("for"),
+			want: keyword(token.For, "for"),
+		},
+		{
+			name: "Function",
+			code: Str("function"),
+			want: keyword(token.Function, "function"),
+		},
+		{
+			name: "If",
+			code: Str("if"),
+			want: keyword(token.If, "if"),
+		},
+		{
+			name: "In",
+			code: Str("in"),
+			want: keyword(token.In, "in"),
+		},
+		{
+			name: "InstanceOf",
+			code: Str("instanceof"),
+			want: keyword(token.InstanceOf, "instanceof"),
+		},
+		{
+			name: "New",
+			code: Str("new"),
+			want: keyword(token.New, "new"),
+		},
+		{
+			name: "Return",
+			code: Str("return"),
+			want: keyword(token.Return, "return"),
+		},
+		{
+			name: "Switch",
+			code: Str("switch"),
+			want: keyword(token.Switch, "switch"),
+		},
+		{
+			name: "This",
+			code: Str("this"),
+			want: keyword(token.This, "this"),
+		},
+		{
+			name: "Throw",
+			code: Str("throw"),
+			want: keyword(token.Throw, "throw"),
+		},
+		{
+			name: "Try",
+			code: Str("try"),
+			want: keyword(token.Try, "try"),
+		},
+		{
+			name: "Typeof",
+			code: Str("typeof"),
+			want: keyword(token.TypeOf, "typeof"),
+		},
+		{
+			name: "Var",
+			code: Str("var"),
+			want: keyword(token.Var, "var"),
+		},
+		{
+			name: "Void",
+			code: Str("void"),
+			want: keyword(token.Void, "void"),
+		},
+		{
+			name: "While",
+			code: Str("while"),
+			want: keyword(token.While, "while"),
+		},
+		{
+			name: "With",
+			code: Str("with"),
+			want: keyword(token.With, "with"),
 		},
 	}
 
