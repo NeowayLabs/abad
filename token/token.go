@@ -51,6 +51,11 @@ const (
 	This
 	Throw
 	Try
+	TypeOf
+	Var
+	Void
+	While
+	With
 
 	EOF
 )
@@ -93,6 +98,11 @@ var names = map[Type]string{
 	This:        "This",
 	Throw:       "Throw",
 	Try:         "Try",
+	TypeOf:      "TypeOf",
+	Var:         "Var",
+	Void:        "Void",
+	While:       "While",
+	With:        "With",
 	EOF:         "EOF",
 }
 

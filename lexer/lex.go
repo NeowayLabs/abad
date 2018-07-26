@@ -501,7 +501,12 @@ func init() {
 	semiColon = rune(';')
 	hexStart = []rune("xX")
 	exponentPartStart = []rune("eE")
-	keywords = map[string]token.Type{
+	keywords = newKeywords()
+	whiteSpaces = newWhiteSpaces()
+}
+
+func newKeywords() map[string]token.Type {
+	return map[string]token.Type{
 		"null":      token.Null,
 		"undefined": token.Undefined,
 		"false":     token.Bool,
@@ -515,9 +520,23 @@ func init() {
 		"do":        token.Do,
 		"else":      token.Else,
 		"finally":   token.Finally,
+		"for": token.For,
+		"function": token.Function,
+		"if": token.If,
+		"in": token.In,
+		"instanceof": token.InstanceOf,
+		"new": token.New,
+		"return": token.Return,
+		"switch": token.Switch,
+		"this": token.This,
+		"throw": token.Throw,
+		"try": token.Try,
+		"typeof": token.TypeOf,
+		"var": token.Var,
+		"void": token.Void,
+		"while" : token.While,
+		"with" : token.With,
 	}
-
-	whiteSpaces = newWhiteSpaces()
 }
 
 func newWhiteSpaces() []rune {
