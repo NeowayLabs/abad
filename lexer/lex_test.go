@@ -269,6 +269,11 @@ func TestStrings(t *testing.T) {
 }
 
 func TestKeywords(t *testing.T) {
+
+	keyword := func(t token.Type, s string) []lexer.Tokval {
+		return tokens(tokval(t, s))
+	}
+	
 	cases := []TestCase{
 		{
 			name: "Null",
@@ -293,47 +298,47 @@ func TestKeywords(t *testing.T) {
 		{
 			name: "Break",
 			code: Str("break"),
-			want: tokens(tokval(token.Break, "break")),
+			want: keyword(token.Break, "break"),
 		},
 		{
 			name: "Case",
 			code: Str("case"),
-			want: tokens(tokval(token.Case, "case")),
+			want: keyword(token.Case, "case"),
 		},
 		{
 			name: "Continue",
 			code: Str("continue"),
-			want: tokens(tokval(token.Continue, "continue")),
+			want: keyword(token.Continue, "continue"),
 		},
 		{
 			name: "Debugger",
 			code: Str("debugger"),
-			want: tokens(tokval(token.Debugger, "debugger")),
+			want: keyword(token.Debugger, "debugger"),
 		},
 		{
 			name: "Default",
 			code: Str("default"),
-			want: tokens(tokval(token.Default, "default")),
+			want: keyword(token.Default, "default"),
 		},
 		{
 			name: "Delete",
 			code: Str("delete"),
-			want: tokens(tokval(token.Delete, "delete")),
+			want: keyword(token.Delete, "delete"),
 		},
 		{
 			name: "Do",
 			code: Str("do"),
-			want: tokens(tokval(token.Do, "do")),
+			want: keyword(token.Do, "do"),
 		},
 		{
 			name: "Else",
 			code: Str("else"),
-			want: tokens(tokval(token.Else, "else")),
+			want: keyword(token.Else, "else"),
 		},
 		{
 			name: "Finally",
 			code: Str("finally"),
-			want: tokens(tokval(token.Finally, "finally")),
+			want: keyword(token.Finally, "finally"),
 		},
 	}
 
