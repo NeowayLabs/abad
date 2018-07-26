@@ -325,6 +325,16 @@ func TestKeywords(t *testing.T) {
 			code: Str("do"),
 			want: tokens(tokval(token.Do, "do")),
 		},
+		{
+			name: "Else",
+			code: Str("else"),
+			want: tokens(tokval(token.Else, "else")),
+		},
+		{
+			name: "Finally",
+			code: Str("finally"),
+			want: tokens(tokval(token.Finally, "finally")),
+		},
 	}
 
 	runTests(t, cases)

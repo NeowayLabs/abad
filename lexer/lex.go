@@ -513,6 +513,8 @@ func init() {
 		"default":   token.Default,
 		"delete":    token.Delete,
 		"do":        token.Do,
+		"else":      token.Else,
+		"finally":   token.Finally,
 	}
 
 	whiteSpaces = newWhiteSpaces()
