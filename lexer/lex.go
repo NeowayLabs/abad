@@ -507,6 +507,12 @@ func init() {
 		"false":     token.Bool,
 		"true":      token.Bool,
 		"break":     token.Break,
+		"case":      token.Case,
+		"continue":  token.Continue,
+		"debugger":  token.Debugger,
+		"default":   token.Default,
+		"delete":    token.Delete,
+		"do":        token.Do,
 	}
 
 	whiteSpaces = newWhiteSpaces()

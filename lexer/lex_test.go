@@ -293,7 +293,37 @@ func TestKeywords(t *testing.T) {
 		{
 			name: "Break",
 			code: Str("break"),
-			want: tokens(breakToken()),
+			want: tokens(tokval(token.Break, "break")),
+		},
+		{
+			name: "Case",
+			code: Str("case"),
+			want: tokens(tokval(token.Case, "case")),
+		},
+		{
+			name: "Continue",
+			code: Str("continue"),
+			want: tokens(tokval(token.Continue, "continue")),
+		},
+		{
+			name: "Debugger",
+			code: Str("debugger"),
+			want: tokens(tokval(token.Debugger, "debugger")),
+		},
+		{
+			name: "Default",
+			code: Str("default"),
+			want: tokens(tokval(token.Default, "default")),
+		},
+		{
+			name: "Delete",
+			code: Str("delete"),
+			want: tokens(tokval(token.Delete, "delete")),
+		},
+		{
+			name: "Do",
+			code: Str("do"),
+			want: tokens(tokval(token.Do, "do")),
 		},
 	}
 
@@ -1480,10 +1510,6 @@ func tokval(t token.Type, val string) lexer.Tokval {
 
 func undefinedToken() lexer.Tokval {
 	return tokval(token.Undefined, "undefined")
-}
-
-func breakToken() lexer.Tokval {
-	return tokval(token.Break, "break")
 }
 
 func boolToken(s string) lexer.Tokval {
