@@ -290,6 +290,11 @@ func TestKeywords(t *testing.T) {
 			code: Str("true"),
 			want: tokens(boolToken("true")),
 		},
+		{
+			name: "Break",
+			code: Str("break"),
+			want: tokens(breakToken()),
+		},
 	}
 
 	runTests(t, cases)
@@ -1475,6 +1480,10 @@ func tokval(t token.Type, val string) lexer.Tokval {
 
 func undefinedToken() lexer.Tokval {
 	return tokval(token.Undefined, "undefined")
+}
+
+func breakToken() lexer.Tokval {
+	return tokval(token.Break, "break")
 }
 
 func boolToken(s string) lexer.Tokval {

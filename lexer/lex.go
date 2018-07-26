@@ -506,6 +506,7 @@ func init() {
 		"undefined": token.Undefined,
 		"false":     token.Bool,
 		"true":      token.Bool,
+		"break":     token.Break,
 	}
 
 	whiteSpaces = newWhiteSpaces()

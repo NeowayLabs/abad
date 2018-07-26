@@ -29,6 +29,8 @@ const (
 
 	Null
 	Undefined
+	
+	Break
 
 	EOF
 )
@@ -50,6 +52,7 @@ var names = map[Type]string{
 	SemiColon:   "SemiColon",
 	Null:        "Null",
 	Undefined:   "Undefined",
+	Break:       "Break",
 	EOF:         "EOF",
 }
 
