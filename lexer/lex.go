@@ -68,12 +68,17 @@ type lexer struct {
 	position uint
 	line     uint
 	column   uint
+	
+	puncStates map[rune]lexerState
 }
 
 type lexerState func() (Tokval, lexerState)
 
+
 func newLexer(code []rune) *lexer {
-	return &lexer{code: code, line: 1, column: 1}
+	l := &lexer{code: code, line: 1, column: 1}
+	l.initPuncStates()
+	return l
 }
 
 func (l *lexer) initialState() (Tokval, lexerState) {
@@ -133,8 +138,31 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 		l.fwd()
 		return l.stringState()
 	}
+	
+	if l.isPunctuator() {
+		return l.punctuator()
+	}
 
 	return l.identifierState()
+}
+
+func (l *lexer) initPuncStates() {
+	// http://es5.github.io/#x7.7
+	
+	l.puncStates = map[rune]lexerState{
+		rune('*'): func() (Tokval, lexerState) {
+			return l.token(token.Mul), l.initialState
+		},
+	}
+}
+
+func (l *lexer) punctuator() (Tokval, lexerState) {
+	return l.puncStates[l.cur()]()
+}
+
+func (l *lexer) isPunctuator() bool {
+	_, ok := l.puncStates[l.cur()]
+	return ok
 }
 
 func (l *lexer) semiColonToken() Tokval {

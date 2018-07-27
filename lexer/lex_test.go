@@ -427,6 +427,25 @@ func TestKeywords(t *testing.T) {
 	runWhiteSpaceTests(t, cases)
 }
 
+func TestPunctuators(t *testing.T) {
+
+	punc := func(t token.Type, s string) []lexer.Tokval {
+		return tokens(tokval(t, s))
+	}
+
+	cases := []TestCase{
+		{
+			name: "Multiplication",
+			code: Str("*"),
+			want: punc(token.Mul, "*"),
+		},
+	}
+
+	runTests(t, cases)
+	runTokenSepTests(t, cases)
+	runWhiteSpaceTests(t, cases)
+}
+
 func TestSemiColon(t *testing.T) {
 	// Almost all semicolon tests are made interwined on other tests
 	runTests(t, []TestCase{
@@ -1419,9 +1438,9 @@ func intertwineWithWhiteSpace(tc TestCase, name string, val string) TestCase {
 // gets separated correctly.
 //
 // This functions is useful to reuse tokens test cases to validate
-// token separation/splitting (like semicolons) when the token that
-// causes the split is a valid token also, not just formatting like
-// newlines and whitespaces.
+// token separation/splitting when the token that
+// causes the split is a valid token also (eg: semicolon), not
+// just formatting like newlines and whitespaces.
 func runTokenSepTests(t *testing.T, testcases []TestCase) {
 	for _, ts := range tokenSeparators() {
 		runTests(t, intertwineOnTestCases(ts, testcases))
