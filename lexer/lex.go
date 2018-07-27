@@ -93,20 +93,6 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 		return l.illegalToken()
 	}
 
-	if l.isSemiColon() {
-		return l.semiColonToken(), l.initialState
-	}
-
-	if l.isPlusSign() {
-		// TODO: handle ++
-		return l.token(token.Plus), l.initialState
-	}
-
-	if l.isMinusSign() {
-		// TODO: handle --
-		return l.token(token.Minus), l.initialState
-	}
-
 	if l.isNumber() {
 		l.fwd()
 		return l.numberState()
@@ -120,18 +106,6 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 		allowExponent := true
 		allowDot := false
 		return l.decimalState(allowExponent, allowDot)
-	}
-
-	if l.isRightParen() {
-		return l.token(token.RParen), l.initialState
-	}
-
-	if l.isLeftParen() {
-		return l.token(token.LParen), l.initialState
-	}
-
-	if l.isComma() {
-		return l.token(token.Comma), l.initialState
 	}
 
 	if l.isDoubleQuote() {
@@ -149,10 +123,20 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 func (l *lexer) initPuncStates() {
 	// http://es5.github.io/#x7.7
 	
+	punctuator := func(t token.Type) lexerState {
+		return func() (Tokval, lexerState) {
+			return l.token(t), l.initialState
+		}		
+	}
+	
 	l.puncStates = map[rune]lexerState{
-		rune('*'): func() (Tokval, lexerState) {
-			return l.token(token.Mul), l.initialState
-		},
+		rune('*'): punctuator(token.Mul),
+		comma: punctuator(token.Comma),
+		leftParen: punctuator(token.LParen),
+		rightParen: punctuator(token.RParen),
+		minusSign: punctuator(token.Minus),
+		plusSign: punctuator(token.Plus),
+		semiColon: punctuator(token.SemiColon),
 	}
 }
 
@@ -163,10 +147,6 @@ func (l *lexer) punctuator() (Tokval, lexerState) {
 func (l *lexer) isPunctuator() bool {
 	_, ok := l.puncStates[l.cur()]
 	return ok
-}
-
-func (l *lexer) semiColonToken() Tokval {
-	return l.token(token.SemiColon)
 }
 
 func (l *lexer) updateLine() {
