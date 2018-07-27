@@ -68,12 +68,11 @@ type lexer struct {
 	position uint
 	line     uint
 	column   uint
-	
+
 	puncStates map[rune]lexerState
 }
 
 type lexerState func() (Tokval, lexerState)
-
 
 func newLexer(code []rune) *lexer {
 	l := &lexer{code: code, line: 1, column: 1}
@@ -98,21 +97,11 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 		return l.numberState()
 	}
 
-	if l.isDot() {
-		l.fwd()
-		if l.isTokenEnd() {
-			return l.illegalToken()
-		}
-		allowExponent := true
-		allowDot := false
-		return l.decimalState(allowExponent, allowDot)
-	}
-
 	if l.isDoubleQuote() {
 		l.fwd()
 		return l.stringState()
 	}
-	
+
 	if l.isPunctuator() {
 		return l.punctuator()
 	}
@@ -122,21 +111,30 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 
 func (l *lexer) initPuncStates() {
 	// http://es5.github.io/#x7.7
-	
+
 	punctuator := func(t token.Type) lexerState {
 		return func() (Tokval, lexerState) {
 			return l.token(t), l.initialState
-		}		
+		}
 	}
-	
+
 	l.puncStates = map[rune]lexerState{
-		rune('*'): punctuator(token.Mul),
-		comma: punctuator(token.Comma),
-		leftParen: punctuator(token.LParen),
+		dot: func() (Tokval, lexerState) {
+			l.fwd()
+			if l.isTokenEnd() {
+				return l.illegalToken()
+			}
+			allowExponent := true
+			allowDot := false
+			return l.decimalState(allowExponent, allowDot)
+		},
+		rune('*'):  punctuator(token.Mul),
+		comma:      punctuator(token.Comma),
+		leftParen:  punctuator(token.LParen),
 		rightParen: punctuator(token.RParen),
-		minusSign: punctuator(token.Minus),
-		plusSign: punctuator(token.Plus),
-		semiColon: punctuator(token.SemiColon),
+		minusSign:  punctuator(token.Minus),
+		plusSign:   punctuator(token.Plus),
+		semiColon:  punctuator(token.SemiColon),
 	}
 }
 
