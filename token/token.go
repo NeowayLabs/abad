@@ -149,7 +149,7 @@ var names = map[Type]string{
 	AndAssign:        "&=",
 	OrAssign:         "|=",
 	XorAssign:        "^=",
-	Ternary: "?",
+	Ternary:          "?",
 	Dot:              ".",
 	LParen:           "(",
 	RParen:           ")",
