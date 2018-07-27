@@ -119,15 +119,7 @@ func (l *lexer) initPuncStates() {
 	}
 
 	l.puncStates = map[rune]lexerState{
-		dot: func() (Tokval, lexerState) {
-			l.fwd()
-			if l.isTokenEnd() {
-				return l.illegalToken()
-			}
-			allowExponent := true
-			allowDot := false
-			return l.decimalState(allowExponent, allowDot)
-		},
+		dot:        l.dotState,
 		rune('*'):  state(token.Mul),
 		rune('/'):  state(token.Quo),
 		rune('%'):  state(token.Rem),
@@ -137,14 +129,14 @@ func (l *lexer) initPuncStates() {
 		rune('}'):  state(token.RBrace),
 		rune('<'):  state(token.Less),
 		rune('>'):  state(token.Greater),
-		rune('&'): state(token.And),
-		rune('|'): state(token.Or),
-		rune('^'): state(token.Xor),
-		rune('~'): state(token.Not),
-		rune('!'): state(token.LNot),
-		rune('?'): state(token.Ternary),
-		rune(':'): state(token.Colon),
-		rune('='): state(token.Assign),
+		rune('&'):  state(token.And),
+		rune('|'):  state(token.Or),
+		rune('^'):  state(token.Xor),
+		rune('~'):  state(token.Not),
+		rune('!'):  state(token.LNot),
+		rune('?'):  state(token.Ternary),
+		rune(':'):  state(token.Colon),
+		rune('='):  state(token.Assign),
 		comma:      state(token.Comma),
 		leftParen:  state(token.LParen),
 		rightParen: state(token.RParen),
@@ -152,6 +144,16 @@ func (l *lexer) initPuncStates() {
 		plusSign:   state(token.Plus),
 		semiColon:  state(token.SemiColon),
 	}
+}
+
+func (l *lexer) dotState() (Tokval, lexerState) {
+	l.fwd()
+	if l.isTokenEnd() {
+		return l.illegalToken()
+	}
+	allowExponent := true
+	allowDot := false
+	return l.decimalState(allowExponent, allowDot)
 }
 
 func (l *lexer) punctuator() (Tokval, lexerState) {
