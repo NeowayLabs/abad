@@ -439,6 +439,46 @@ func TestPunctuators(t *testing.T) {
 			code: Str("*"),
 			want: punc(token.Mul, "*"),
 		},
+		{
+			name: "Quotient",
+			code: Str("/"),
+			want: punc(token.Quo, "/"),
+		},
+		{
+			name: "Remainder",
+			code: Str("%"),
+			want: punc(token.Rem, "%"),
+		},
+		{
+			name: "LeftBracket",
+			code: Str("["),
+			want: punc(token.LBrack, "["),
+		},
+		{
+			name: "RightBracket",
+			code: Str("]"),
+			want: punc(token.RBrack, "]"),
+		},
+		{
+			name: "LeftBrace",
+			code: Str("{"),
+			want: punc(token.LBrace, "{"),
+		},
+		{
+			name: "RightBrace",
+			code: Str("}"),
+			want: punc(token.RBrace, "}"),
+		},
+		{
+			name: "Less",
+			code: Str("<"),
+			want: punc(token.Less, "<"),
+		},
+		{
+			name: "Greater",
+			code: Str(">"),
+			want: punc(token.Greater, ">"),
+		},
 	}
 
 	runTests(t, cases)

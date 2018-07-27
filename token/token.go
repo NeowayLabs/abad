@@ -63,6 +63,7 @@ const (
 	AndAssign
 	OrAssign
 	XorAssign
+	Ternary
 
 	Ident
 
@@ -148,6 +149,7 @@ var names = map[Type]string{
 	AndAssign:        "&=",
 	OrAssign:         "|=",
 	XorAssign:        "^=",
+	Ternary: "?",
 	Dot:              ".",
 	LParen:           "(",
 	RParen:           ")",

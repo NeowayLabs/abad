@@ -112,7 +112,7 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 func (l *lexer) initPuncStates() {
 	// http://es5.github.io/#x7.7
 
-	punctuator := func(t token.Type) lexerState {
+	state := func(t token.Type) lexerState {
 		return func() (Tokval, lexerState) {
 			return l.token(t), l.initialState
 		}
@@ -128,13 +128,21 @@ func (l *lexer) initPuncStates() {
 			allowDot := false
 			return l.decimalState(allowExponent, allowDot)
 		},
-		rune('*'):  punctuator(token.Mul),
-		comma:      punctuator(token.Comma),
-		leftParen:  punctuator(token.LParen),
-		rightParen: punctuator(token.RParen),
-		minusSign:  punctuator(token.Minus),
-		plusSign:   punctuator(token.Plus),
-		semiColon:  punctuator(token.SemiColon),
+		rune('*'):  state(token.Mul),
+		rune('/'):  state(token.Quo),
+		rune('%'):  state(token.Rem),
+		rune('['):  state(token.LBrack),
+		rune(']'):  state(token.RBrack),
+		rune('{'):  state(token.LBrace),
+		rune('}'):  state(token.RBrace),
+		rune('<'):  state(token.Less),
+		rune('>'):  state(token.Greater),
+		comma:      state(token.Comma),
+		leftParen:  state(token.LParen),
+		rightParen: state(token.RParen),
+		minusSign:  state(token.Minus),
+		plusSign:   state(token.Plus),
+		semiColon:  state(token.SemiColon),
 	}
 }
 
