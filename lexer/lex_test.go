@@ -479,6 +479,46 @@ func TestPunctuators(t *testing.T) {
 			code: Str(">"),
 			want: punc(token.Greater, ">"),
 		},
+		{
+			name: "BitwiseAnd",
+			code: Str("&"),
+			want: punc(token.And, "&"),
+		},
+		{
+			name: "BitwiseOr",
+			code: Str("|"),
+			want: punc(token.Or, "|"),
+		},
+		{
+			name: "XOR",
+			code: Str("^"),
+			want: punc(token.Xor, "^"),
+		},
+		{
+			name: "BitwiseNot",
+			code: Str("~"),
+			want: punc(token.Not, "~"),
+		},
+		{
+			name: "LogicalNot",
+			code: Str("!"),
+			want: punc(token.LNot, "!"),
+		},
+		{
+			name: "Ternary",
+			code: Str("?"),
+			want: punc(token.Ternary, "?"),
+		},
+		{
+			name: "Colon",
+			code: Str(":"),
+			want: punc(token.Colon, ":"),
+		},
+		{
+			name: "Assign",
+			code: Str("="),
+			want: punc(token.Assign, "="),
+		},
 	}
 
 	runTests(t, cases)
