@@ -136,7 +136,7 @@ func (l *lexer) initPuncStates() {
 		rune('!'):  l.logicalNotState,
 		rune('?'):  state(token.Ternary),
 		rune(':'):  state(token.Colon),
-		assign:  state(token.Assign),
+		assign:     state(token.Assign),
 		comma:      state(token.Comma),
 		leftParen:  state(token.LParen),
 		rightParen: state(token.RParen),
@@ -152,11 +152,11 @@ func (l *lexer) logicalNotState() (Tokval, lexerState) {
 		l.bwd()
 		return l.token(token.LNot), l.initialState
 	}
-	
+
 	if l.cur() == assign {
 		return l.token(token.NotEqual), l.initialState
 	}
-	
+
 	return l.illegalToken()
 }
 
