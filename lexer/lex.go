@@ -72,6 +72,11 @@ type lexer struct {
 	puncStates map[rune]lexerState
 }
 
+type match struct {
+	str string
+	token token.Type
+}
+
 type lexerState func() (Tokval, lexerState)
 
 func newLexer(code []rune) *lexer {
@@ -133,7 +138,10 @@ func (l *lexer) initPuncStates() {
 		rune('|'):  state(token.Or),
 		rune('^'):  state(token.Xor),
 		rune('~'):  state(token.Not),
-		rune('!'):  l.logicalNotState,
+		rune('!'):  l.acceptFirst([]match{
+			{ str: "!=", token: token.NotEqual},
+			{ str: "!", token: token.LNot},
+		}),
 		rune('?'):  state(token.Ternary),
 		rune(':'):  state(token.Colon),
 		assign:     state(token.Assign),
@@ -146,18 +154,41 @@ func (l *lexer) initPuncStates() {
 	}
 }
 
-func (l *lexer) logicalNotState() (Tokval, lexerState) {
-	l.fwd()
-	if l.isTokenEnd() {
-		l.bwd()
-		return l.token(token.LNot), l.initialState
+// acceptFirst takes a list of matches and returns the
+// first matched token, if no match is found it is considered
+// as an error and a illegal token is produced.
+//
+// This function is useful when multiple well know tokens
+// starts with the same char, so you can search for the better
+// match given a common start rune.
+func (l *lexer) acceptFirst(matches []match) lexerState {
+	return func() (Tokval, lexerState) {
+		for _, m := range matches {
+			tok, ok := l.accept(m)
+			if ok {
+				return tok, l.initialState
+			}
+		}
+		return l.illegalToken()
 	}
+}
 
-	if l.cur() == assign {
-		return l.token(token.NotEqual), l.initialState
+func (l *lexer) accept(m match) (Tokval, bool) {
+	want := []rune(m.str)
+	code := l.code[l.position:]
+	
+	if len(code) < len(want) {
+		return Tokval{}, false
 	}
-
-	return l.illegalToken()
+	
+	for i, r := range want {
+		if r != code[i] {
+			return Tokval{}, false
+		} 
+	}
+	
+	l.position += uint(len(want) - 1)
+	return l.token(m.token), true
 }
 
 func (l *lexer) dotState() (Tokval, lexerState) {
