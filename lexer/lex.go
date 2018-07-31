@@ -132,8 +132,14 @@ func (l *lexer) initPuncStates() {
 		rune(']'):  state(token.RBrack),
 		rune('{'):  state(token.LBrace),
 		rune('}'):  state(token.RBrace),
-		rune('<'):  state(token.Less),
-		rune('>'):  state(token.Greater),
+		rune('<'):  l.acceptFirst([]match{
+			{ str: "<=", token: token.LessEq },
+			{ str: "<", token: token.Less },
+		}),
+		rune('>'): l.acceptFirst([]match{
+			{ str: ">=", token: token.GreaterEq },
+			{ str: ">", token: token.Greater },
+		}),
 		rune('&'):  state(token.And),
 		rune('|'):  state(token.Or),
 		rune('^'):  state(token.Xor),

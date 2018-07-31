@@ -524,6 +524,16 @@ func TestPunctuators(t *testing.T) {
 			code: Str("!="),
 			want: punc(token.NotEqual, "!="),
 		},
+		{
+			name: "LessEqual",
+			code: Str("<="),
+			want: punc(token.LessEq, "<="),
+		},
+		{
+			name: "GreaterEqual",
+			code: Str(">="),
+			want: punc(token.GreaterEq, ">="),
+		},
 	}
 
 	runTests(t, cases)
