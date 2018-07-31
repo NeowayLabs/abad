@@ -126,15 +126,24 @@ func (l *lexer) initPuncStates() {
 	l.puncStates = map[rune]lexerState{
 		dot:        l.dotState,
 		comma:      state(token.Comma),
+		semiColon:  state(token.SemiColon),
 		leftParen:  state(token.LParen),
 		rightParen: state(token.RParen),
-		rune('*'):  state(token.Mul),
-		rune('/'):  state(token.Quo),
-		rune('%'):  state(token.Rem),
+		rune('?'):  state(token.Ternary),
+		rune(':'):  state(token.Colon),
 		rune('['):  state(token.LBrack),
 		rune(']'):  state(token.RBrack),
 		rune('{'):  state(token.LBrace),
 		rune('}'):  state(token.RBrace),
+		rune('*'):  l.acceptFirst([]match{
+			{str: "*=", token: token.MulAssign},
+			{str: "*", token: token.Mul},
+		}),
+		rune('/'):  state(token.Quo),
+		rune('%'):  l.acceptFirst([]match{
+			{str: "%=", token: token.RemAssign},
+			{str: "%", token: token.Rem},
+		}),
 		rune('<'): l.acceptFirst([]match{
 			{str: "<<", token: token.LShift},
 			{str: "<=", token: token.LessEq},
@@ -161,8 +170,6 @@ func (l *lexer) initPuncStates() {
 			{str: "!=", token: token.NotEqual},
 			{str: "!", token: token.LNot},
 		}),
-		rune('?'): state(token.Ternary),
-		rune(':'): state(token.Colon),
 		assign: l.acceptFirst([]match{
 			{str: "===", token: token.TEqual},
 			{str: "==", token: token.Equal},
@@ -170,13 +177,14 @@ func (l *lexer) initPuncStates() {
 		}),
 		minusSign: l.acceptFirst([]match{
 			{str: "--", token: token.Dec},
+			{str: "-=", token: token.SubAssign},
 			{str: "-", token: token.Minus},
 		}),
 		plusSign: l.acceptFirst([]match{
 			{str: "++", token: token.Inc},
+			{str: "+=", token: token.AddAssign},
 			{str: "+", token: token.Plus},
 		}),
-		semiColon: state(token.SemiColon),
 	}
 }
 

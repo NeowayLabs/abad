@@ -584,6 +584,26 @@ func TestPunctuators(t *testing.T) {
 			code: Str("||"),
 			want: punc(token.LOr, "||"),
 		},
+		{
+			name: "AddAssign",
+			code: Str("+="),
+			want: punc(token.AddAssign, "+="),
+		},
+		{
+			name: "SubAssign",
+			code: Str("-="),
+			want: punc(token.SubAssign, "-="),
+		},
+		{
+			name: "MulAssign",
+			code: Str("*="),
+			want: punc(token.MulAssign, "*="),
+		},
+		{
+			name: "RemAssign",
+			code: Str("%="),
+			want: punc(token.RemAssign, "%="),
+		},
 	}
 
 	runTests(t, cases)
