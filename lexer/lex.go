@@ -129,6 +129,7 @@ func (l *lexer) initPuncStates() {
 		semiColon:  state(token.SemiColon),
 		leftParen:  state(token.LParen),
 		rightParen: state(token.RParen),
+		rune('~'): state(token.Not),
 		rune('?'):  state(token.Ternary),
 		rune(':'):  state(token.Colon),
 		rune('['):  state(token.LBrack),
@@ -139,32 +140,42 @@ func (l *lexer) initPuncStates() {
 			{str: "*=", token: token.MulAssign},
 			{str: "*", token: token.Mul},
 		}),
-		rune('/'):  state(token.Quo),
+		rune('/'):  l.acceptFirst([]match{
+			{str: "/=", token: token.QuoAssign},
+			{str: "/", token: token.Quo},
+		}),
 		rune('%'):  l.acceptFirst([]match{
 			{str: "%=", token: token.RemAssign},
 			{str: "%", token: token.Rem},
 		}),
 		rune('<'): l.acceptFirst([]match{
+			{str: "<<=", token: token.LShiftAssign},
 			{str: "<<", token: token.LShift},
 			{str: "<=", token: token.LessEq},
 			{str: "<", token: token.Less},
 		}),
 		rune('>'): l.acceptFirst([]match{
+			{str: ">>>=", token: token.RShiftZeroAssign},
 			{str: ">>>", token: token.RShiftZero},
+			{str: ">>=", token: token.RShiftAssign},
 			{str: ">>", token: token.RShift},
 			{str: ">=", token: token.GreaterEq},
 			{str: ">", token: token.Greater},
 		}),
 		rune('&'): l.acceptFirst([]match{
 			{str: "&&", token: token.LAnd},
+			{str: "&=", token: token.AndAssign},
 			{str: "&", token: token.And},
 		}),
 		rune('|'): l.acceptFirst([]match{
 			{str: "||", token: token.LOr},
+			{str: "|=", token: token.OrAssign},
 			{str: "|", token: token.Or},
 		}),
-		rune('^'): state(token.Xor),
-		rune('~'): state(token.Not),
+		rune('^'): l.acceptFirst([]match{
+			{str: "^=", token: token.XorAssign},
+			{str: "^", token: token.Xor},
+		}),
 		rune('!'): l.acceptFirst([]match{
 			{str: "!==", token: token.NotTEqual},
 			{str: "!=", token: token.NotEqual},

@@ -604,6 +604,41 @@ func TestPunctuators(t *testing.T) {
 			code: Str("%="),
 			want: punc(token.RemAssign, "%="),
 		},
+		{
+			name: "QuoAssign",
+			code: Str("/="),
+			want: punc(token.QuoAssign, "/="),
+		},
+		{
+			name: "LeftShiftAssign",
+			code: Str("<<="),
+			want: punc(token.LShiftAssign, "<<="),
+		},
+		{
+			name: "RightShiftAssign",
+			code: Str(">>="),
+			want: punc(token.RShiftAssign, ">>="),
+		},
+		{
+			name: "RightShiftZeroFillingAssign",
+			code: Str(">>>="),
+			want: punc(token.RShiftZeroAssign, ">>>="),
+		},
+		{
+			name: "AndAssign",
+			code: Str("&="),
+			want: punc(token.AndAssign, "&="),
+		},
+		{
+			name: "OrAssign",
+			code: Str("|="),
+			want: punc(token.OrAssign, "|="),
+		},
+		{
+			name: "XORAssign",
+			code: Str("^="),
+			want: punc(token.XorAssign, "^="),
+		},
 	}
 
 	runTests(t, cases)
