@@ -73,7 +73,7 @@ type lexer struct {
 }
 
 type match struct {
-	str string
+	str   string
 	token token.Type
 }
 
@@ -125,6 +125,9 @@ func (l *lexer) initPuncStates() {
 
 	l.puncStates = map[rune]lexerState{
 		dot:        l.dotState,
+		comma:      state(token.Comma),
+		leftParen:  state(token.LParen),
+		rightParen: state(token.RParen),
 		rune('*'):  state(token.Mul),
 		rune('/'):  state(token.Quo),
 		rune('%'):  state(token.Rem),
@@ -132,36 +135,48 @@ func (l *lexer) initPuncStates() {
 		rune(']'):  state(token.RBrack),
 		rune('{'):  state(token.LBrace),
 		rune('}'):  state(token.RBrace),
-		rune('<'):  l.acceptFirst([]match{
-			{ str: "<=", token: token.LessEq },
-			{ str: "<", token: token.Less },
+		rune('<'): l.acceptFirst([]match{
+			{str: "<<", token: token.LShift},
+			{str: "<=", token: token.LessEq},
+			{str: "<", token: token.Less},
 		}),
 		rune('>'): l.acceptFirst([]match{
-			{ str: ">=", token: token.GreaterEq },
-			{ str: ">", token: token.Greater },
+			{str: ">>>", token: token.RShiftZero},
+			{str: ">>", token: token.RShift},
+			{str: ">=", token: token.GreaterEq},
+			{str: ">", token: token.Greater},
 		}),
-		rune('&'):  state(token.And),
-		rune('|'):  state(token.Or),
-		rune('^'):  state(token.Xor),
-		rune('~'):  state(token.Not),
-		rune('!'):  l.acceptFirst([]match{
-			{ str: "!==", token: token.NotTEqual },
-			{ str: "!=", token: token.NotEqual},
-			{ str: "!", token: token.LNot},
+		rune('&'): l.acceptFirst([]match{
+			{str: "&&", token: token.LAnd},
+			{str: "&", token: token.And},
 		}),
-		rune('?'):  state(token.Ternary),
-		rune(':'):  state(token.Colon),
+		rune('|'): l.acceptFirst([]match{
+			{str: "||", token: token.LOr},
+			{str: "|", token: token.Or},
+		}),
+		rune('^'): state(token.Xor),
+		rune('~'): state(token.Not),
+		rune('!'): l.acceptFirst([]match{
+			{str: "!==", token: token.NotTEqual},
+			{str: "!=", token: token.NotEqual},
+			{str: "!", token: token.LNot},
+		}),
+		rune('?'): state(token.Ternary),
+		rune(':'): state(token.Colon),
 		assign: l.acceptFirst([]match{
-			{ str: "===", token: token.TEqual},
-			{ str: "==", token: token.Equal },
-			{ str: "=", token: token.Assign},
+			{str: "===", token: token.TEqual},
+			{str: "==", token: token.Equal},
+			{str: "=", token: token.Assign},
 		}),
-		comma:      state(token.Comma),
-		leftParen:  state(token.LParen),
-		rightParen: state(token.RParen),
-		minusSign:  state(token.Minus),
-		plusSign:   state(token.Plus),
-		semiColon:  state(token.SemiColon),
+		minusSign: l.acceptFirst([]match{
+			{str: "--", token: token.Dec},
+			{str: "-", token: token.Minus},
+		}),
+		plusSign: l.acceptFirst([]match{
+			{str: "++", token: token.Inc},
+			{str: "+", token: token.Plus},
+		}),
+		semiColon: state(token.SemiColon),
 	}
 }
 
@@ -187,17 +202,17 @@ func (l *lexer) acceptFirst(matches []match) lexerState {
 func (l *lexer) accept(m match) (Tokval, bool) {
 	want := []rune(m.str)
 	code := l.code[l.position:]
-	
+
 	if len(code) < len(want) {
 		return Tokval{}, false
 	}
-	
+
 	for i, r := range want {
 		if r != code[i] {
 			return Tokval{}, false
-		} 
+		}
 	}
-	
+
 	l.position += uint(len(want) - 1)
 	return l.token(m.token), true
 }

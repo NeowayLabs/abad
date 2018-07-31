@@ -549,6 +549,41 @@ func TestPunctuators(t *testing.T) {
 			code: Str("==="),
 			want: punc(token.TEqual, "==="),
 		},
+		{
+			name: "Increment",
+			code: Str("++"),
+			want: punc(token.Inc, "++"),
+		},
+		{
+			name: "Decrement",
+			code: Str("--"),
+			want: punc(token.Dec, "--"),
+		},
+		{
+			name: "LeftShift",
+			code: Str("<<"),
+			want: punc(token.LShift, "<<"),
+		},
+		{
+			name: "RightShift",
+			code: Str(">>"),
+			want: punc(token.RShift, ">>"),
+		},
+		{
+			name: "RightShiftZeroFilling",
+			code: Str(">>>"),
+			want: punc(token.RShiftZero, ">>>"),
+		},
+		{
+			name: "LogicalAnd",
+			code: Str("&&"),
+			want: punc(token.LAnd, "&&"),
+		},
+		{
+			name: "LogicalOr",
+			code: Str("||"),
+			want: punc(token.LOr, "||"),
+		},
 	}
 
 	runTests(t, cases)
