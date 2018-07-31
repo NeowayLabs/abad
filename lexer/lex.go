@@ -129,22 +129,22 @@ func (l *lexer) initPuncStates() {
 		semiColon:  state(token.SemiColon),
 		leftParen:  state(token.LParen),
 		rightParen: state(token.RParen),
-		rune('~'): state(token.Not),
+		rune('~'):  state(token.Not),
 		rune('?'):  state(token.Ternary),
 		rune(':'):  state(token.Colon),
 		rune('['):  state(token.LBrack),
 		rune(']'):  state(token.RBrack),
 		rune('{'):  state(token.LBrace),
 		rune('}'):  state(token.RBrace),
-		rune('*'):  l.acceptFirst([]match{
+		rune('*'): l.acceptFirst([]match{
 			{str: "*=", token: token.MulAssign},
 			{str: "*", token: token.Mul},
 		}),
-		rune('/'):  l.acceptFirst([]match{
+		rune('/'): l.acceptFirst([]match{
 			{str: "/=", token: token.QuoAssign},
 			{str: "/", token: token.Quo},
 		}),
-		rune('%'):  l.acceptFirst([]match{
+		rune('%'): l.acceptFirst([]match{
 			{str: "%=", token: token.RemAssign},
 			{str: "%", token: token.Rem},
 		}),
