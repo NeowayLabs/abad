@@ -145,12 +145,17 @@ func (l *lexer) initPuncStates() {
 		rune('^'):  state(token.Xor),
 		rune('~'):  state(token.Not),
 		rune('!'):  l.acceptFirst([]match{
+			{ str: "!==", token: token.NotTEqual },
 			{ str: "!=", token: token.NotEqual},
 			{ str: "!", token: token.LNot},
 		}),
 		rune('?'):  state(token.Ternary),
 		rune(':'):  state(token.Colon),
-		assign:     state(token.Assign),
+		assign: l.acceptFirst([]match{
+			{ str: "===", token: token.TEqual},
+			{ str: "==", token: token.Equal },
+			{ str: "=", token: token.Assign},
+		}),
 		comma:      state(token.Comma),
 		leftParen:  state(token.LParen),
 		rightParen: state(token.RParen),
