@@ -133,10 +133,10 @@ func (l *lexer) initPuncStates() {
 		rune('|'):  state(token.Or),
 		rune('^'):  state(token.Xor),
 		rune('~'):  state(token.Not),
-		rune('!'):  state(token.LNot),
+		rune('!'):  l.logicalNotState,
 		rune('?'):  state(token.Ternary),
 		rune(':'):  state(token.Colon),
-		rune('='):  state(token.Assign),
+		assign:  state(token.Assign),
 		comma:      state(token.Comma),
 		leftParen:  state(token.LParen),
 		rightParen: state(token.RParen),
@@ -144,6 +144,20 @@ func (l *lexer) initPuncStates() {
 		plusSign:   state(token.Plus),
 		semiColon:  state(token.SemiColon),
 	}
+}
+
+func (l *lexer) logicalNotState() (Tokval, lexerState) {
+	l.fwd()
+	if l.isTokenEnd() {
+		l.bwd()
+		return l.token(token.LNot), l.initialState
+	}
+	
+	if l.cur() == assign {
+		return l.token(token.NotEqual), l.initialState
+	}
+	
+	return l.illegalToken()
 }
 
 func (l *lexer) dotState() (Tokval, lexerState) {
@@ -503,6 +517,7 @@ var leftParen rune
 var rightParen rune
 var comma rune
 var doubleQuote rune
+var assign rune
 var hexStart []rune
 var exponentPartStart []rune
 var keywords map[string]token.Type
@@ -525,6 +540,7 @@ func init() {
 	semiColon = rune(';')
 	hexStart = []rune("xX")
 	exponentPartStart = []rune("eE")
+	assign = rune('=')
 	keywords = newKeywords()
 	whiteSpaces = newWhiteSpaces()
 }

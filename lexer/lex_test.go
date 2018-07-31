@@ -519,6 +519,11 @@ func TestPunctuators(t *testing.T) {
 			code: Str("="),
 			want: punc(token.Assign, "="),
 		},
+		{
+			name: "NotEqual",
+			code: Str("!="),
+			want: punc(token.NotEqual, "!="),
+		},
 	}
 
 	runTests(t, cases)
