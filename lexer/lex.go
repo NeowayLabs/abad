@@ -68,12 +68,21 @@ type lexer struct {
 	position uint
 	line     uint
 	column   uint
+
+	puncStates map[rune]lexerState
+}
+
+type match struct {
+	str   string
+	token token.Type
 }
 
 type lexerState func() (Tokval, lexerState)
 
 func newLexer(code []rune) *lexer {
-	return &lexer{code: code, line: 1, column: 1}
+	l := &lexer{code: code, line: 1, column: 1}
+	l.initPuncStates()
+	return l
 }
 
 func (l *lexer) initialState() (Tokval, lexerState) {
@@ -88,45 +97,9 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 		return l.illegalToken()
 	}
 
-	if l.isSemiColon() {
-		return l.semiColonToken(), l.initialState
-	}
-
-	if l.isPlusSign() {
-		// TODO: handle ++
-		return l.token(token.Plus), l.initialState
-	}
-
-	if l.isMinusSign() {
-		// TODO: handle --
-		return l.token(token.Minus), l.initialState
-	}
-
 	if l.isNumber() {
 		l.fwd()
 		return l.numberState()
-	}
-
-	if l.isDot() {
-		l.fwd()
-		if l.isTokenEnd() {
-			return l.illegalToken()
-		}
-		allowExponent := true
-		allowDot := false
-		return l.decimalState(allowExponent, allowDot)
-	}
-
-	if l.isRightParen() {
-		return l.token(token.RParen), l.initialState
-	}
-
-	if l.isLeftParen() {
-		return l.token(token.LParen), l.initialState
-	}
-
-	if l.isComma() {
-		return l.token(token.Comma), l.initialState
 	}
 
 	if l.isDoubleQuote() {
@@ -134,11 +107,152 @@ func (l *lexer) initialState() (Tokval, lexerState) {
 		return l.stringState()
 	}
 
+	if l.isPunctuator() {
+		return l.punctuator()
+	}
+
 	return l.identifierState()
 }
 
-func (l *lexer) semiColonToken() Tokval {
-	return l.token(token.SemiColon)
+func (l *lexer) initPuncStates() {
+	// http://es5.github.io/#x7.7
+
+	state := func(t token.Type) lexerState {
+		return func() (Tokval, lexerState) {
+			return l.token(t), l.initialState
+		}
+	}
+
+	l.puncStates = map[rune]lexerState{
+		dot:        l.dotState,
+		comma:      state(token.Comma),
+		semiColon:  state(token.SemiColon),
+		leftParen:  state(token.LParen),
+		rightParen: state(token.RParen),
+		rune('~'):  state(token.Not),
+		rune('?'):  state(token.Ternary),
+		rune(':'):  state(token.Colon),
+		rune('['):  state(token.LBrack),
+		rune(']'):  state(token.RBrack),
+		rune('{'):  state(token.LBrace),
+		rune('}'):  state(token.RBrace),
+		rune('*'): l.acceptFirst([]match{
+			{str: "*=", token: token.MulAssign},
+			{str: "*", token: token.Mul},
+		}),
+		rune('/'): l.acceptFirst([]match{
+			{str: "/=", token: token.QuoAssign},
+			{str: "/", token: token.Quo},
+		}),
+		rune('%'): l.acceptFirst([]match{
+			{str: "%=", token: token.RemAssign},
+			{str: "%", token: token.Rem},
+		}),
+		rune('<'): l.acceptFirst([]match{
+			{str: "<<=", token: token.LShiftAssign},
+			{str: "<<", token: token.LShift},
+			{str: "<=", token: token.LessEq},
+			{str: "<", token: token.Less},
+		}),
+		rune('>'): l.acceptFirst([]match{
+			{str: ">>>=", token: token.RShiftZeroAssign},
+			{str: ">>>", token: token.RShiftZero},
+			{str: ">>=", token: token.RShiftAssign},
+			{str: ">>", token: token.RShift},
+			{str: ">=", token: token.GreaterEq},
+			{str: ">", token: token.Greater},
+		}),
+		rune('&'): l.acceptFirst([]match{
+			{str: "&&", token: token.LAnd},
+			{str: "&=", token: token.AndAssign},
+			{str: "&", token: token.And},
+		}),
+		rune('|'): l.acceptFirst([]match{
+			{str: "||", token: token.LOr},
+			{str: "|=", token: token.OrAssign},
+			{str: "|", token: token.Or},
+		}),
+		rune('^'): l.acceptFirst([]match{
+			{str: "^=", token: token.XorAssign},
+			{str: "^", token: token.Xor},
+		}),
+		rune('!'): l.acceptFirst([]match{
+			{str: "!==", token: token.NotTEqual},
+			{str: "!=", token: token.NotEqual},
+			{str: "!", token: token.LNot},
+		}),
+		assign: l.acceptFirst([]match{
+			{str: "===", token: token.TEqual},
+			{str: "==", token: token.Equal},
+			{str: "=", token: token.Assign},
+		}),
+		minusSign: l.acceptFirst([]match{
+			{str: "--", token: token.Dec},
+			{str: "-=", token: token.SubAssign},
+			{str: "-", token: token.Minus},
+		}),
+		plusSign: l.acceptFirst([]match{
+			{str: "++", token: token.Inc},
+			{str: "+=", token: token.AddAssign},
+			{str: "+", token: token.Plus},
+		}),
+	}
+}
+
+// acceptFirst takes a list of matches and returns the
+// first matched token, if no match is found it is considered
+// as an error and a illegal token is produced.
+//
+// This function is useful when multiple well know tokens
+// starts with the same char, so you can search for the better
+// match given a common start rune.
+func (l *lexer) acceptFirst(matches []match) lexerState {
+	return func() (Tokval, lexerState) {
+		for _, m := range matches {
+			tok, ok := l.accept(m)
+			if ok {
+				return tok, l.initialState
+			}
+		}
+		return l.illegalToken()
+	}
+}
+
+func (l *lexer) accept(m match) (Tokval, bool) {
+	want := []rune(m.str)
+	code := l.code[l.position:]
+
+	if len(code) < len(want) {
+		return Tokval{}, false
+	}
+
+	for i, r := range want {
+		if r != code[i] {
+			return Tokval{}, false
+		}
+	}
+
+	l.position += uint(len(want) - 1)
+	return l.token(m.token), true
+}
+
+func (l *lexer) dotState() (Tokval, lexerState) {
+	l.fwd()
+	if l.isTokenEnd() {
+		return l.illegalToken()
+	}
+	allowExponent := true
+	allowDot := false
+	return l.decimalState(allowExponent, allowDot)
+}
+
+func (l *lexer) punctuator() (Tokval, lexerState) {
+	return l.puncStates[l.cur()]()
+}
+
+func (l *lexer) isPunctuator() bool {
+	_, ok := l.puncStates[l.cur()]
+	return ok
 }
 
 func (l *lexer) updateLine() {
@@ -479,6 +593,7 @@ var leftParen rune
 var rightParen rune
 var comma rune
 var doubleQuote rune
+var assign rune
 var hexStart []rune
 var exponentPartStart []rune
 var keywords map[string]token.Type
@@ -501,6 +616,7 @@ func init() {
 	semiColon = rune(';')
 	hexStart = []rune("xX")
 	exponentPartStart = []rune("eE")
+	assign = rune('=')
 	keywords = newKeywords()
 	whiteSpaces = newWhiteSpaces()
 }

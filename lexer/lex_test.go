@@ -427,6 +427,225 @@ func TestKeywords(t *testing.T) {
 	runWhiteSpaceTests(t, cases)
 }
 
+func TestPunctuators(t *testing.T) {
+
+	punc := func(t token.Type, s string) []lexer.Tokval {
+		return tokens(tokval(t, s))
+	}
+
+	cases := []TestCase{
+		{
+			name: "Multiplication",
+			code: Str("*"),
+			want: punc(token.Mul, "*"),
+		},
+		{
+			name: "Quotient",
+			code: Str("/"),
+			want: punc(token.Quo, "/"),
+		},
+		{
+			name: "Remainder",
+			code: Str("%"),
+			want: punc(token.Rem, "%"),
+		},
+		{
+			name: "LeftBracket",
+			code: Str("["),
+			want: punc(token.LBrack, "["),
+		},
+		{
+			name: "RightBracket",
+			code: Str("]"),
+			want: punc(token.RBrack, "]"),
+		},
+		{
+			name: "LeftBrace",
+			code: Str("{"),
+			want: punc(token.LBrace, "{"),
+		},
+		{
+			name: "RightBrace",
+			code: Str("}"),
+			want: punc(token.RBrace, "}"),
+		},
+		{
+			name: "Less",
+			code: Str("<"),
+			want: punc(token.Less, "<"),
+		},
+		{
+			name: "Greater",
+			code: Str(">"),
+			want: punc(token.Greater, ">"),
+		},
+		{
+			name: "BitwiseAnd",
+			code: Str("&"),
+			want: punc(token.And, "&"),
+		},
+		{
+			name: "BitwiseOr",
+			code: Str("|"),
+			want: punc(token.Or, "|"),
+		},
+		{
+			name: "XOR",
+			code: Str("^"),
+			want: punc(token.Xor, "^"),
+		},
+		{
+			name: "BitwiseNot",
+			code: Str("~"),
+			want: punc(token.Not, "~"),
+		},
+		{
+			name: "LogicalNot",
+			code: Str("!"),
+			want: punc(token.LNot, "!"),
+		},
+		{
+			name: "Ternary",
+			code: Str("?"),
+			want: punc(token.Ternary, "?"),
+		},
+		{
+			name: "Colon",
+			code: Str(":"),
+			want: punc(token.Colon, ":"),
+		},
+		{
+			name: "Assign",
+			code: Str("="),
+			want: punc(token.Assign, "="),
+		},
+		{
+			name: "NotEqual",
+			code: Str("!="),
+			want: punc(token.NotEqual, "!="),
+		},
+		{
+			name: "ActualNotEqualBecauseTheOtherOneIsStupid",
+			code: Str("!=="),
+			want: punc(token.NotTEqual, "!=="),
+		},
+		{
+			name: "LessEqual",
+			code: Str("<="),
+			want: punc(token.LessEq, "<="),
+		},
+		{
+			name: "GreaterEqual",
+			code: Str(">="),
+			want: punc(token.GreaterEq, ">="),
+		},
+		{
+			name: "Equal",
+			code: Str("=="),
+			want: punc(token.Equal, "=="),
+		},
+		{
+			name: "ActualEqualBecauseTheOtherOneIsStupid",
+			code: Str("==="),
+			want: punc(token.TEqual, "==="),
+		},
+		{
+			name: "Increment",
+			code: Str("++"),
+			want: punc(token.Inc, "++"),
+		},
+		{
+			name: "Decrement",
+			code: Str("--"),
+			want: punc(token.Dec, "--"),
+		},
+		{
+			name: "LeftShift",
+			code: Str("<<"),
+			want: punc(token.LShift, "<<"),
+		},
+		{
+			name: "RightShift",
+			code: Str(">>"),
+			want: punc(token.RShift, ">>"),
+		},
+		{
+			name: "RightShiftZeroFilling",
+			code: Str(">>>"),
+			want: punc(token.RShiftZero, ">>>"),
+		},
+		{
+			name: "LogicalAnd",
+			code: Str("&&"),
+			want: punc(token.LAnd, "&&"),
+		},
+		{
+			name: "LogicalOr",
+			code: Str("||"),
+			want: punc(token.LOr, "||"),
+		},
+		{
+			name: "AddAssign",
+			code: Str("+="),
+			want: punc(token.AddAssign, "+="),
+		},
+		{
+			name: "SubAssign",
+			code: Str("-="),
+			want: punc(token.SubAssign, "-="),
+		},
+		{
+			name: "MulAssign",
+			code: Str("*="),
+			want: punc(token.MulAssign, "*="),
+		},
+		{
+			name: "RemAssign",
+			code: Str("%="),
+			want: punc(token.RemAssign, "%="),
+		},
+		{
+			name: "QuoAssign",
+			code: Str("/="),
+			want: punc(token.QuoAssign, "/="),
+		},
+		{
+			name: "LeftShiftAssign",
+			code: Str("<<="),
+			want: punc(token.LShiftAssign, "<<="),
+		},
+		{
+			name: "RightShiftAssign",
+			code: Str(">>="),
+			want: punc(token.RShiftAssign, ">>="),
+		},
+		{
+			name: "RightShiftZeroFillingAssign",
+			code: Str(">>>="),
+			want: punc(token.RShiftZeroAssign, ">>>="),
+		},
+		{
+			name: "AndAssign",
+			code: Str("&="),
+			want: punc(token.AndAssign, "&="),
+		},
+		{
+			name: "OrAssign",
+			code: Str("|="),
+			want: punc(token.OrAssign, "|="),
+		},
+		{
+			name: "XORAssign",
+			code: Str("^="),
+			want: punc(token.XorAssign, "^="),
+		},
+	}
+
+	runTests(t, cases)
+	runTokenSepTests(t, cases)
+	runWhiteSpaceTests(t, cases)
+}
+
 func TestSemiColon(t *testing.T) {
 	// Almost all semicolon tests are made interwined on other tests
 	runTests(t, []TestCase{
@@ -1419,9 +1638,9 @@ func intertwineWithWhiteSpace(tc TestCase, name string, val string) TestCase {
 // gets separated correctly.
 //
 // This functions is useful to reuse tokens test cases to validate
-// token separation/splitting (like semicolons) when the token that
-// causes the split is a valid token also, not just formatting like
-// newlines and whitespaces.
+// token separation/splitting when the token that
+// causes the split is a valid token also (eg: semicolon), not
+// just formatting like newlines and whitespaces.
 func runTokenSepTests(t *testing.T, testcases []TestCase) {
 	for _, ts := range tokenSeparators() {
 		runTests(t, intertwineOnTestCases(ts, testcases))
