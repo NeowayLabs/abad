@@ -59,6 +59,11 @@ type (
 		Args   []Node
 	}
 
+	VarDecl struct {
+		Name String
+		Value Node
+	}
+
 	Ident utf16.Str
 )
 
@@ -76,6 +81,7 @@ const (
 	NodeUnaryExpr
 	NodeMemberExpr
 	NodeCallExpr
+	NodeVarDecl
 	NodeIdent
 
 	exprEnd
@@ -95,6 +101,7 @@ var nodeTypesNames = [...]string{
 	NodeMemberExpr: "MEMBEREXPR",
 	NodeCallExpr:   "CALLEXPR",
 	NodeIdent:      "IDENT",
+	NodeVarDecl:    "VARDECL",
 	exprEnd:        "",
 }
 
