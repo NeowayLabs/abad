@@ -301,6 +301,21 @@ func TestMemberExpr(t *testing.T) {
 	})
 }
 
+func TestVarDeclarationFailures(t *testing.T) {
+	runTests(t, []TestCase{
+		{
+			name: "NotIdentifierAfterVarDecl",
+			code: "var 1234;",
+			fail: true,
+		},
+		{
+			name: "VarWithoutIdentifier",
+			code: "var",
+			fail: true,
+		},
+	})
+}
+
 func TestVarDeclaration(t *testing.T) {
 	runTests(t, []TestCase{
 		{
@@ -309,9 +324,9 @@ func TestVarDeclaration(t *testing.T) {
 			want: varDecl(identifier("x"), undefined()),
 		},
 		{
-			name: "NotIdentifierAfterVarDecl",
-			code: "var 1234;",
-			fail: true,
+			name: "VarInitToDecimal",
+			code: "var y = 1;",
+			want: varDecl(identifier("y"), intNumber(1)),
 		},
 	})
 }

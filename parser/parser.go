@@ -146,18 +146,24 @@ func (p *Parser) next() lexer.Tokval {
 
 // scry foretell the future using a crystal ball. Amount is how much
 // of the future you want to foresee.
-func (p *Parser) scry(amount int) {
+//
+// Returns false if it reaches EOF before reading the desired amount
+func (p *Parser) scry(amount int) bool {
 	if len(p.lookahead)+amount > 2 {
 		panic("lookahead > 2")
 	}
 
+	got := 0
 	for i := 0; i < amount; i++ {
 		val := p.next()
 		p.lookahead = append(p.lookahead, val)
+		got += 1
 		if val.Type == token.EOF {
 			break
 		}
 	}
+
+	return got == amount
 }
 
 // forget what you had foresee
@@ -248,16 +254,32 @@ func parseUnary(p *Parser) (ast.Node, error) {
 
 func parseVarDecl(p *Parser) (ast.Node, error) {
 	p.forget(1)
-	p.scry(1)
+	if !p.scry(2) {
+		return nil, fmt.Errorf("parser var decl: expected at least two tokens got[%s]", p.lookahead)
+	}
 
 	identifier := p.lookahead[0]
+	possibleAssignment := p.lookahead[1]
+	p.forget(2)
+
 	if identifier.Type != token.Ident {
 		return nil, fmt.Errorf("parser: var decl: expected identifier got[%s]", identifier)
 	}
-	//TODO: handle when there is initialization
+	
+	varname := ast.NewIdent(identifier.Value)
+	if possibleAssignment.Type == token.SemiColon {
+		return ast.NewVarDecl(varname, ast.NewUndefined()), nil
+	}
 
-	p.forget(1)
-	return ast.NewVarDecl(ast.NewIdent(identifier.Value), ast.NewUndefined()), nil
+	// TODO: check if it is actually an assignment token
+	// TODO: when parser is not found
+	p.scry(1)
+	assignExpr := p.lookahead[0]
+	parser, _ := literalParsers[assignExpr.Type]
+
+	// TODO: check when parser fails
+	val, _ := parser(p)
+	return ast.NewVarDecl(varname, val), nil
 }
 
 func parseIdentExpr(p *Parser) (ast.Node, error) {
