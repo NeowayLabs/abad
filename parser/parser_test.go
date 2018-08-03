@@ -301,6 +301,16 @@ func TestMemberExpr(t *testing.T) {
 	})
 }
 
+func TestVarDeclaration(t *testing.T) {
+	runTests(t, []TestCase{
+		{
+			name: "NoInitializer",
+			code: "var x;",
+			want: varDecl(identifier("x"), undefined()),
+		},
+	})
+}
+
 func TestParserFuncall(t *testing.T) {
 
 	runTests(t, []TestCase{
@@ -571,4 +581,8 @@ func memberExpr(obj ast.Node, memberName string) *ast.MemberExpr {
 
 func callExpr(callee ast.Node, args []ast.Node) *ast.CallExpr {
 	return ast.NewCallExpr(callee, args)
+}
+
+func varDecl(name ast.Ident, value ast.Node) *ast.VarDecl {
+	return ast.NewVarDecl(name, value)
 }

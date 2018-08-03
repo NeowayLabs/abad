@@ -102,6 +102,7 @@ func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 			unaryParsers,
 			{
 				token.Ident: parseIdentExpr,
+				token.Var: parseVarDecl,
 			},
 		} {
 			parser, ok := parsers[tok.Type]
@@ -243,6 +244,18 @@ func parseUnary(p *Parser) (ast.Node, error) {
 	}
 
 	return ast.NewUnaryExpr(tok.Type, expr), nil
+}
+
+func parseVarDecl(p *Parser) (ast.Node, error) {
+	p.forget(1)
+	p.scry(1)
+
+	identifier := p.lookahead[0]
+	//TODO: handle when not identifier
+	//TODO: handle when there is initialization
+
+	p.forget(1)
+	return ast.NewVarDecl(ast.NewIdent(identifier.Value), ast.NewUndefined()), nil
 }
 
 func parseIdentExpr(p *Parser) (ast.Node, error) {

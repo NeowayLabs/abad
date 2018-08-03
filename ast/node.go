@@ -26,6 +26,8 @@ type (
 		Nodes []Node
 	}
 
+	Ident utf16.Str
+
 	// Function Body
 	FnBody struct {
 		Nodes []Node
@@ -60,11 +62,9 @@ type (
 	}
 
 	VarDecl struct {
-		Name String
+		Name  Ident
 		Value Node
 	}
-
-	Ident utf16.Str
 )
 
 const (
@@ -350,6 +350,28 @@ func (m *MemberExpr) Equal(other Node) bool {
 	o := other.(*MemberExpr)
 	return m.Object.Equal(o.Object) &&
 		m.Property.Equal(o.Property)
+}
+
+func NewVarDecl(name Ident, val Node) *VarDecl {
+	return &VarDecl{
+		Name:  name,
+		Value: val,
+	}
+}
+
+func (v *VarDecl) Type() NodeType { return NodeVarDecl }
+
+func (v *VarDecl) Equal(other Node) bool {
+	if other.Type() != v.Type() {
+		return false
+	}
+
+	o := other.(*VarDecl)
+	return v.Name.Equal(o.Name) && v.Value.Equal(o.Value) 
+}
+
+func (v *VarDecl) String() string {
+	return fmt.Sprintf("var %s = %s", v.Name, v.Value)
 }
 
 func NewCallExpr(callee Node, args []Node) *CallExpr {
