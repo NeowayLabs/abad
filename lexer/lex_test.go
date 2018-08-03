@@ -1312,7 +1312,6 @@ func TestIllegalSingleDot(t *testing.T) {
 }
 
 func TestIllegalMemberAccess(t *testing.T) {
-
 	runTests(t, []TestCase{
 		{
 			name: "CantAccessMemberThatStartsWithNumber",

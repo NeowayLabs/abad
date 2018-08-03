@@ -26,11 +26,6 @@ type (
 		Nodes []Node
 	}
 
-	// Function Body
-	FnBody struct {
-		Nodes []Node
-	}
-
 	Number float64
 
 	String utf16.Str
@@ -59,12 +54,20 @@ type (
 		Args   []Node
 	}
 
+	// FunDecl is the syntatic function declaration
+	FunDecl struct {
+		Name Ident
+		Args []Ident
+		Body *Program
+	}
+
+	// Ident is the identifier
 	Ident utf16.Str
 )
 
 const (
 	NodeProgram NodeType = iota + 1
-	NodeFnBody
+	NodeFunDecl
 
 	exprBegin
 
@@ -85,7 +88,7 @@ const (
 
 var nodeTypesNames = [...]string{
 	NodeProgram:    "PROGRAM",
-	NodeFnBody:     "FNBODY",
+	NodeFunDecl:    "FUNDECL",
 	NodeNumber:     "NUMBER",
 	NodeString:     "STRING",
 	NodeBool:       "BOOLEAN",
@@ -142,16 +145,6 @@ func (p *Program) Equal(other Node) bool {
 		}
 	}
 	return true
-}
-
-func (_ *FnBody) Type() NodeType { return NodeFnBody }
-
-func (f *FnBody) String() string {
-	var stmts []string
-	for _, stmt := range f.Nodes {
-		stmts = append(stmts, stmt.String())
-	}
-	return strings.Join(stmts, "\n")
 }
 
 func NewString(a utf16.Str) String {
@@ -375,6 +368,54 @@ func (c *CallExpr) Equal(other Node) bool {
 	}
 
 	return c.Callee.Equal(o.Callee)
+}
+
+// NewFunDecl creates a new function declaration node.
+func NewFunDecl(name Ident, args []Ident, body *Program) *FunDecl {
+	return &FunDecl{
+		Name: name,
+		Args: args,
+		Body: body,
+	}
+}
+
+func (a *FunDecl) Type() NodeType {
+	return NodeFunDecl
+}
+
+func (a *FunDecl) String() string {
+	var args []string
+
+	for _, arg := range a.Args {
+		args = append(args, arg.String())
+	}
+
+	// TODO(i4k): improve identation
+	return fmt.Sprintf("function %s(%s) {\n%s\n}",
+		a.Name,
+		strings.Join(args, ", "),
+		a.Body.String(),
+	)
+}
+
+func (a *FunDecl) Equal(other Node) bool {
+	if other.Type() != NodeFunDecl {
+		return false
+	}
+
+	o := other.(*FunDecl)
+
+	if len(a.Args) != len(o.Args) {
+		return false
+	}
+
+	for i := 0; i < len(a.Args); i++ {
+		if !a.Args[i].Equal(o.Args[i]) {
+			return false
+		}
+	}
+
+	return a.Name.Equal(o.Name) && a.Body.Equal(o.Body)
 }
 
 func floatEquals(a, b float64) bool {
