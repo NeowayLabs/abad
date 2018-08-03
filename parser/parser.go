@@ -272,10 +272,13 @@ func parseVarDecl(p *Parser) (ast.Node, error) {
 	}
 
 	// TODO: check if it is actually an assignment token
-	// TODO: when parser is not found
 	p.scry(1)
 	assignExpr := p.lookahead[0]
-	parser, _ := literalParsers[assignExpr.Type]
+	parser, hasparser := literalParsers[assignExpr.Type]
+	
+	if !hasparser {
+		return nil, fmt.Errorf("parser: var decl: invalid token[%s] expected assigment expression", assignExpr)
+	}
 
 	// TODO: check when parser fails
 	val, _ := parser(p)

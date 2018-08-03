@@ -301,7 +301,7 @@ func TestMemberExpr(t *testing.T) {
 	})
 }
 
-func TestVarDeclarationFailures(t *testing.T) {
+func TestVarDeclarationErrors(t *testing.T) {
 	runTests(t, []TestCase{
 		{
 			name: "NotIdentifierAfterVarDecl",
@@ -311,6 +311,11 @@ func TestVarDeclarationFailures(t *testing.T) {
 		{
 			name: "VarWithoutIdentifier",
 			code: "var",
+			fail: true,
+		},
+		{
+			name: "InvalidAssignExpression",
+			code: "var a = var;",
 			fail: true,
 		},
 	})
