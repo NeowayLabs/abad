@@ -316,7 +316,8 @@ func TestVarDeclarationFailures(t *testing.T) {
 	})
 }
 
-func TestVarDeclaration(t *testing.T) {
+func TestVarStatement(t *testing.T) {
+	// http://es5.github.io/#x12.2
 	runTests(t, []TestCase{
 		{
 			name: "NoInitializer",
@@ -327,6 +328,41 @@ func TestVarDeclaration(t *testing.T) {
 			name: "VarInitToDecimal",
 			code: "var y = 1;",
 			want: varDecl(identifier("y"), intNumber(1)),
+		},
+		{
+			name: "VarInitToReal",
+			code: "var y = 6.66;",
+			want: varDecl(identifier("y"), number(6.66)),
+		},
+		{
+			name: "VarInitToHex",
+			code: "var y = 0xFF;",
+			want: varDecl(identifier("y"), intNumber(255)),
+		},
+		{
+			name: "VarInitToString",
+			code: `var win = "i4k likes windows";`,
+			want: varDecl(identifier("win"), str("i4k likes windows")),
+		},
+		{
+			name: "VarInitToUndefined",
+			code: "var u = undefined;",
+			want: varDecl(identifier("u"), undefined()),
+		},
+		{
+			name: "VarInitToNull",
+			code: "var u = null;",
+			want: varDecl(identifier("u"), null()),
+		},
+		{
+			name: "VarInitToTrue",
+			code: "var b = true;",
+			want: varDecl(identifier("b"), boolean(true)),
+		},
+		{
+			name: "VarInitToFalse",
+			code: "var b = false;",
+			want: varDecl(identifier("b"), boolean(false)),
 		},
 	})
 }
