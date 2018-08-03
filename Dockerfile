@@ -42,5 +42,3 @@ RUN cd /tmp && \
 	tar -xvf go$GOVERSION.linux-amd64.tar.gz && \
 	mkdir -p $GOROOT && \
 	mv ./go/* $GOROOT
-
-	
