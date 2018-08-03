@@ -314,8 +314,23 @@ func TestVarDeclarationErrors(t *testing.T) {
 			fail: true,
 		},
 		{
+			name: "EOFAfterIdentifier",
+			code: "var x",
+			fail: true,
+		},
+		{
+			name: "EOFAfterInitializer",
+			code: "var x =",
+			fail: true,
+		},
+		{
 			name: "InvalidAssignExpression",
 			code: "var a = var;",
+			fail: true,
+		},
+		{
+			name: "InvalidAssignInitializer",
+			code: "var a ! 5;",
 			fail: true,
 		},
 	})

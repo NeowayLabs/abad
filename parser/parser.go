@@ -271,6 +271,10 @@ func parseVarDecl(p *Parser) (ast.Node, error) {
 		return ast.NewVarDecl(varname, ast.NewUndefined()), nil
 	}
 
+	if possibleAssignment.Type != token.Assign {
+		return nil, fmt.Errorf("parser: var decl: expected assignment token [=] got [%s]", possibleAssignment)
+	}
+
 	// TODO: check if it is actually an assignment token
 	p.scry(1)
 	assignExpr := p.lookahead[0]
