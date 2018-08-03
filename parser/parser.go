@@ -34,6 +34,9 @@ var (
 		token.Undefined:   parseUndefined,
 		token.Null:        parseNull,
 	}
+	varAssignParsers = mergeParsers(literalParsers, map[token.Type]parserfn{
+		token.Ident: parseIdentExpr,
+	})
 	unaryParsers map[token.Type]parserfn
 )
 
@@ -278,14 +281,17 @@ func parseVarDecl(p *Parser) (ast.Node, error) {
 	// TODO: check if it is actually an assignment token
 	p.scry(1)
 	assignExpr := p.lookahead[0]
-	parser, hasparser := literalParsers[assignExpr.Type]
+	parser, hasparser := varAssignParsers[assignExpr.Type]
 	
 	if !hasparser {
 		return nil, fmt.Errorf("parser: var decl: invalid token[%s] expected assigment expression", assignExpr)
 	}
 
 	// TODO: check when parser fails
-	val, _ := parser(p)
+	val, err := parser(p)
+	if err != nil {
+		return nil, fmt.Errorf("parser: var decl: error[%s] parsing variable assign expression", err)
+	}
 	return ast.NewVarDecl(varname, val), nil
 }
 
@@ -305,7 +311,7 @@ func parseIdentExpr(p *Parser) (ast.Node, error) {
 		return parseCallExpr(p)
 	}
 
-	if next.Type != token.EOF {
+	if next.Type != token.EOF && next.Type != token.SemiColon {
 		return nil, p.errorf(next, "parser:identifier:unexpected token [%s]", next)
 	}
 
@@ -422,4 +428,16 @@ func parseCallExpr(p *Parser) (ast.Node, error) {
 // TODO(i4k): implement line and column of error
 func (p *Parser) errorf(_ lexer.Tokval, f string, a ...interface{}) error {
 	return fmt.Errorf("%s:1:0: %s", p.filename, fmt.Sprintf(f, a...))
+}
+
+func mergeParsers(parsers ...map[token.Type]parserfn) map[token.Type]parserfn {
+	res := map[token.Type]parserfn{}
+
+	for _, parsermap := range parsers {
+		for tokenType, fn := range parsermap {
+			res[tokenType] = fn
+		}
+	}
+
+	return res
 }

@@ -203,6 +203,20 @@ func TestIdentifier(t *testing.T) {
 			code: "a$b$c",
 			want: identifier("a$b$c"),
 		},
+		{
+			name: "WithSemicolon",
+			code: "a;",
+			want: identifier("a"),
+		},
+		{
+			name: "SeparatedBySemicolon",
+			code: "a;b;c",
+			wants: []ast.Node{
+				identifier("a"),
+				identifier("b"),
+				identifier("c"),
+			},
+		},
 	})
 }
 
@@ -383,6 +397,11 @@ func TestVarStatement(t *testing.T) {
 			name: "VarInitToFalse",
 			code: "var b = false;",
 			want: varDecl(identifier("b"), boolean(false)),
+		},
+		{
+			name: "VarInitToIdentifier",
+			code: "var b = a;",
+			want: varDecl(identifier("b"), identifier("a")),
 		},
 	})
 }
