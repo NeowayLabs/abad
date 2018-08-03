@@ -251,7 +251,9 @@ func parseVarDecl(p *Parser) (ast.Node, error) {
 	p.scry(1)
 
 	identifier := p.lookahead[0]
-	//TODO: handle when not identifier
+	if identifier.Type != token.Ident {
+		return nil, fmt.Errorf("parser: var decl: expected identifier got[%s]", identifier)
+	}
 	//TODO: handle when there is initialization
 
 	p.forget(1)

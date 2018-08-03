@@ -308,6 +308,11 @@ func TestVarDeclaration(t *testing.T) {
 			code: "var x;",
 			want: varDecl(identifier("x"), undefined()),
 		},
+		{
+			name: "NotIdentifierAfterVarDecl",
+			code: "var 1234;",
+			fail: true,
+		},
 	})
 }
 
@@ -506,13 +511,21 @@ type TestCase struct {
 	code    string
 	want    ast.Node
 	wants   []ast.Node
+	fail    bool
 	wantErr error
 }
 
 func (tc *TestCase) run(t *testing.T) {
 	t.Run(tc.name, func(t *testing.T) {
 		tree, err := parser.Parse("tests.js", tc.code)
-		assert.EqualErrs(t, tc.wantErr, err, "parser err")
+
+		if tc.fail && tc.wantErr == nil {
+			if err == nil {
+				t.Fatal("expected an error, got nil")
+			}
+		} else {
+			assert.EqualErrs(t, tc.wantErr, err, "parser err")
+		}
 
 		if err != nil {
 			return
