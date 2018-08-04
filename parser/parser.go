@@ -25,7 +25,17 @@ type (
 var tokEOF = lexer.EOF
 
 var (
-	keywordParsers = map[token.Type]parserfn{}
+	literalParsers map[token.Type]parserfn
+	unaryParsers map[token.Type]parserfn
+	varAssignParsers map[token.Type]parserfn
+	nodeParsers map[token.Type]parserfn
+)
+
+func init() {
+	unaryParsers = map[token.Type]parserfn{
+		token.Minus: parseUnary,
+		token.Plus:  parseUnary,
+	}
 	literalParsers = map[token.Type]parserfn{
 		token.Decimal:     parseDecimal,
 		token.Hexadecimal: parseHex,
@@ -34,17 +44,20 @@ var (
 		token.Undefined:   parseUndefined,
 		token.Null:        parseNull,
 	}
-	varAssignParsers = mergeParsers(literalParsers, map[token.Type]parserfn{
-		token.Ident: parseIdentExpr,
-	})
-	unaryParsers map[token.Type]parserfn
-)
-
-func init() {
-	unaryParsers = map[token.Type]parserfn{
-		token.Minus: parseUnary,
-		token.Plus:  parseUnary,
-	}
+	varAssignParsers = mergeParsers(
+		literalParsers,
+		map[token.Type]parserfn{
+			token.Ident: parseIdentExpr,
+		},
+	)
+	nodeParsers = mergeParsers(
+			literalParsers,
+			unaryParsers,
+			map[token.Type]parserfn{
+				token.Ident: parseIdentExpr,
+				token.Var: parseVarDecl,
+			},
+	)
 }
 
 // Parse input source into an AST representation.
@@ -98,25 +111,7 @@ func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 		return nil, false, err
 	}
 
-	getParser := func() (parserfn, bool) {
-		for _, parsers := range []map[token.Type]parserfn{
-			keywordParsers,
-			literalParsers,
-			unaryParsers,
-			{
-				token.Ident: parseIdentExpr,
-				token.Var: parseVarDecl,
-			},
-		} {
-			parser, ok := parsers[tok.Type]
-			if ok {
-				return parser, true
-			}
-		}
-		return nil, false
-	}
-
-	parser, ok := getParser()
+	parser, ok := nodeParsers[tok.Type]
 
 	if !ok {
 		return nil, false, p.errorf(tok, "invalid token: %s", tok)
