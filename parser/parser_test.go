@@ -516,6 +516,33 @@ func TestFunDecl(t *testing.T) {
 					})),
 			),
 		},
+		{
+			name: "function between stmts",
+			code: `console.log(1);
+			function a(b){
+				b(1, 2)
+			}
+			console.log(2);
+			`,
+			wants: []ast.Node{
+				callExpr(
+					memberExpr(identifier("console"), "log"),
+					[]ast.Node{ast.NewNumber(1.0)},
+				),
+				fundecl(
+					identifier("a"),
+					[]ast.Ident{identifier("b")},
+					program(
+						callExpr(identifier("b"), []ast.Node{
+							number(1), number(2),
+						})),
+				),
+				callExpr(
+					memberExpr(identifier("console"), "log"),
+					[]ast.Node{ast.NewNumber(2.0)},
+				),
+			},
+		},
 	})
 }
 
