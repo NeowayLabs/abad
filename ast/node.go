@@ -105,7 +105,7 @@ var nodeTypesNames = [...]string{
 	NodeCallExpr:   "CALLEXPR",
 	NodeIdent:      "IDENT",
 	NodeVarDecl:    "VARDECL",
-	NodeVarDecls:    "VARDECLS",
+	NodeVarDecls:   "VARDECLS",
 	exprEnd:        "",
 }
 
@@ -371,7 +371,7 @@ func (v VarDecl) Equal(other Node) bool {
 	}
 
 	o := other.(VarDecl)
-	return v.Name.Equal(o.Name) && v.Value.Equal(o.Value) 
+	return v.Name.Equal(o.Name) && v.Value.Equal(o.Value)
 }
 
 func (v VarDecl) String() string {

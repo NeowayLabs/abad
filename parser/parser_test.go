@@ -386,7 +386,7 @@ func TestVarStatement(t *testing.T) {
 
 	// TODO: add vars init to funcall and access member expressions
 	// eg: var a = func()
-    //     var b = a.x.i()
+	//     var b = a.x.i()
 
 	// TODO: add identifier to multiple vars statements and multiple vars on
 	// single statement.
@@ -458,7 +458,7 @@ func TestVarStatement(t *testing.T) {
 				varDecl(identifier("n"), null()),
 			),
 		},
-        {
+		{
 			name: "MultipleVarsStatements",
 			code: `
 					var d = 666;

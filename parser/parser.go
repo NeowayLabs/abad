@@ -25,10 +25,10 @@ type (
 var tokEOF = lexer.EOF
 
 var (
-	literalParsers map[token.Type]parserfn
-	unaryParsers map[token.Type]parserfn
+	literalParsers   map[token.Type]parserfn
+	unaryParsers     map[token.Type]parserfn
 	varAssignParsers map[token.Type]parserfn
-	nodeParsers map[token.Type]parserfn
+	nodeParsers      map[token.Type]parserfn
 )
 
 func init() {
@@ -51,12 +51,12 @@ func init() {
 		},
 	)
 	nodeParsers = mergeParsers(
-			literalParsers,
-			unaryParsers,
-			map[token.Type]parserfn{
-				token.Ident: parseIdentExpr,
-				token.Var: parseVarDecls,
-			},
+		literalParsers,
+		unaryParsers,
+		map[token.Type]parserfn{
+			token.Ident: parseIdentExpr,
+			token.Var:   parseVarDecls,
+		},
 	)
 }
 
@@ -268,7 +268,7 @@ func _parseVarDecls(p *Parser) (ast.VarDecls, error) {
 	if identifier.Type != token.Ident {
 		return nil, fmt.Errorf("parser: var decl: expected identifier got[%s]", identifier)
 	}
-	
+
 	varname := ast.NewIdent(identifier.Value)
 	if possibleAssignment.Type == token.SemiColon {
 		return ast.NewVarDecls(ast.NewVarDecl(varname, ast.NewUndefined())), nil
@@ -281,7 +281,7 @@ func _parseVarDecls(p *Parser) (ast.VarDecls, error) {
 	p.scry(1)
 	assignExpr := p.lookahead[0]
 	parser, hasparser := varAssignParsers[assignExpr.Type]
-	
+
 	if !hasparser {
 		return nil, fmt.Errorf("parser: var decl: invalid token[%s] expected assigment expression", assignExpr)
 	}
@@ -296,14 +296,14 @@ func _parseVarDecls(p *Parser) (ast.VarDecls, error) {
 	possibleSemiColon := p.lookahead[0]
 	p.forget(1)
 
-	if possibleSemiColon.Type == token.SemiColon || possibleSemiColon.Type == token.EOF { 
+	if possibleSemiColon.Type == token.SemiColon || possibleSemiColon.Type == token.EOF {
 		return res, nil
 	}
 
 	if possibleSemiColon.Type != token.Comma {
 		return nil, fmt.Errorf("parser: var decl: invalid token[%s] expected comma", possibleSemiColon)
 	}
-	
+
 	vars, err := _parseVarDecls(p)
 	return append(res, vars...), err
 }
