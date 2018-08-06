@@ -359,49 +359,87 @@ func TestVarStatement(t *testing.T) {
 			want: varDecl(identifier("x"), undefined()),
 		},
 		{
-			name: "VarInitToDecimal",
+			name: "Decimal",
 			code: "var y = 1;",
 			want: varDecl(identifier("y"), intNumber(1)),
 		},
 		{
-			name: "VarInitToReal",
+			name: "Real",
 			code: "var y = 6.66;",
 			want: varDecl(identifier("y"), number(6.66)),
 		},
 		{
-			name: "VarInitToHex",
+			name: "Hex",
 			code: "var y = 0xFF;",
 			want: varDecl(identifier("y"), intNumber(255)),
 		},
 		{
-			name: "VarInitToString",
+			name: "String",
 			code: `var win = "i4k likes windows";`,
 			want: varDecl(identifier("win"), str("i4k likes windows")),
 		},
 		{
-			name: "VarInitToUndefined",
+			name: "Undefined",
 			code: "var u = undefined;",
 			want: varDecl(identifier("u"), undefined()),
 		},
 		{
-			name: "VarInitToNull",
+			name: "Null",
 			code: "var u = null;",
 			want: varDecl(identifier("u"), null()),
 		},
 		{
-			name: "VarInitToTrue",
+			name: "True",
 			code: "var b = true;",
 			want: varDecl(identifier("b"), boolean(true)),
 		},
 		{
-			name: "VarInitToFalse",
+			name: "False",
 			code: "var b = false;",
 			want: varDecl(identifier("b"), boolean(false)),
 		},
 		{
-			name: "VarInitToIdentifier",
+			name: "Identifier",
 			code: "var b = a;",
 			want: varDecl(identifier("b"), identifier("a")),
+		},
+		{
+			name: "MultipleVarsInSingleStatement",
+			code: `
+					var d = 666,
+					    x = 0xFF,
+					    i = d,
+					    s = "hi",
+					    u = undefined,
+					    n = null;
+			`,
+			want: varDecls(
+				varDecl(identifier("d"), intNumber(666)),
+				varDecl(identifier("x"), intNumber(255)),
+				varDecl(identifier("i"), identifier("d")),
+				varDecl(identifier("s"), str("hi")),
+				varDecl(identifier("u"), undefined()),
+				varDecl(identifier("n"), null()),
+			),
+		},
+        {
+			name: "MultipleVarsStatements",
+			code: `
+					var d = 666;
+					var x = 0xFF;
+					var i = d;
+					var s = "hi";
+					var u = undefined;
+					var n = null;
+			`,
+			wants: []ast.Node{
+				varDecl(identifier("d"), intNumber(666)),
+				varDecl(identifier("x"), intNumber(255)),
+				varDecl(identifier("i"), identifier("d")),
+				varDecl(identifier("s"), str("hi")),
+				varDecl(identifier("u"), undefined()),
+				varDecl(identifier("n"), null()),
+			},
 		},
 	})
 }
@@ -686,6 +724,10 @@ func callExpr(callee ast.Node, args []ast.Node) *ast.CallExpr {
 	return ast.NewCallExpr(callee, args)
 }
 
-func varDecl(name ast.Ident, value ast.Node) *ast.VarDecl {
+func varDecls(vars ...ast.VarDecl) ast.VarDecls {
+	return ast.NewVarDecls(vars)
+}
+
+func varDecl(name ast.Ident, value ast.Node) ast.VarDecl {
 	return ast.NewVarDecl(name, value)
 }
