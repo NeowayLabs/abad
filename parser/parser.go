@@ -55,7 +55,7 @@ func init() {
 			unaryParsers,
 			map[token.Type]parserfn{
 				token.Ident: parseIdentExpr,
-				token.Var: parseVarDecl,
+				token.Var: parseVarDecls,
 			},
 	)
 }
@@ -125,10 +125,10 @@ func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 	// parsers should not leave tokens not processed
 	// in the lookahead buffer.
 	if len(p.lookahead) != 0 {
-		panic(fmt.Sprintf(
+		return nil, false, fmt.Errorf(
 			"parser for token[%v] not handled lookahead correctly, lookahead has[%v] but should be empty",
 			tok,
-			p.lookahead))
+			p.lookahead)
 	}
 	return node, false, nil
 }
@@ -250,8 +250,13 @@ func parseUnary(p *Parser) (ast.Node, error) {
 	return ast.NewUnaryExpr(tok.Type, expr), nil
 }
 
-func parseVarDecl(p *Parser) (ast.Node, error) {
+func parseVarDecls(p *Parser) (ast.Node, error) {
 	p.forget(1)
+	return _parseVarDecls(p)
+}
+
+func _parseVarDecls(p *Parser) (ast.VarDecls, error) {
+
 	if !p.scry(2) {
 		return nil, fmt.Errorf("parser var decl: expected at least two tokens got[%s]", p.lookahead)
 	}
@@ -266,14 +271,13 @@ func parseVarDecl(p *Parser) (ast.Node, error) {
 	
 	varname := ast.NewIdent(identifier.Value)
 	if possibleAssignment.Type == token.SemiColon {
-		return ast.NewVarDecl(varname, ast.NewUndefined()), nil
+		return ast.NewVarDecls(ast.NewVarDecl(varname, ast.NewUndefined())), nil
 	}
 
 	if possibleAssignment.Type != token.Assign {
 		return nil, fmt.Errorf("parser: var decl: expected assignment token [=] got [%s]", possibleAssignment)
 	}
 
-	// TODO: check if it is actually an assignment token
 	p.scry(1)
 	assignExpr := p.lookahead[0]
 	parser, hasparser := varAssignParsers[assignExpr.Type]
@@ -282,12 +286,26 @@ func parseVarDecl(p *Parser) (ast.Node, error) {
 		return nil, fmt.Errorf("parser: var decl: invalid token[%s] expected assigment expression", assignExpr)
 	}
 
-	// TODO: check when parser fails
 	val, err := parser(p)
 	if err != nil {
 		return nil, fmt.Errorf("parser: var decl: error[%s] parsing variable assign expression", err)
 	}
-	return ast.NewVarDecl(varname, val), nil
+
+	res := ast.NewVarDecls(ast.NewVarDecl(varname, val))
+	p.scry(1)
+	possibleSemiColon := p.lookahead[0]
+	p.forget(1)
+
+	if possibleSemiColon.Type == token.SemiColon || possibleSemiColon.Type == token.EOF { 
+		return res, nil
+	}
+
+	if possibleSemiColon.Type != token.Comma {
+		return nil, fmt.Errorf("parser: var decl: invalid token[%s] expected comma", possibleSemiColon)
+	}
+	
+	vars, err := _parseVarDecls(p)
+	return append(res, vars...), err
 }
 
 func parseIdentExpr(p *Parser) (ast.Node, error) {
@@ -382,7 +400,7 @@ func parseFuncallArgs(p *Parser) ([]ast.Node, error) {
 	for {
 		tok := nextToken()
 
-		if tok.Type == token.EOF || tok.Type == token.RParen {
+		if tok.Type == token.RParen {
 			p.forget(1)
 			break
 		}

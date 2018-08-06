@@ -378,7 +378,7 @@ func (v VarDecl) String() string {
 	return fmt.Sprintf("var %s = %s", v.Name, v.Value)
 }
 
-func NewVarDecls(vars []VarDecl) VarDecls {
+func NewVarDecls(vars ...VarDecl) VarDecls {
 	return VarDecls(vars)
 }
 

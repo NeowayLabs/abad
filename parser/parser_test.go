@@ -347,68 +347,105 @@ func TestVarDeclarationErrors(t *testing.T) {
 			code: "var a ! 5;",
 			fail: true,
 		},
+		{
+			name: "InvalidVarOnMultipleInits",
+			code: "var a = 5, var x = 6;",
+			fail: true,
+		},
+		{
+			name: "InvalidAssignOnMultipleInits",
+			code: "var a = 5, x ! 3",
+			fail: true,
+		},
+		{
+			name: "InvalidSeparatorForMultipleInits",
+			code: "var d = 6 : x = 1",
+			fail: true,
+		},
+		{
+			name: "InvalidFuncall",
+			code: "var d = lala(666",
+			fail: true,
+		},
+		{
+			name: "InvalidMemberAccess",
+			code: "var d = obj.666",
+			fail: true,
+		},
 	})
 }
 
 func TestVarStatement(t *testing.T) {
 	// http://es5.github.io/#x12.2
+
+	// WHY: just to avoid typing a lot initializing tests
+	// that have single vars being initialized.
+	vars := func(name ast.Ident, val ast.Node) ast.Node {
+		return varDecls(varDecl(name, val))
+	}
+
+	// TODO: add vars init to funcall and access member expressions
+	// eg: var a = func()
+    //     var b = a.x.i()
+
+	// TODO: add identifier to multiple vars statements and multiple vars on
+	// single statement.
 	runTests(t, []TestCase{
 		{
 			name: "NoInitializer",
 			code: "var x;",
-			want: varDecl(identifier("x"), undefined()),
+			want: vars(identifier("x"), undefined()),
 		},
 		{
 			name: "Decimal",
 			code: "var y = 1;",
-			want: varDecl(identifier("y"), intNumber(1)),
+			want: vars(identifier("y"), intNumber(1)),
 		},
 		{
 			name: "Real",
 			code: "var y = 6.66;",
-			want: varDecl(identifier("y"), number(6.66)),
+			want: vars(identifier("y"), number(6.66)),
 		},
 		{
 			name: "Hex",
 			code: "var y = 0xFF;",
-			want: varDecl(identifier("y"), intNumber(255)),
+			want: vars(identifier("y"), intNumber(255)),
 		},
 		{
 			name: "String",
 			code: `var win = "i4k likes windows";`,
-			want: varDecl(identifier("win"), str("i4k likes windows")),
+			want: vars(identifier("win"), str("i4k likes windows")),
 		},
 		{
 			name: "Undefined",
 			code: "var u = undefined;",
-			want: varDecl(identifier("u"), undefined()),
+			want: vars(identifier("u"), undefined()),
 		},
 		{
 			name: "Null",
 			code: "var u = null;",
-			want: varDecl(identifier("u"), null()),
+			want: vars(identifier("u"), null()),
 		},
 		{
 			name: "True",
 			code: "var b = true;",
-			want: varDecl(identifier("b"), boolean(true)),
+			want: vars(identifier("b"), boolean(true)),
 		},
 		{
 			name: "False",
 			code: "var b = false;",
-			want: varDecl(identifier("b"), boolean(false)),
+			want: vars(identifier("b"), boolean(false)),
 		},
 		{
 			name: "Identifier",
 			code: "var b = a;",
-			want: varDecl(identifier("b"), identifier("a")),
+			want: vars(identifier("b"), identifier("a")),
 		},
 		{
 			name: "MultipleVarsInSingleStatement",
 			code: `
 					var d = 666,
 					    x = 0xFF,
-					    i = d,
 					    s = "hi",
 					    u = undefined,
 					    n = null;
@@ -416,7 +453,6 @@ func TestVarStatement(t *testing.T) {
 			want: varDecls(
 				varDecl(identifier("d"), intNumber(666)),
 				varDecl(identifier("x"), intNumber(255)),
-				varDecl(identifier("i"), identifier("d")),
 				varDecl(identifier("s"), str("hi")),
 				varDecl(identifier("u"), undefined()),
 				varDecl(identifier("n"), null()),
@@ -427,19 +463,37 @@ func TestVarStatement(t *testing.T) {
 			code: `
 					var d = 666;
 					var x = 0xFF;
-					var i = d;
 					var s = "hi";
 					var u = undefined;
 					var n = null;
 			`,
 			wants: []ast.Node{
-				varDecl(identifier("d"), intNumber(666)),
-				varDecl(identifier("x"), intNumber(255)),
-				varDecl(identifier("i"), identifier("d")),
-				varDecl(identifier("s"), str("hi")),
-				varDecl(identifier("u"), undefined()),
-				varDecl(identifier("n"), null()),
+				vars(identifier("d"), intNumber(666)),
+				vars(identifier("x"), intNumber(255)),
+				vars(identifier("s"), str("hi")),
+				vars(identifier("u"), undefined()),
+				vars(identifier("n"), null()),
 			},
+		},
+	})
+}
+
+func TestParserFuncallError(t *testing.T) {
+	runTests(t, []TestCase{
+		{
+			name: "NoParamMissingRParen",
+			code: "a(",
+			fail: true,
+		},
+		{
+			name: "OneParamMissingRParen",
+			code: "a(666",
+			fail: true,
+		},
+		{
+			name: "MultipleParamsMissingRParen",
+			code: "a(666,777",
+			fail: true,
 		},
 	})
 }
@@ -649,7 +703,7 @@ func (tc *TestCase) run(t *testing.T) {
 
 		if tc.fail && tc.wantErr == nil {
 			if err == nil {
-				t.Fatal("expected an error, got nil")
+				t.Fatalf("expected an error got succeess:\n%s\n", tree)
 			}
 		} else {
 			assert.EqualErrs(t, tc.wantErr, err, "parser err")
@@ -677,7 +731,7 @@ func runTests(t *testing.T, tcases []TestCase) {
 func assertEqualNodes(t *testing.T, want []ast.Node, got []ast.Node) {
 	if len(want) != len(got) {
 		t.Errorf("want[%d] nodes but got[%d] nodes", len(want), len(got))
-		t.Fatalf("want[%v] != got[%v]", want, got)
+		t.Fatalf("want:\n%v\n\ngot:\n%v\n", want, got)
 	}
 
 	for i, w := range want {
@@ -725,7 +779,7 @@ func callExpr(callee ast.Node, args []ast.Node) *ast.CallExpr {
 }
 
 func varDecls(vars ...ast.VarDecl) ast.VarDecls {
-	return ast.NewVarDecls(vars)
+	return ast.NewVarDecls(vars...)
 }
 
 func varDecl(name ast.Ident, value ast.Node) ast.VarDecl {
