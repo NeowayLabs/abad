@@ -25,7 +25,17 @@ type (
 var tokEOF = lexer.EOF
 
 var (
-	keywordParsers = map[token.Type]parserfn{}
+	literalParsers   map[token.Type]parserfn
+	unaryParsers     map[token.Type]parserfn
+	varAssignParsers map[token.Type]parserfn
+	nodeParsers      map[token.Type]parserfn
+)
+
+func init() {
+	unaryParsers = map[token.Type]parserfn{
+		token.Minus: parseUnary,
+		token.Plus:  parseUnary,
+	}
 	literalParsers = map[token.Type]parserfn{
 		token.Decimal:     parseDecimal,
 		token.Hexadecimal: parseHex,
@@ -34,14 +44,20 @@ var (
 		token.Undefined:   parseUndefined,
 		token.Null:        parseNull,
 	}
-	unaryParsers map[token.Type]parserfn
-)
-
-func init() {
-	unaryParsers = map[token.Type]parserfn{
-		token.Minus: parseUnary,
-		token.Plus:  parseUnary,
-	}
+	varAssignParsers = mergeParsers(
+		literalParsers,
+		map[token.Type]parserfn{
+			token.Ident: parseIdentExpr,
+		},
+	)
+	nodeParsers = mergeParsers(
+		literalParsers,
+		unaryParsers,
+		map[token.Type]parserfn{
+			token.Ident: parseIdentExpr,
+			token.Var:   parseVarDecls,
+		},
+	)
 }
 
 // Parse input source into an AST representation.
@@ -95,24 +111,7 @@ func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 		return nil, false, err
 	}
 
-	getParser := func() (parserfn, bool) {
-		for _, parsers := range []map[token.Type]parserfn{
-			keywordParsers,
-			literalParsers,
-			unaryParsers,
-			{
-				token.Ident: parseIdentExpr,
-			},
-		} {
-			parser, ok := parsers[tok.Type]
-			if ok {
-				return parser, true
-			}
-		}
-		return nil, false
-	}
-
-	parser, ok := getParser()
+	parser, ok := nodeParsers[tok.Type]
 
 	if !ok {
 		return nil, false, p.errorf(tok, "invalid token: %s", tok)
@@ -126,8 +125,7 @@ func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 	// parsers should not leave tokens not processed
 	// in the lookahead buffer.
 	if len(p.lookahead) != 0 {
-		panic(fmt.Sprintf(
-			"parser for token[%v] not handled lookahead correctly, lookahead has[%v] but should be empty",
+		panic(fmt.Sprintf("parser for token[%v] not handled lookahead correctly, lookahead has[%v] but should be empty",
 			tok,
 			p.lookahead))
 	}
@@ -145,18 +143,24 @@ func (p *Parser) next() lexer.Tokval {
 
 // scry foretell the future using a crystal ball. Amount is how much
 // of the future you want to foresee.
-func (p *Parser) scry(amount int) {
+//
+// Returns false if it reaches EOF before reading the desired amount
+func (p *Parser) scry(amount int) bool {
 	if len(p.lookahead)+amount > 2 {
 		panic("lookahead > 2")
 	}
 
+	got := 0
 	for i := 0; i < amount; i++ {
 		val := p.next()
 		p.lookahead = append(p.lookahead, val)
+		got += 1
 		if val.Type == token.EOF {
 			break
 		}
 	}
+
+	return got == amount
 }
 
 // forget what you had foresee
@@ -245,6 +249,60 @@ func parseUnary(p *Parser) (ast.Node, error) {
 	return ast.NewUnaryExpr(tok.Type, expr), nil
 }
 
+func parseVarDecls(p *Parser) (ast.Node, error) {
+	p.forget(1)
+	return parseVarDeclList(p)
+}
+
+func parseVarDeclList(p *Parser) (ast.VarDecls, error) {
+
+	identifier := p.next()
+	if identifier.Type != token.Ident {
+		return nil, fmt.Errorf("parser: var decl: expected identifier got[%s]", identifier)
+	}
+
+	varname := ast.NewIdent(identifier.Value)
+	possibleAssignment := p.next()
+
+	if possibleAssignment.Type == token.SemiColon {
+		return ast.NewVarDecls(ast.NewVarDecl(varname, ast.NewUndefined())), nil
+	}
+
+	if possibleAssignment.Type != token.Assign {
+		return nil, fmt.Errorf("parser: var decl: expected assignment token [=] got [%s]", possibleAssignment)
+	}
+
+	p.scry(1)
+	assignExpr := p.lookahead[0]
+	parser, hasparser := varAssignParsers[assignExpr.Type]
+
+	if !hasparser {
+		return nil, fmt.Errorf("parser: var decl: invalid token[%s] expected assigment expression", assignExpr)
+	}
+
+	val, err := parser(p)
+	if err != nil {
+		return nil, fmt.Errorf("parser: var decl: error[%s] parsing variable assign expression", err)
+	}
+
+	res := ast.NewVarDecls(ast.NewVarDecl(varname, val))
+	possibleSemiColon := p.next()
+
+	if possibleSemiColon.Type == token.SemiColon || possibleSemiColon.Type == token.EOF {
+		return res, nil
+	}
+
+	if possibleSemiColon.Type != token.Comma {
+		return nil, fmt.Errorf("parser: var decl: invalid token[%s] expected comma", possibleSemiColon)
+	}
+
+	vars, err := parseVarDeclList(p)
+	if err != nil {
+		return nil, err
+	}
+	return append(res, vars...), nil
+}
+
 func parseIdentExpr(p *Parser) (ast.Node, error) {
 	tok := p.lookahead[0]
 	p.scry(1)
@@ -261,7 +319,7 @@ func parseIdentExpr(p *Parser) (ast.Node, error) {
 		return parseCallExpr(p)
 	}
 
-	if next.Type != token.EOF {
+	if next.Type != token.EOF && next.Type != token.SemiColon {
 		return nil, p.errorf(next, "parser:identifier:unexpected token [%s]", next)
 	}
 
@@ -337,7 +395,7 @@ func parseFuncallArgs(p *Parser) ([]ast.Node, error) {
 	for {
 		tok := nextToken()
 
-		if tok.Type == token.EOF || tok.Type == token.RParen {
+		if tok.Type == token.RParen {
 			p.forget(1)
 			break
 		}
@@ -378,4 +436,16 @@ func parseCallExpr(p *Parser) (ast.Node, error) {
 // TODO(i4k): implement line and column of error
 func (p *Parser) errorf(_ lexer.Tokval, f string, a ...interface{}) error {
 	return fmt.Errorf("%s:1:0: %s", p.filename, fmt.Sprintf(f, a...))
+}
+
+func mergeParsers(parsers ...map[token.Type]parserfn) map[token.Type]parserfn {
+	res := map[token.Type]parserfn{}
+
+	for _, parsermap := range parsers {
+		for tokenType, fn := range parsermap {
+			res[tokenType] = fn
+		}
+	}
+
+	return res
 }
