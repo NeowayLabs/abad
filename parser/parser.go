@@ -125,10 +125,9 @@ func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 	// parsers should not leave tokens not processed
 	// in the lookahead buffer.
 	if len(p.lookahead) != 0 {
-		return nil, false, fmt.Errorf(
-			"parser for token[%v] not handled lookahead correctly, lookahead has[%v] but should be empty",
+		panic(fmt.Sprintf("parser for token[%v] not handled lookahead correctly, lookahead has[%v] but should be empty",
 			tok,
-			p.lookahead)
+			p.lookahead))
 	}
 	return node, false, nil
 }
