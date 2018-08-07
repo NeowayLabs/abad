@@ -61,13 +61,21 @@ type (
 		Body *Program
 	}
 
-	// Ident is the identifier
 	Ident utf16.Str
+
+	VarDecl struct {
+		Name  Ident
+		Value Node
+	}
+
+	VarDecls []VarDecl
 )
 
 const (
 	NodeProgram NodeType = iota + 1
 	NodeFunDecl
+	NodeVarDecl
+	NodeVarDecls
 
 	exprBegin
 
@@ -89,6 +97,8 @@ const (
 var nodeTypesNames = [...]string{
 	NodeProgram:    "PROGRAM",
 	NodeFunDecl:    "FUNDECL",
+	NodeVarDecl:    "VARDECL",
+	NodeVarDecls:   "VARDECLS",
 	NodeNumber:     "NUMBER",
 	NodeString:     "STRING",
 	NodeBool:       "BOOLEAN",
@@ -336,6 +346,62 @@ func (m *MemberExpr) Equal(other Node) bool {
 	o := other.(*MemberExpr)
 	return m.Object.Equal(o.Object) &&
 		m.Property.Equal(o.Property)
+}
+
+func NewVarDecl(name Ident, val Node) VarDecl {
+	return VarDecl{
+		Name:  name,
+		Value: val,
+	}
+}
+
+func (v VarDecl) Type() NodeType { return NodeVarDecl }
+
+func (v VarDecl) Equal(other Node) bool {
+	if other.Type() != v.Type() {
+		return false
+	}
+
+	o := other.(VarDecl)
+	return v.Name.Equal(o.Name) && v.Value.Equal(o.Value)
+}
+
+func (v VarDecl) String() string {
+	return fmt.Sprintf("var %s = %s", v.Name, v.Value)
+}
+
+func NewVarDecls(vars ...VarDecl) VarDecls {
+	return VarDecls(vars)
+}
+
+func (v VarDecls) Type() NodeType { return NodeVarDecls }
+
+func (v VarDecls) Equal(other Node) bool {
+	if other.Type() != v.Type() {
+		return false
+	}
+
+	o := other.(VarDecls)
+
+	if len(v) != len(o) {
+		return false
+	}
+
+	for i, v := range v {
+		if !v.Equal(o[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (v VarDecls) String() string {
+	varstr := []string{}
+	for _, vardecl := range v {
+		varstr = append(varstr, fmt.Sprintf("%s = %s", vardecl.Name, vardecl.Value))
+	}
+	return "var " + strings.Join(varstr, ",")
 }
 
 func NewCallExpr(callee Node, args []Node) *CallExpr {
