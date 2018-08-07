@@ -269,7 +269,6 @@ func TestStrings(t *testing.T) {
 }
 
 func TestKeywords(t *testing.T) {
-
 	keyword := func(t token.Type, s string) []lexer.Tokval {
 		return tokens(tokval(t, s))
 	}
@@ -1169,8 +1168,62 @@ func TestFuncall(t *testing.T) {
 	})
 }
 
-func TestPosition(t *testing.T) {
+func TestFundecl(t *testing.T) {
+	runTests(t, []TestCase{
+		{
+			name: "EmptyFunDecl",
+			code: Str("function a() {}"),
+			want: tokens(
+				tokval(token.Function, "function"),
+				identToken("a"),
+				leftParenToken(), rightParenToken(),
+				tokval(token.LBrace, "{"),
+				tokval(token.RBrace, "}"),
+			),
+		},
+		{
+			name: "UnderscoreFunDecl",
+			code: Str("function _() {}"),
+			want: tokens(
+				tokval(token.Function, "function"),
+				identToken("_"),
+				leftParenToken(), rightParenToken(),
+				tokval(token.LBrace, "{"),
+				tokval(token.RBrace, "}"),
+			),
+		},
+		{
+			name: "FunDeclArgs",
+			code: Str("function split(arr, delim) {}"),
+			want: tokens(
+				tokval(token.Function, "function"),
+				identToken("split"),
+				leftParenToken(),
+				identToken("arr"), commaToken(), identToken("delim"),
+				rightParenToken(),
+				tokval(token.LBrace, "{"),
+				tokval(token.RBrace, "}"),
+			),
+		},
+		{
+			name: "FunDeclArgsBody",
+			code: Str("function split(arr, delim) { something; }"),
+			want: tokens(
+				tokval(token.Function, "function"),
+				identToken("split"),
+				leftParenToken(),
+				identToken("arr"), commaToken(), identToken("delim"),
+				rightParenToken(),
+				tokval(token.LBrace, "{"),
+				identToken("something"),
+				semiColonToken(),
+				tokval(token.RBrace, "}"),
+			),
+		},
+	})
+}
 
+func TestPosition(t *testing.T) {
 	cases := []TestCase{
 		{
 			name:          "MinusDecimal",
@@ -1259,7 +1312,6 @@ func TestIllegalSingleDot(t *testing.T) {
 }
 
 func TestIllegalMemberAccess(t *testing.T) {
-
 	runTests(t, []TestCase{
 		{
 			name: "CantAccessMemberThatStartsWithNumber",

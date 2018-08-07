@@ -16,6 +16,8 @@ type (
 		lookahead []lexer.Tokval
 
 		filename string
+
+		openbraces int
 	}
 
 	parserfn func(*Parser) (ast.Node, error)
@@ -25,6 +27,7 @@ type (
 var tokEOF = lexer.EOF
 
 var (
+	keywordParsers   map[token.Type]parserfn
 	literalParsers   map[token.Type]parserfn
 	unaryParsers     map[token.Type]parserfn
 	varAssignParsers map[token.Type]parserfn
@@ -32,10 +35,15 @@ var (
 )
 
 func init() {
+	keywordParsers = map[token.Type]parserfn{
+		token.Function: parseFundecl,
+	}
+
 	unaryParsers = map[token.Type]parserfn{
 		token.Minus: parseUnary,
 		token.Plus:  parseUnary,
 	}
+
 	literalParsers = map[token.Type]parserfn{
 		token.Decimal:     parseDecimal,
 		token.Hexadecimal: parseHex,
@@ -44,13 +52,16 @@ func init() {
 		token.Undefined:   parseUndefined,
 		token.Null:        parseNull,
 	}
+
 	varAssignParsers = mergeParsers(
 		literalParsers,
 		map[token.Type]parserfn{
 			token.Ident: parseIdentExpr,
 		},
 	)
+
 	nodeParsers = mergeParsers(
+		keywordParsers,
 		literalParsers,
 		unaryParsers,
 		map[token.Type]parserfn{
@@ -94,6 +105,23 @@ func (p *Parser) parse() (*ast.Program, error) {
 func (p *Parser) parseNode() (n ast.Node, eof bool, err error) {
 	p.scry(1)
 	tok := p.lookahead[0]
+
+	// http://es5.github.io/#A.4
+	if tok.Type == token.LBrace {
+		p.openbraces++
+		p.forget(1)
+		return p.parseNode()
+	}
+
+	if tok.Type == token.RBrace {
+		if p.openbraces <= 0 {
+			return nil, false, p.errorf(tok, "unexpected '}'")
+		}
+
+		p.openbraces--
+		p.forget(1)
+		return nil, true, nil
+	}
 
 	// FIXME: This will probably not be enough to handle semicolon on the future
 	for tok.Type == token.SemiColon {
@@ -431,6 +459,76 @@ func parseCallExpr(p *Parser) (ast.Node, error) {
 		return nil, err
 	}
 	return ast.NewCallExpr(ast.NewIdent(ident.Value), args), nil
+}
+
+func parseFundecl(p *Parser) (ast.Node, error) {
+	p.forget(1)
+	tok := p.next()
+	if tok.Type != token.Ident {
+		return nil, p.errorf(tok, "parser: fundecl: Unexpected [%s]", tok.Value)
+	}
+
+	ident := ast.NewIdent(tok.Value)
+
+	args, err := parseFunargs(p)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := parseFunbody(p)
+	if err != nil {
+		return nil, err
+	}
+
+	return ast.NewFunDecl(ident, args, body), nil
+}
+
+func parseFunargs(p *Parser) ([]ast.Ident, error) {
+	tok := p.next()
+	if tok.Type != token.LParen {
+		return nil, p.errorf(tok, "parser: funargs: unexpected [%s]", tok.Value)
+	}
+
+	var args []ast.Ident
+	tok = p.next()
+	if tok.Type == token.RParen {
+		return args, nil
+	}
+
+	for tok.Type == token.Ident {
+		args = append(args, ast.NewIdent(tok.Value))
+		tok = p.next()
+		if tok.Type != token.Comma {
+			break
+		}
+		tok = p.next()
+	}
+
+	if tok.Type != token.RParen {
+		return nil, p.errorf(tok, "parser: funargs: unexpected [%s]", tok.Value)
+	}
+
+	return args, nil
+}
+
+func parseFunbody(p *Parser) (*ast.Program, error) {
+	tok := p.next()
+	if tok.Type != token.LBrace {
+		return nil, p.errorf(tok, "parser: funbody: unexpected [%s]", tok.Value)
+	}
+
+	nbraces := p.openbraces
+	p.openbraces++
+	body, err := p.parse()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.openbraces != nbraces {
+		return nil, p.errorf(tok, "parser: funbody: expected '}' but found EOF")
+	}
+
+	return body, nil
 }
 
 // TODO(i4k): implement line and column of error

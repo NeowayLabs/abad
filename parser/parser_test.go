@@ -14,7 +14,6 @@ import (
 var E = fmt.Errorf
 
 func TestParserNumbers(t *testing.T) {
-
 	runTests(t, []TestCase{
 		{
 			name: "SmallDecimal",
@@ -499,7 +498,6 @@ func TestParserFuncallError(t *testing.T) {
 }
 
 func TestParserFuncall(t *testing.T) {
-
 	runTests(t, []TestCase{
 		{
 			name: "NoParameter",
@@ -683,6 +681,68 @@ func TestParserFuncall(t *testing.T) {
 	})
 }
 
+func TestFunDecl(t *testing.T) {
+	runTests(t, []TestCase{
+		{
+			name: "simple function",
+			code: `function a(){}`,
+			want: fundecl(
+				identifier("a"),
+				[]ast.Ident{},
+				program(),
+			),
+		},
+		{
+			name: "function with args",
+			code: `function a(b, c, d){}`,
+			want: fundecl(
+				identifier("a"),
+				[]ast.Ident{identifier("b"), identifier("c"), identifier("d")},
+				program(),
+			),
+		},
+		{
+			name: "function with args and body",
+			code: `function a(b){b(1, 2)}`,
+			want: fundecl(
+				identifier("a"),
+				[]ast.Ident{identifier("b")},
+				program(
+					callExpr(identifier("b"), []ast.Node{
+						number(1), number(2),
+					})),
+			),
+		},
+		{
+			name: "function between stmts",
+			code: `console.log(1);
+			function a(b){
+				b(1, 2)
+			}
+			console.log(2);
+			`,
+			wants: []ast.Node{
+				callExpr(
+					memberExpr(identifier("console"), "log"),
+					[]ast.Node{ast.NewNumber(1.0)},
+				),
+				fundecl(
+					identifier("a"),
+					[]ast.Ident{identifier("b")},
+					program(
+						callExpr(identifier("b"), []ast.Node{
+							number(1), number(2),
+						})),
+				),
+				callExpr(
+					memberExpr(identifier("console"), "log"),
+					[]ast.Node{ast.NewNumber(2.0)},
+				),
+			},
+		},
+	})
+}
+
 // TestCase is the description of an parser related test.
 // The fields want and wants are mutually exclusive, you should
 // never provide both. If "wants" is provided the "want" field will be ignored.
@@ -776,6 +836,16 @@ func memberExpr(obj ast.Node, memberName string) *ast.MemberExpr {
 
 func callExpr(callee ast.Node, args []ast.Node) *ast.CallExpr {
 	return ast.NewCallExpr(callee, args)
+}
+
+func fundecl(name ast.Ident, args []ast.Ident, body *ast.Program) *ast.FunDecl {
+	return ast.NewFunDecl(name, args, body)
+}
+
+func program(stmts ...ast.Node) *ast.Program {
+	return &ast.Program{
+		Nodes: stmts,
+	}
 }
 
 func varDecls(vars ...ast.VarDecl) ast.VarDecls {

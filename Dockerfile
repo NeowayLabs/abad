@@ -33,7 +33,7 @@ RUN mkdir -p /usr/local/bin && \
 ENV GOPATH="/go"
 ENV GOROOT="/goroot"
 ENV GOVERSION="1.10"
-ENV PATH="${GOROOT}/bin:${PATH}"
+ENV PATH="${GOROOT}/bin:${GOPATH}/bin:${PATH}"
 
 RUN apt-get update && apt-get install -y wget make
 
@@ -42,5 +42,3 @@ RUN cd /tmp && \
 	tar -xvf go$GOVERSION.linux-amd64.tar.gz && \
 	mkdir -p $GOROOT && \
 	mv ./go/* $GOROOT
-
-	

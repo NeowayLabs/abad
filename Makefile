@@ -7,10 +7,10 @@ installdir?=/usr/local/bin
 all: fmt build analysis test dev-test-e2e
 
 build:
-	go build -o ./cmd/abad/abad -v ./cmd/abad
+	cd cmd/abad && go build -v
 
 install: build
-	cp ./cmd/abad/abad $(installdir)
+	go install -v ./cmd/abad
 
 fmt:
 	gofmt -s -w .

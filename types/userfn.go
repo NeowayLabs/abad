@@ -14,7 +14,7 @@ type (
 		isFnPrototype bool
 
 		params []utf16.Str
-		body   *ast.FnBody
+		body   *ast.Program
 		scope  interface{}
 	}
 )
@@ -27,7 +27,7 @@ func NewUserFunctionPrototype() *UserFunction {
 }
 
 func NewUserFunction(
-	params []utf16.Str, body *ast.FnBody, scope interface{}, strict bool,
+	params []utf16.Str, body *ast.Program, scope interface{}, strict bool,
 ) *UserFunction {
 	return &UserFunction{
 		params:     params,
