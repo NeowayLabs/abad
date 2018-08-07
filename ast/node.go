@@ -72,6 +72,8 @@ type (
 const (
 	NodeProgram NodeType = iota + 1
 	NodeFnBody
+	NodeVarDecl
+	NodeVarDecls
 
 	exprBegin
 
@@ -83,8 +85,6 @@ const (
 	NodeUnaryExpr
 	NodeMemberExpr
 	NodeCallExpr
-	NodeVarDecl
-	NodeVarDecls
 	NodeIdent
 
 	exprEnd

@@ -251,24 +251,19 @@ func parseUnary(p *Parser) (ast.Node, error) {
 
 func parseVarDecls(p *Parser) (ast.Node, error) {
 	p.forget(1)
-	return _parseVarDecls(p)
+	return parseVarDeclList(p)
 }
 
-func _parseVarDecls(p *Parser) (ast.VarDecls, error) {
+func parseVarDeclList(p *Parser) (ast.VarDecls, error) {
 
-	if !p.scry(2) {
-		return nil, fmt.Errorf("parser var decl: expected at least two tokens got[%s]", p.lookahead)
-	}
-
-	identifier := p.lookahead[0]
-	possibleAssignment := p.lookahead[1]
-	p.forget(2)
-
+	identifier := p.next()
 	if identifier.Type != token.Ident {
 		return nil, fmt.Errorf("parser: var decl: expected identifier got[%s]", identifier)
 	}
 
 	varname := ast.NewIdent(identifier.Value)
+	possibleAssignment := p.next()
+
 	if possibleAssignment.Type == token.SemiColon {
 		return ast.NewVarDecls(ast.NewVarDecl(varname, ast.NewUndefined())), nil
 	}
@@ -291,9 +286,7 @@ func _parseVarDecls(p *Parser) (ast.VarDecls, error) {
 	}
 
 	res := ast.NewVarDecls(ast.NewVarDecl(varname, val))
-	p.scry(1)
-	possibleSemiColon := p.lookahead[0]
-	p.forget(1)
+	possibleSemiColon := p.next()
 
 	if possibleSemiColon.Type == token.SemiColon || possibleSemiColon.Type == token.EOF {
 		return res, nil
@@ -303,7 +296,7 @@ func _parseVarDecls(p *Parser) (ast.VarDecls, error) {
 		return nil, fmt.Errorf("parser: var decl: invalid token[%s] expected comma", possibleSemiColon)
 	}
 
-	vars, err := _parseVarDecls(p)
+	vars, err := parseVarDeclList(p)
 	return append(res, vars...), err
 }
 
