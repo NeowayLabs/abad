@@ -297,7 +297,10 @@ func parseVarDeclList(p *Parser) (ast.VarDecls, error) {
 	}
 
 	vars, err := parseVarDeclList(p)
-	return append(res, vars...), err
+	if err != nil {
+		return nil, err
+	}
+	return append(res, vars...), nil
 }
 
 func parseIdentExpr(p *Parser) (ast.Node, error) {
